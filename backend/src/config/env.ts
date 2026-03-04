@@ -1,7 +1,28 @@
+/**
+ * @fileoverview Environment configuration module for the Twedar backend.
+ * 
+ * This module centralizes all environment variable access and provides:
+ * - Type-safe environment variable retrieval
+ * - Required vs optional variable distinction
+ * - Sensible defaults for development
+ * - Runtime validation of critical configuration
+ * 
+ * @module config/env
+ */
 import dotenv from "dotenv";
 
 dotenv.config();
 
+/**
+ * Retrieves a required environment variable.
+ * Throws an error if the variable is not set, ensuring
+ * the application fails fast during startup rather than
+ * encountering runtime issues later.
+ * 
+ * @param key - The environment variable name
+ * @returns The environment variable value
+ * @throws Error if the variable is not set
+ */
 function required(key: string): string {
   const value = process.env[key];
   if (!value) {
@@ -10,6 +31,15 @@ function required(key: string): string {
   return value;
 }
 
+/**
+ * Retrieves an optional environment variable with a fallback.
+ * Used for configuration that has sensible defaults for
+ * local development but may be overridden in production.
+ * 
+ * @param key - The environment variable name
+ * @param fallback - Default value if not set
+ * @returns The environment variable value or fallback
+ */
 function optional(key: string, fallback: string): string {
   return process.env[key] || fallback;
 }
