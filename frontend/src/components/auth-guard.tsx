@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Client-side authentication guard component.
+ * 
+ * This component protects routes by verifying user authentication and
+ * optionally checking role-based access. It handles loading states,
+ * session verification, and redirects for unauthorized access.
+ * 
+ * @module components/auth-guard
+ */
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
@@ -5,11 +14,30 @@ import { useRouter } from "next/navigation";
 import { useSession, organization } from "@/lib/auth-client";
 import { authClient } from "@/lib/auth-client";
 
+/**
+ * Props for the AuthGuard component.
+ */
 interface AuthGuardProps {
+  /** Child components to render when authentication passes */
   children: React.ReactNode;
+  /** Optional array of roles that are allowed to access this route */
   allowedRoles?: string[];
 }
 
+/**
+ * Authentication guard that wraps protected routes.
+ * 
+ * This component performs several checks:
+ * 1. Verifies the user has an active session
+ * 2. If allowedRoles is specified, checks the user's role
+ * 3. For vendor role checks, also verifies organization membership
+ * 
+ * Shows a loading state while checks are in progress, and redirects
+ * to login if authentication fails.
+ * 
+ * @param props - Component props including children and optional allowedRoles
+ * @returns The children if authenticated, loading state, or null while redirecting
+ */
 export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
