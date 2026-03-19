@@ -1,11 +1,22 @@
-import mongoose from "mongoose";
+import pg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+const { Pool } = pg;
+
+export const pool = new Pool({
+  connectionString:
+    process.env.DATABASE_URL || "postgres://localhost:5432/twedar",
+});
+
 const connectDB = async (): Promise<void> => {
-  const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/twedar";
-  await mongoose.connect(uri);
+  const client = await pool.connect();
+  try {
+    await client.query("SELECT 1");
+  } finally {
+    client.release();
+  }
 };
 
 export default connectDB;
