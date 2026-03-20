@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Better Auth server configuration for the Twedar backend.
+ * 
+ * This module configures the authentication system including:
+ * - Session management with cookie-based caching
+ * - Email/password authentication with verification
+ * - Social OAuth providers (Google, Apple)
+ * - Organization-based multi-tenancy for vendors
+ * - Admin capabilities for user management
+ * 
+ * @module lib/auth
+ */
 import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins";
 import { admin } from "better-auth/plugins";
@@ -6,6 +18,15 @@ import { env } from "../config/env.js";
 import { getSendEmailUseCase } from "../features/email/index.js";
 import { ac, ownerRole, memberRole } from "./permissions.js";
 
+/**
+ * Configured Better Auth instance for the Twedar platform.
+ * 
+ * The auth configuration supports multiple user types:
+ * - Couples: Wedding planners using the platform to find vendors
+ * - Vendors: Service providers with their own organizations
+ * - Staff: Team members invited to vendor organizations
+ * - Admins: Platform administrators with moderation capabilities
+ */
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: [env.FRONTEND_URL],
