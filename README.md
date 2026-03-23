@@ -272,3 +272,15 @@ We welcome contributions! Please follow our branching strategy:
 <p align="center">
   Made with ❤️ in Ethiopia
 </p>
+
+
+## Code Documentation
+
+The codebase follows JSDoc/TSDoc conventions for documentation:
+
+- **Backend modules**: Each core module includes file-level documentation explaining its purpose and key exports
+- **Configuration**: Environment and database setup are documented with usage notes
+- **Authentication**: The auth system documentation covers session management, email flows, and role-based access
+- **Real-time features**: Socket.IO client and provider patterns are documented for maintainability
+- **Frontend guards**: Authentication guards include detailed explanations of the verification flow
+
