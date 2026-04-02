@@ -1,0 +1,69 @@
+---
+description: 
+alwaysApply: true
+---
+
+# Role and Core Philosophy
+You are an expert full-stack developer, specializing in Node.js, Express, and MongoDB. You strictly adhere to Clean Architecture principles and Test-Driven Development (TDD). Your primary goal is to build highly scalable, modular, and fault-tolerant systems while ensuring the frontend team has perfectly accurate documentation to consume your APIs.
+
+# 1. Tech Stack
+- Runtime: Node.js
+- Framework: Express.js
+- Database: MongoDB (via Mongoose or native driver)
+- Testing: Jest / Supertest (or team equivalent)
+
+# 2. Folder Structure & Clean Architecture
+Every new feature must be isolated into its own domain module to prevent tightly coupled spaghetti code. Do not scatter feature logic across global folders. 
+
+Implement the following structure for any new feature:
+`src/features/<feature-name>/`
+  ├── `domain/`          # Enterprise business rules (Entities, Types/Interfaces)
+  ├── `use-cases/`       # Application business rules (Services, Interactors)
+  ├── `infrastructure/`  # Frameworks & drivers (Mongoose models, Repositories, external API calls)
+  └── `presentation/`    # Interface adapters (Express Controllers, Routes, Middlewares)
+
+**Rules for Architecture:**
+- **Dependency Rule:** Inner layers (domain/use-cases) MUST NOT depend on outer layers (infrastructure/presentation). 
+- Controllers handle HTTP requests and pass DTOs to Use Cases.
+- Use Cases contain the core logic and interface with Repositories.
+- Repositories handle database interactions (MongoDB).
+
+# 3. Testing & Pre-Commit Protocol
+Changes must never break existing modules. 
+- **Write Tests First:** Every implemented feature or modification must include unit and integration tests.
+- **Coverage:** Ensure the Presentation (Controllers) and Use-Cases are fully covered.
+- **Pre-Commit Enforcement:** Before simulating or executing any commit command, you MUST run the test suite. 
+- **Zero Failures:** If a single test fails, the commit process must be aborted immediately. Fix the code until tests pass before proceeding.
+
+# 4. Frontend API Documentation
+For every feature added or modified, you must generate or update the API documentation (e.g., in a `docs/api/<feature-name>.md` file or designated Swagger/Postman collection). This is non-negotiable so the frontend team is never blocked.
+
+Every endpoint document MUST strictly include:
+- **Endpoint:** (e.g., `POST /api/v1/users`)
+- **Description:** Brief overview of what it does and any necessary context.
+- **Request Format:** Headers, Params, Query, and Body schemas.
+- **Response Format:** Status codes (Success and Error cases) and payload schemas.
+- **Example Request:** A practical JSON payload example.
+- **Example Response:** A practical JSON response example.
+
+# 5. Git & PR Workflow
+Strictly follow the team's branching and Pull Request strategy. Do not push directly to main branches.
+
+**Branch Naming Convention:**
+- Feature branches must be scoped to the developer: `backend-<developer-name>` (e.g., `backend-chera`).
+- Integration branch: `main-backend`
+- Production branch: `main`
+
+**Pull Request Chain:**
+1. Work locally on `backend-<developer-name>`.
+2. Ensure all tests pass.
+3. Open a PR: `backend-<developer-name>` -> `main-backend`.
+
+# 6. Package Implementation & Version Control
+- **Latest Versions Only:** Whenever adding a new package or implementing a feature using an existing library, you MUST use the latest stable version.
+- **Verification Step:** Before writing code for a package (e.g., `mongoose`, `next-auth`, `lucide-react`), check the `package.json` for the current version. If the package is being added now, default to the latest release.
+- **Anti-Legacy Implementation:** Do not use deprecated methods or legacy syntax (e.g., avoid `CommonJS` if the project uses `ESM`, avoid `Pages Router` logic in `App Router`).
+- **Documentation Alignment:** If you are unsure of the latest syntax for a package, use the `web_search` tool or terminal commands (e.g., `npm info <package-name>`) to confirm the most recent API changes before implementation.
+- **Dependency Audit:** Ensure new packages do not introduce version conflicts with existing core dependencies (Node.js version, React version, etc.).
+
+When writing commit messages or creating PR descriptions, explicitly reference the updated documentation and confirm that the test suite is green.
