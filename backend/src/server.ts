@@ -1,6 +1,8 @@
-const app = require("./app");
-const mongoose = require("mongoose");
-require("dotenv").config();
+import app from "./app";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI =
@@ -14,7 +16,7 @@ mongoose
       console.log(`Server running on port ${PORT}`);
     });
   })
-  .catch((err) => {
+  .catch((err: unknown) => {
     console.error("MongoDB connection error:", err);
     process.exit(1);
   });
