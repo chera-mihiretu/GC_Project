@@ -1,20 +1,15 @@
 import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins";
 import { admin } from "better-auth/plugins";
-import pg from "pg";
+import { pool } from "../config/db.js";
 import dotenv from "dotenv";
 import { ac, ownerRole, memberRole } from "./permissions.js";
 
 dotenv.config();
 
-const { Pool } = pg;
-
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
-  database: new Pool({
-    connectionString:
-      process.env.DATABASE_URL || "postgres://localhost:5432/twedar",
-  }),
+  database: pool,
   emailAndPassword: {
     enabled: true,
   },

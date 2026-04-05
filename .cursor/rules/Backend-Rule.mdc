@@ -10,12 +10,12 @@ You are an expert full-stack developer, specializing in Node.js, Express, and Po
 - Runtime: Node.js
 - Language: TypeScript (strict mode)
 - Framework: Express.js
-- Database: PostgreSQL
+- Database: PostgreSQL (hosted on **Neon** — serverless Postgres)
 - Authentication: Better Auth (self-hosted) with Organization Plugin and Admin Plugin
 - Testing: Jest / Supertest (or team equivalent)
 
 # 2. Authentication System
-The platform uses **Better Auth** for the complete user identity lifecycle. All user data stays in PostgreSQL — no external identity providers hold core auth data.
+The platform uses **Better Auth** for the complete user identity lifecycle. All user data stays in PostgreSQL (Neon) — no external identity providers hold core auth data. The database is hosted on **Neon** (serverless Postgres). Connection strings follow the format `postgresql://<user>:<password>@<endpoint>.neon.tech/<dbname>?sslmode=require`. SSL is always required for Neon connections.
 
 **User Roles & RBAC:**
 
@@ -62,7 +62,7 @@ Implement the following structure for any new feature:
 - **Dependency Rule:** Inner layers (domain/use-cases) MUST NOT depend on outer layers (infrastructure/presentation). 
 - Controllers handle HTTP requests and pass DTOs to Use Cases.
 - Use Cases contain the core logic and interface with Repositories.
-- Repositories handle database interactions (PostgreSQL).
+- Repositories handle database interactions (PostgreSQL via Neon).
 
 # 4. Testing & Pre-Commit Protocol
 Changes must never break existing modules. 
@@ -97,7 +97,7 @@ Strictly follow the team's branching and Pull Request strategy. Do not push dire
 
 # 7. Package Implementation & Version Control
 - **Latest Versions Only:** Whenever adding a new package or implementing a feature using an existing library, you MUST use the latest stable version.
-- **Verification Step:** Before writing code for a package (e.g., `better-auth`, `pg`, `drizzle-orm`), check the `package.json` for the current version. If the package is being added now, default to the latest release.
+- **Verification Step:** Before writing code for a package (e.g., `better-auth`, `pg`, `@neondatabase/serverless`), check the `package.json` for the current version. If the package is being added now, default to the latest release.
 - **Anti-Legacy Implementation:** Do not use deprecated methods or legacy syntax (e.g., avoid `CommonJS` if the project uses `ESM`).
 - **Documentation Alignment:** If you are unsure of the latest syntax for a package, use the `web_search` tool or terminal commands (e.g., `npm info <package-name>`) to confirm the most recent API changes before implementation.
 - **Dependency Audit:** Ensure new packages do not introduce version conflicts with existing core dependencies (Node.js version, TypeScript version, etc.).

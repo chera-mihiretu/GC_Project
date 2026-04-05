@@ -5,9 +5,14 @@ dotenv.config();
 
 const { Pool } = pg;
 
+const connectionString =
+  process.env.DATABASE_URL || "postgres://localhost:5432/twedar";
+
 export const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL || "postgres://localhost:5432/twedar",
+  connectionString,
+  ssl: connectionString.includes("neon.tech")
+    ? { rejectUnauthorized: false }
+    : undefined,
 });
 
 const connectDB = async (): Promise<void> => {

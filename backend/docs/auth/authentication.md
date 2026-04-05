@@ -2,7 +2,7 @@
 
 ## Overview
 
-Twedarr uses **Better Auth** (self-hosted authentication library) with the **Organization Plugin** and **Admin Plugin** to handle the complete user identity lifecycle. All user data is stored in **PostgreSQL** — no external identity providers hold core auth data, ensuring full data sovereignty.
+Twedarr uses **Better Auth** (self-hosted authentication library) with the **Organization Plugin** and **Admin Plugin** to handle the complete user identity lifecycle. All user data is stored in **PostgreSQL hosted on Neon** (serverless Postgres) — no external identity providers hold core auth data, ensuring full data sovereignty.
 
 Authentication is implemented within the **User Management Subsystem** and serves as the foundation for every other module in the platform.
 
@@ -136,7 +136,7 @@ All users register through a single endpoint. The system collects:
                        ▼
 ┌─────────────────────────────────────────────────────┐
 │         Create secure HTTP-only session cookie       │
-│         Load role + permissions from PostgreSQL      │
+│         Load role + permissions from PostgreSQL (Neon)│
 └──────────────────────┬──────────────────────────────┘
                        │
             ┌──────────┼──────────┬──────────┐
@@ -198,7 +198,7 @@ Once authenticated, **strict RBAC** is enforced:
 | Authentication Library | Better Auth | Full user identity lifecycle |
 | Multi-Tenancy | Better Auth Organization Plugin | Vendor org structure (Owner / Member) |
 | Admin Management | Better Auth Admin Plugin | System-wide user oversight |
-| Database | PostgreSQL | User data, sessions, roles, permissions |
+| Database | PostgreSQL (Neon) | User data, sessions, roles, permissions |
 | Social Login | Google OAuth, Apple OAuth | One-click login for Couples |
 | Password Hashing | bcrypt | Secure credential storage |
 | Session Transport | HTTP-only cookies over HTTPS | Secure session management |
