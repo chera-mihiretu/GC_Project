@@ -1,0 +1,21 @@
+import express, { Request, Response } from "express";
+import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./lib/auth.js";
+
+const app = express();
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true,
+}));
+
+app.all("/api/auth/*splat", toNodeHandler(auth));
+
+app.use(express.json());
+
+app.get("/api/v1/health", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+export default app;
