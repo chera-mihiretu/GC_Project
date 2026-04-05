@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
+import styles from "../form.module.css";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -24,64 +25,49 @@ function VerifyEmailContent() {
         body: JSON.stringify({ token }),
       },
     )
-      .then((res) => {
-        setStatus(res.ok ? "success" : "error");
-      })
+      .then((res) => setStatus(res.ok ? "success" : "error"))
       .catch(() => setStatus("error"));
   }, [token]);
 
+  if (status === "loading") {
+    return (
+      <div className={styles.statusPage}>
+        <div className={styles.spinner} />
+        <h1 className={styles.statusTitle}>Verifying your email...</h1>
+        <p className={styles.statusText}>
+          Just a moment while we confirm your address.
+        </p>
+      </div>
+    );
+  }
+
+  if (status === "success") {
+    return (
+      <div className={styles.statusPage}>
+        <div className={styles.statusIcon}>✨</div>
+        <h1 className={styles.statusTitle}>Email verified!</h1>
+        <p className={styles.statusText}>
+          Your email has been confirmed. You&apos;re all set to start planning
+          your perfect day.
+        </p>
+        <a href="/login" className={styles.statusBtn}>
+          Continue to sign in
+        </a>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ textAlign: "center" }}>
-      {status === "loading" && (
-        <>
-          <h1 style={{ fontSize: 24, marginBottom: 8 }}>Verifying email...</h1>
-          <p style={{ color: "#666" }}>Please wait while we verify your email address.</p>
-        </>
-      )}
-      {status === "success" && (
-        <>
-          <h1 style={{ fontSize: 24, marginBottom: 8 }}>Email verified</h1>
-          <p style={{ color: "#666", marginBottom: 20 }}>
-            Your email has been verified successfully.
-          </p>
-          <a
-            href="/login"
-            style={{
-              display: "inline-block",
-              padding: "10px 24px",
-              background: "#111",
-              color: "#fff",
-              borderRadius: 8,
-              textDecoration: "none",
-              fontSize: 14,
-            }}
-          >
-            Go to login
-          </a>
-        </>
-      )}
-      {status === "error" && (
-        <>
-          <h1 style={{ fontSize: 24, marginBottom: 8 }}>Verification failed</h1>
-          <p style={{ color: "#666", marginBottom: 20 }}>
-            The verification link is invalid or has expired.
-          </p>
-          <a
-            href="/register"
-            style={{
-              display: "inline-block",
-              padding: "10px 24px",
-              background: "#111",
-              color: "#fff",
-              borderRadius: 8,
-              textDecoration: "none",
-              fontSize: 14,
-            }}
-          >
-            Register again
-          </a>
-        </>
-      )}
+    <div className={styles.statusPage}>
+      <div className={styles.statusIcon}>💌</div>
+      <h1 className={styles.statusTitle}>Verification failed</h1>
+      <p className={styles.statusText}>
+        This link may have expired or is invalid. Please try registering again
+        to receive a new verification email.
+      </p>
+      <a href="/register" className={styles.statusBtn}>
+        Back to registration
+      </a>
     </div>
   );
 }
@@ -90,9 +76,10 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ textAlign: "center" }}>
-          <h1 style={{ fontSize: 24, marginBottom: 8 }}>Verifying email...</h1>
-          <p style={{ color: "#666" }}>Please wait.</p>
+        <div className={styles.statusPage}>
+          <div className={styles.spinner} />
+          <h1 className={styles.statusTitle}>Verifying your email...</h1>
+          <p className={styles.statusText}>Please wait.</p>
         </div>
       }
     >
