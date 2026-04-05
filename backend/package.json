@@ -1,15 +1,16 @@
 {
   "name": "twedar-backend",
   "version": "1.0.0",
-  "description": "Twedar backend API — Node.js, Express, MongoDB, TypeScript",
+  "description": "Twedar backend API — Node.js, Express, PostgreSQL, TypeScript",
   "main": "dist/server.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
-    "test": "jest --forceExit --detectOpenHandles",
-    "test:watch": "jest --watch --forceExit --detectOpenHandles",
-    "test:coverage": "jest --coverage --forceExit --detectOpenHandles"
+    "dev": "tsx src/server.ts",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch --forceExit --detectOpenHandles",
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage --forceExit --detectOpenHandles"
   },
   "keywords": [],
   "license": "ISC",
@@ -17,18 +18,19 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
-    "mongoose": "^9.3.3"
+    "pg": "^8.16.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
+    "@types/pg": "^8.15.4",
     "@types/supertest": "^7.2.0",
     "jest": "^30.3.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.9",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.0",
     "typescript": "^6.0.2"
   }
 }
