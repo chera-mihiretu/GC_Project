@@ -39,3 +39,23 @@ export function getDashboardPath(role?: string): string {
   if (!role) return "/dashboard";
   return ROLE_DASHBOARD_MAP[role] || "/dashboard";
 }
+
+export async function apiFetch(input: RequestInfo, init?: RequestInit) {
+  const baseURL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const url =
+    typeof input === "string" && input.startsWith("/")
+      ? `${baseURL}${input}`
+      : input;
+
+  const res = await fetch(url, {
+    ...init,
+    credentials: "include",
+  });
+
+  if (res.status === 401 && typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+
+  return res;
+}
