@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
 import { getDashboardPath } from "@/services/auth.service";
+import styles from "../form.module.css";
 
 type RoleOption = "couple" | "vendor";
 
@@ -30,7 +31,7 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message || "Registration failed");
+      setError(authError.message || "Registration failed. Please try again.");
       return;
     }
 
@@ -41,102 +42,68 @@ export default function RegisterPage() {
 
   return (
     <>
-      <h1 style={{ textAlign: "center", marginBottom: 8, fontSize: 24 }}>
-        Create your account
-      </h1>
-      <p
-        style={{
-          textAlign: "center",
-          marginBottom: 24,
-          color: "#666",
-          fontSize: 14,
-        }}
-      >
-        Start planning your perfect wedding
+      <h1 className={styles.heading}>Begin your journey</h1>
+      <p className={styles.subtitle}>
+        Create your account and start planning the wedding of your dreams
       </p>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", marginBottom: 8, fontSize: 14 }}>
-            I am a...
-          </label>
-          <div style={{ display: "flex", gap: 10 }}>
-            {(["couple", "vendor"] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                style={{
-                  flex: 1,
-                  padding: "10px 0",
-                  border: role === r ? "2px solid #111" : "1px solid #ddd",
-                  borderRadius: 8,
-                  background: role === r ? "#f9f9f9" : "#fff",
-                  fontSize: 14,
-                  cursor: "pointer",
-                  fontWeight: role === r ? 600 : 400,
-                  textTransform: "capitalize",
-                }}
-              >
-                {r}
-              </button>
-            ))}
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <label className={styles.label}>I am a...</label>
+          <div className={styles.roleSelector}>
+            <button
+              type="button"
+              onClick={() => setRole("couple")}
+              className={`${styles.roleBtn} ${role === "couple" ? styles.roleBtnActive : ""}`}
+            >
+              <span className={styles.roleIcon}>💍</span>
+              <span className={styles.roleName}>Couple</span>
+              <span className={styles.roleDesc}>Planning our wedding</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("vendor")}
+              className={`${styles.roleBtn} ${role === "vendor" ? styles.roleBtnActive : ""}`}
+            >
+              <span className={styles.roleIcon}>🏪</span>
+              <span className={styles.roleName}>Vendor</span>
+              <span className={styles.roleDesc}>Offering services</span>
+            </button>
           </div>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label
-            htmlFor="name"
-            style={{ display: "block", marginBottom: 4, fontSize: 14 }}
-          >
+        <div className={styles.field}>
+          <label htmlFor="name" className={styles.label}>
             Full name
           </label>
           <input
             id="name"
             type="text"
             required
+            placeholder="Your full name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid #ddd",
-              borderRadius: 8,
-              fontSize: 14,
-              boxSizing: "border-box",
-            }}
+            className={styles.input}
           />
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label
-            htmlFor="email"
-            style={{ display: "block", marginBottom: 4, fontSize: 14 }}
-          >
-            Email
+        <div className={styles.field}>
+          <label htmlFor="email" className={styles.label}>
+            Email address
           </label>
           <input
             id="email"
             type="email"
             required
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid #ddd",
-              borderRadius: 8,
-              fontSize: 14,
-              boxSizing: "border-box",
-            }}
+            className={styles.input}
           />
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label
-            htmlFor="password"
-            style={{ display: "block", marginBottom: 4, fontSize: 14 }}
-          >
+        <div className={styles.field}>
+          <label htmlFor="password" className={styles.label}>
             Password
           </label>
           <input
@@ -144,57 +111,24 @@ export default function RegisterPage() {
             type="password"
             required
             minLength={8}
+            placeholder="Create a strong password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid #ddd",
-              borderRadius: 8,
-              fontSize: 14,
-              boxSizing: "border-box",
-            }}
+            className={styles.input}
           />
-          <span style={{ fontSize: 12, color: "#999" }}>
-            Min 8 characters
-          </span>
+          <span className={styles.hint}>At least 8 characters</span>
         </div>
 
-        {error && (
-          <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 12 }}>
-            {error}
-          </p>
-        )}
+        {error && <p className={styles.error}>{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "10px 0",
-            background: "#111",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            fontSize: 14,
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? "Creating account..." : "Create account"}
+        <button type="submit" disabled={loading} className={styles.submitBtn}>
+          {loading ? "Creating your account..." : "Create account"}
         </button>
       </form>
 
-      <p
-        style={{
-          textAlign: "center",
-          marginTop: 20,
-          fontSize: 13,
-          color: "#666",
-        }}
-      >
+      <p className={styles.footer}>
         Already have an account?{" "}
-        <a href="/login" style={{ color: "#111", fontWeight: 500 }}>
+        <a href="/login" className={styles.footerLink}>
           Sign in
         </a>
       </p>
