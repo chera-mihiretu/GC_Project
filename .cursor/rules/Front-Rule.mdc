@@ -17,22 +17,45 @@ You are an expert frontend developer specializing in Next.js and React. Your pri
 - **Judicious Client Components:** Only add the `"use client"` directive when absolutely necessary (e.g., utilizing state, effects, context, or DOM event listeners). Push `"use client"` as far down the component tree as possible.
 - **Data Fetching:** Leverage server-side fetching and Next.js caching mechanisms (`fetch` with appropriate `revalidate` tags) before reaching for client-side fetching.
 - **Modularity:** Keep feature-specific logic organized. Maintain shared, reusable elements in a centralized location.
-  ├── `app/`          # Routes, layouts, and page components
-  ├── `components/`   # Reusable UI components (buttons, modals, inputs)
-  ├── `hooks/`        # Custom React hooks
-  ├── `types/`        # Shared TypeScript interfaces (especially for API payloads)
-  └── `services/`     # API integration methods
+ ├── `app/`          # Routes, layouts, and page components
+ ├── `components/`   # Reusable UI components (buttons, modals, inputs)
+ ├── `hooks/`        # Custom React hooks
+ ├── `types/`        # Shared TypeScript interfaces (especially for API payloads)
+ └── `services/`     # API integration methods
 
-# 3. API Consumption & Integration
-- **Rely on Docs:** You must strictly follow the backend documentation provided for every feature.
+# 3. Authentication Integration
+The backend uses **Better Auth** with HTTP-only secure session cookies. The frontend does **not** manage tokens or JWTs directly.
+
+**Key Rules:**
+- **No token storage.** The browser sends session cookies automatically with every request. Do not store auth tokens in localStorage or sessionStorage.
+- **Check session on app load.** Call `GET /api/auth/session` in the root layout to determine if the user is logged in and which role-specific UI to render.
+- **Role-based routing.** After login, redirect users based on `user.role`:
+  - `couple` → `/dashboard`
+  - `vendor` → `/vendor/dashboard`
+  - `admin` → `/admin/dashboard`
+- **Social login is a redirect.** For Google/Apple login, navigate the browser to `GET /api/auth/social/{provider}` — do not use `fetch()`.
+- **Handle 401 globally.** If any API call returns 401, redirect to the login page.
+
+**Platform Roles (for UI rendering):**
+
+| Role | Dashboard | Description |
+|------|-----------|-------------|
+| Couple | `/dashboard` | Personal wedding planning (budget, checklist, guest list, vendor bookings) |
+| Vendor Owner | `/vendor/dashboard` | Full vendor management (portfolio, pricing, banking, staff invitations) |
+| Vendor Staff | `/vendor/dashboard` | Limited vendor access (chat, schedule; read-only financial data) |
+| Super Admin | `/admin/dashboard` | Full system management (users, configs, moderation) |
+| Content Moderator | `/admin/dashboard` | Limited admin privileges (assigned by Super Admin) |
+
+# 4. API Consumption & Integration
+- **Rely on Docs:** You must strictly follow the backend documentation provided for every feature (see `backend/docs/api/`).
 - **Type Safety:** Create types or interfaces that mirror the exact Request and Response formats detailed in the backend docs.
 - **Error Handling:** Gracefully handle API errors based on the documented status codes, ensuring the UI reflects loading, success, and error states accurately.
 
-# 4. Testing Protocol
+# 5. Testing Protocol
 - **NO TESTS:** Do not write, scaffold, or suggest tests for the frontend. 
 - Skip test generation entirely when creating new pages, components, or hooks. Focus 100% of your effort on implementation, structure, and styling.
 
-# 5. Git & PR Workflow
+# 6. Git & PR Workflow
 Strictly follow the team's branching and Pull Request strategy. Do not push directly to main branches.
 
 **Branch Naming Convention:**
@@ -44,9 +67,10 @@ Strictly follow the team's branching and Pull Request strategy. Do not push dire
 1. Work locally on `frontend-<developer-name>`.
 2. Ensure the UI compiles and runs cleanly without hydration errors or linting warnings.
 3. Open a PR: `frontend-<developer-name>` -> `main-frontend`.
-# 6. Package Implementation & Version Control
+
+# 7. Package Implementation & Version Control
 - **Latest Versions Only:** Whenever adding a new package or implementing a feature using an existing library, you MUST use the latest stable version.
-- **Verification Step:** Before writing code for a package (e.g., `mongoose`, `next-auth`, `lucide-react`), check the `package.json` for the current version. If the package is being added now, default to the latest release.
+- **Verification Step:** Before writing code for a package (e.g., `better-auth`, `lucide-react`), check the `package.json` for the current version. If the package is being added now, default to the latest release.
 - **Anti-Legacy Implementation:** Do not use deprecated methods or legacy syntax (e.g., avoid `CommonJS` if the project uses `ESM`, avoid `Pages Router` logic in `App Router`).
 - **Documentation Alignment:** If you are unsure of the latest syntax for a package, use the `web_search` tool or terminal commands (e.g., `npm info <package-name>`) to confirm the most recent API changes before implementation.
 - **Dependency Audit:** Ensure new packages do not introduce version conflicts with existing core dependencies (Node.js version, React version, etc.).
