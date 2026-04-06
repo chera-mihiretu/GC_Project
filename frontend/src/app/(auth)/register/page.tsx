@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
-import { getDashboardPath } from "@/services/auth.service";
 import { FiHeart } from "react-icons/fi";
 import { PiStorefrontDuotone } from "react-icons/pi";
 
@@ -37,7 +36,7 @@ export default function RegisterPage() {
     }
 
     if (data?.user) {
-      router.push(getDashboardPath(role));
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
     }
   }
 

@@ -23,6 +23,10 @@ export default function LoginPage() {
     setLoading(false);
 
     if (authError) {
+      if (authError.status === 403) {
+        router.push(`/check-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
       setError(authError.message || "Invalid email or password");
       return;
     }
