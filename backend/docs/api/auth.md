@@ -195,24 +195,24 @@
 
 ---
 
-### 6. Verify Email — `POST /api/auth/verify-email`
+### 6. Verify Email — `GET /api/auth/verify-email`
 
-**Description:** Verifies a user's email address using the token sent during registration.
+**Description:** Verifies a user's email address using the token from the verification link. A verification email is **automatically sent on sign-up**. If the user tries to sign in without verifying, a `403` is returned and a new verification email is sent automatically.
 
-**Request Body:**
-```json
-{
-  "token": "verification_token_from_email"
-}
-```
+**Behavior:**
+- **Auto-send on sign-up:** A verification email is dispatched when a user registers.
+- **Required for sign-in:** Users with unverified email receive `403` on sign-in attempts.
+- **Auto sign-in after verification:** After clicking the verification link, the user is automatically signed in and redirected to the `callbackURL`.
+
+**Query Parameters:**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `token` | string | Yes | Verification token from the email link |
+
+**Example:** `GET /api/auth/verify-email?token=abc123def456`
 
 **Response — Success (200):**
-```json
-{
-  "success": true,
-  "message": "Email verified successfully"
-}
-```
+The user is redirected to the callback URL with a session cookie set.
 
 **Response — Error (400):**
 ```json
@@ -226,7 +226,107 @@
 
 ---
 
-### 7. Invite Vendor Staff — `POST /api/auth/organization/invite`
+### 7. Resend Verification Email — `POST /api/auth/send-verification-email`
+
+**Description:** Manually triggers sending a new verification email to the specified address.
+
+**Request Body:**
+```json
+{
+  "email": "abebe@example.com",
+  "callbackURL": "/dashboard"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Email address to verify |
+| `callbackURL` | string | No | URL to redirect after verification (defaults to `/`) |
+
+**Response — Success (200):**
+```json
+{
+  "success": true
+}
+```
+
+**Response — Error (400):**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Email not found"
+  }
+}
+```
+
+---
+
+### 8. Request Password Reset — `POST /api/auth/forget-password`
+
+**Description:** Sends a password reset email to the specified address. The email contains a link with a reset token.
+
+**Request Body:**
+```json
+{
+  "email": "abebe@example.com",
+  "redirectTo": "/reset-password"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | Yes | Registered email address |
+| `redirectTo` | string | No | Frontend URL for the reset form (token is appended as query param) |
+
+**Response — Success (200):**
+```json
+{
+  "success": true
+}
+```
+
+> A password reset email is sent. The response is always `200` to prevent email enumeration.
+
+---
+
+### 9. Reset Password — `POST /api/auth/reset-password`
+
+**Description:** Resets the user's password using the token received via email.
+
+**Request Body:**
+```json
+{
+  "token": "reset_token_from_email",
+  "newPassword": "NewSecureP@ss456"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `token` | string | Yes | Reset token from the email link |
+| `newPassword` | string | Yes | New password (same complexity rules as registration) |
+
+**Response — Success (200):**
+```json
+{
+  "success": true
+}
+```
+
+**Response — Error (400):**
+```json
+{
+  "error": {
+    "code": "INVALID_TOKEN",
+    "message": "Reset token is invalid or expired"
+  }
+}
+```
+
+---
+
+### 10. Invite Vendor Staff — `POST /api/auth/organization/invite`
 
 **Description:** Allows a **Vendor Owner** to invite a staff member to their organization via email.
 
@@ -278,6 +378,7 @@
 | 401 | `INVALID_CREDENTIALS` | Wrong email or password |
 | 401 | `UNAUTHORIZED` | No active session / not logged in |
 | 403 | `FORBIDDEN` | Authenticated but insufficient permissions |
+| 403 | `EMAIL_NOT_VERIFIED` | Email not verified (sign-in blocked; verification email re-sent) |
 | 404 | `NOT_FOUND` | Resource does not exist |
 | 409 | `CONFLICT` | Duplicate resource (e.g., email already registered) |
 | 429 | `RATE_LIMITED` | Too many requests |
@@ -295,3 +396,6 @@
    - `admin` → `/admin/dashboard`
 4. **Social login is a redirect.** For Google/Apple login, navigate the browser to `GET /api/auth/social/{provider}` — do not use `fetch()`.
 5. **Handle 401 globally.** If any API call returns 401, redirect to the login page.
+6. **Handle 403 on sign-in.** A `403` response on sign-in means the user's email is not yet verified. Show a "check your inbox" message. A new verification email is sent automatically.
+7. **Auto sign-in after verification.** When the user clicks the verification link, they are automatically signed in and redirected — no manual login step needed.
+8. **Password reset flow.** Call `POST /api/auth/forget-password` to trigger a reset email. The `redirectTo` URL receives the reset token as a query param. Submit the new password via `POST /api/auth/reset-password`.
