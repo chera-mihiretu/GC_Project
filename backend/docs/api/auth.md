@@ -34,7 +34,7 @@
 | `password` | string | Yes | Min 8 chars, must include uppercase, lowercase, number, special char |
 | `role` | string | Yes | One of: `couple`, `vendor`, `admin` |
 
-**Response — Success (201):**
+**Response — Success (200):**
 ```json
 {
   "user": {
@@ -47,6 +47,12 @@
   }
 }
 ```
+
+> **Important — Email Verification Required:** On successful registration, a verification email is automatically sent to the user's email address. The response will always include `"emailVerified": false`. The frontend **must** check this field and show a prompt such as:
+>
+> *"A verification email has been sent to **abebe@example.com**. Please check your inbox and click the link to verify your account before signing in."*
+>
+> The user **cannot sign in** until they verify their email. Attempting to sign in with an unverified email returns `403`.
 
 **Response — Error (400):**
 ```json
