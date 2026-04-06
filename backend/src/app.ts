@@ -8,9 +8,17 @@ const app = express();
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:3000",
   credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
+app.all("/api/auth/*splat", (req, res) => {
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+    return;
+  }
+  return toNodeHandler(auth)(req, res);
+});
 
 app.use(express.json());
 
