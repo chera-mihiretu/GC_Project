@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins";
 import { admin } from "better-auth/plugins";
 import { pool } from "../config/db.js";
+import { getSendEmailUseCase } from "../features/email/index.js";
 import dotenv from "dotenv";
 import { ac, ownerRole, memberRole } from "./permissions.js";
 
@@ -9,9 +10,43 @@ dotenv.config();
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
+  trustedOrigins: [process.env.FRONTEND_URL || "http://localhost:3000"],
   database: pool,
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      void getSendEmailUseCase().execute({
+        to: user.email,
+        subject: "Reset your password — Twedar",
+        html: `
+          <h2>Password Reset</h2>
+          <p>Hi ${user.name},</p>
+          <p>Click the link below to reset your password:</p>
+          <p><a href="${url}">Reset Password</a></p>
+          <p>If you didn't request this, you can safely ignore this email.</p>
+        `,
+        text: `Reset your password by visiting: ${url}`,
+      });
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      void getSendEmailUseCase().execute({
+        to: user.email,
+        subject: "Verify your email — Twedar",
+        html: `
+          <h2>Welcome to Twedar!</h2>
+          <p>Hi ${user.name},</p>
+          <p>Please verify your email address by clicking the link below:</p>
+          <p><a href="${url}">Verify Email</a></p>
+          <p>If you didn't create an account, you can safely ignore this email.</p>
+        `,
+        text: `Verify your email by visiting: ${url}`,
+      });
+    },
+    autoSignInAfterVerification: true,
   },
   socialProviders: {
     google: {
@@ -31,9 +66,18 @@ export const auth = betterAuth({
         member: memberRole,
       },
       async sendInvitationEmail(data) {
-        console.log(
-          `Invitation email to ${data.email} for org ${data.organization.name}`,
-        );
+        const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const inviteLink = `${baseUrl}/accept-invitation/${data.id}`;
+        void getSendEmailUseCase().execute({
+          to: data.email,
+          subject: `You've been invited to ${data.organization.name} — Twedar`,
+          html: `
+            <h2>Organization Invitation</h2>
+            <p>You've been invited to join <strong>${data.organization.name}</strong> on Twedar.</p>
+            <p><a href="${inviteLink}">Accept Invitation</a></p>
+          `,
+          text: `You've been invited to join ${data.organization.name}. Accept here: ${inviteLink}`,
+        });
       },
     }),
     admin(),
