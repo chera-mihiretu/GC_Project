@@ -15,7 +15,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    sendResetPassword: async ({ user, url }) => {
+    sendResetPassword: async ({ user, url, token }) => {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Reset your password — Twedar",
@@ -23,16 +25,19 @@ export const auth = betterAuth({
           <h2>Password Reset</h2>
           <p>Hi ${user.name},</p>
           <p>Click the link below to reset your password:</p>
-          <p><a href="${url}">Reset Password</a></p>
+          <p><a href="${resetUrl}">Reset Password</a></p>
           <p>If you didn't request this, you can safely ignore this email.</p>
         `,
-        text: `Reset your password by visiting: ${url}`,
+        text: `Reset your password by visiting: ${resetUrl}`,
       });
     },
   },
   emailVerification: {
     sendOnSignUp: true,
-    sendVerificationEmail: async ({ user, url }) => {
+    sendVerificationEmail: async ({ user, token }) => {
+      const backendUrl = process.env.BETTER_AUTH_URL || "http://localhost:5000";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const verifyUrl = `${backendUrl}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent(`${frontendUrl}/verify-email`)}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Verify your email — Twedar",
@@ -40,10 +45,10 @@ export const auth = betterAuth({
           <h2>Welcome to Twedar!</h2>
           <p>Hi ${user.name},</p>
           <p>Please verify your email address by clicking the link below:</p>
-          <p><a href="${url}">Verify Email</a></p>
+          <p><a href="${verifyUrl}">Verify Email</a></p>
           <p>If you didn't create an account, you can safely ignore this email.</p>
         `,
-        text: `Verify your email by visiting: ${url}`,
+        text: `Verify your email by visiting: ${verifyUrl}`,
       });
     },
     autoSignInAfterVerification: true,
