@@ -19,7 +19,7 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError("Invalid or missing reset token. Please request a new password reset link.");
+      setError("Invalid or missing reset token.");
     }
   }, [token]);
 
@@ -33,7 +33,7 @@ function ResetPasswordForm() {
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -56,26 +56,26 @@ function ResetPasswordForm() {
       setSuccess(true);
     } catch {
       setLoading(false);
-      setError("An unexpected error occurred. Please try again.");
+      setError("An unexpected error occurred.");
     }
   }
 
   if (success) {
     return (
       <>
-        <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <FiCheckCircle className="w-6 h-6 text-emerald-600" />
+        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <FiCheckCircle className="w-5 h-5 text-emerald-600" />
         </div>
-        <h1 className="font-display text-[28px] font-bold text-slate-900 mb-2 tracking-tight text-center">
-          Password reset successful
+        <h1 className="text-2xl font-bold text-slate-800 mb-1 text-center">
+          Password reset!
         </h1>
-        <p className="text-[15px] text-slate-500 mb-8 leading-relaxed text-center">
-          Your password has been successfully reset. You can now sign in with your new password.
+        <p className="text-slate-500 mb-6 text-center">
+          Your password has been successfully reset.
         </p>
 
         <button
           onClick={() => router.push("/login")}
-          className="flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-[15px] font-semibold tracking-wide shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700"
+          className="w-full py-2.5 bg-rose-500 text-white rounded-lg text-sm font-semibold transition-all hover:bg-rose-600"
         >
           Continue to sign in
         </button>
@@ -86,21 +86,21 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <>
-        <div className="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <FiLock className="w-6 h-6 text-rose-600" />
+        <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <FiLock className="w-5 h-5 text-rose-600" />
         </div>
-        <h1 className="font-display text-[28px] font-bold text-slate-900 mb-2 tracking-tight text-center">
-          Invalid reset link
+        <h1 className="text-2xl font-bold text-slate-800 mb-1 text-center">
+          Invalid link
         </h1>
-        <p className="text-[15px] text-slate-500 mb-8 leading-relaxed text-center">
-          This password reset link is invalid or has expired. Please request a new one.
+        <p className="text-slate-500 mb-6 text-center">
+          This reset link is invalid or expired.
         </p>
 
         <Link
           href="/forget-password"
-          className="flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-[15px] font-semibold tracking-wide shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700"
+          className="flex items-center justify-center w-full py-2.5 bg-rose-500 text-white rounded-lg text-sm font-semibold transition-all hover:bg-rose-600"
         >
-          Request new reset link
+          Request new link
         </Link>
       </>
     );
@@ -110,25 +110,22 @@ function ResetPasswordForm() {
     <>
       <Link
         href="/login"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-8"
+        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-6"
       >
         <FiArrowLeft className="w-4 h-4" />
         Back to sign in
       </Link>
 
-      <h1 className="font-display text-[28px] font-bold text-slate-900 mb-1.5 tracking-tight">
+      <h1 className="text-2xl font-bold text-slate-800 mb-1">
         Set new password
       </h1>
-      <p className="text-[15px] text-slate-500 mb-8 leading-relaxed">
-        Your new password must be at least 8 characters long.
+      <p className="text-slate-500 mb-6">
+        Must be at least 8 characters.
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="password"
-            className="text-xs font-semibold text-slate-700 uppercase tracking-wide"
-          >
+          <label htmlFor="password" className="text-sm font-medium text-slate-700">
             New password
           </label>
           <input
@@ -138,15 +135,12 @@ function ResetPasswordForm() {
             placeholder="Enter new password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border-[1.5px] border-slate-200 rounded-[10px] text-[15px] text-slate-800 bg-slate-50 outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-[3px] focus:ring-rose-100 focus:bg-white"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="confirmPassword"
-            className="text-xs font-semibold text-slate-700 uppercase tracking-wide"
-          >
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
             Confirm password
           </label>
           <input
@@ -156,12 +150,12 @@ function ResetPasswordForm() {
             placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-3 border-[1.5px] border-slate-200 rounded-[10px] text-[15px] text-slate-800 bg-slate-50 outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-[3px] focus:ring-rose-100 focus:bg-white"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
           />
         </div>
 
         {error && (
-          <p className="text-[13px] text-rose-600 bg-rose-50 border border-rose-200 rounded-md px-3.5 py-2.5">
+          <p className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
@@ -169,7 +163,7 @@ function ResetPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 mt-1 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-[15px] font-semibold tracking-wide shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+          className="w-full py-2.5 mt-1 bg-rose-500 text-white rounded-lg text-sm font-semibold transition-all hover:bg-rose-600 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? "Resetting..." : "Reset password"}
         </button>
@@ -182,8 +176,8 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center py-10">
-          <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center justify-center py-8">
+          <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >
