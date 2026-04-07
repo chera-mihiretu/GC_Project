@@ -12,6 +12,13 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
   trustedOrigins: [process.env.FRONTEND_URL || "http://localhost:3000"],
   database: pool,
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none" as const,
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,

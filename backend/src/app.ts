@@ -12,13 +12,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-app.all("/api/auth/*splat", (req, res) => {
-  if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-    return;
-  }
-  return toNodeHandler(auth)(req, res);
-});
+app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
 
