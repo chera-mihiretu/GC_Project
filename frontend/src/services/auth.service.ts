@@ -42,7 +42,7 @@ export function getDashboardPath(role?: string): string {
 
 export async function apiFetch(input: RequestInfo, init?: RequestInit) {
   const baseURL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
   const url =
     typeof input === "string" && input.startsWith("/")
       ? `${baseURL}${input}`
@@ -50,7 +50,6 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 
   const res = await fetch(url, {
     ...init,
-    credentials: "include",
   });
 
   if (res.status === 401 && typeof window !== "undefined") {
