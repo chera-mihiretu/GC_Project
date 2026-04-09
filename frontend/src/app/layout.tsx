@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${playfair.variable}`}>
-      <body className="min-h-screen bg-warm-50 text-slate-800 font-body antialiased">
+      <body suppressHydrationWarning className="min-h-screen bg-warm-50 text-slate-800 font-body antialiased">
         {children}
       </body>
     </html>

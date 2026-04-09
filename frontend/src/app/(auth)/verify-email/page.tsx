@@ -1,34 +1,57 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, Suspense, useCallback } from "react";
+import { useSession, authClient } from "@/lib/auth-client";
+import { getDashboardPath } from "@/services/auth.service";
 import { FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const token = searchParams.get("token");
+  const { data: session, isPending } = useSession();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
+  const [countdown, setCountdown] = useState(5);
+
+  const redirectToDashboard = useCallback(() => {
+    const role = (session?.user as Record<string, unknown> | undefined)
+      ?.role as string | undefined;
+    router.push(getDashboardPath(role));
+  }, [session, router]);
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
+    if (isPending) return;
+
+    if (session?.user) {
+      setStatus("success");
       return;
     }
 
-    fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/verify-email`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      },
-    )
-      .then((res) => setStatus(res.ok ? "success" : "error"))
-      .catch(() => setStatus("error"));
-  }, [token]);
+    if (token) {
+      authClient
+        .verifyEmail({ query: { token } })
+        .then(() => setStatus("success"))
+        .catch(() => setStatus("error"));
+    } else {
+      setStatus("error");
+    }
+  }, [token, session, isPending]);
+
+  useEffect(() => {
+    if (status !== "success") return;
+
+    if (countdown <= 0) {
+      redirectToDashboard();
+      return;
+    }
+
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [status, countdown, redirectToDashboard]);
 
   if (status === "loading") {
     return (
@@ -49,18 +72,23 @@ function VerifyEmailContent() {
       <div className="text-center py-5">
         <FiCheckCircle className="w-14 h-14 text-emerald-500 mx-auto mb-5" />
         <h1 className="font-display text-2xl font-bold text-slate-900 mb-2.5">
-          Email verified!
+          Verification successful!
         </h1>
         <p className="text-[15px] text-slate-500 mb-7 leading-relaxed">
           Your email has been confirmed. You&apos;re all set to start planning
           your perfect day.
         </p>
-        <a
-          href="/login"
-          className="inline-block px-8 py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
+        <p className="text-sm text-slate-400 mb-6">
+          Redirecting to your dashboard in{" "}
+          <span className="font-semibold text-slate-600">{countdown}</span>{" "}
+          second{countdown !== 1 ? "s" : ""}...
+        </p>
+        <button
+          onClick={redirectToDashboard}
+          className="inline-block px-8 py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5 cursor-pointer"
         >
-          Continue to sign in
-        </a>
+          Go to dashboard now
+        </button>
       </div>
     );
   }

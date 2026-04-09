@@ -38,6 +38,7 @@ export interface SessionData {
 
 export const ROLE_DASHBOARD_MAP: Record<string, string> = {
   couple: "/dashboard",
+  user: "/dashboard",
   vendor: "/vendor/dashboard",
   admin: "/admin/dashboard",
 };

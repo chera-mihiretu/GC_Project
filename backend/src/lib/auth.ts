@@ -12,10 +12,19 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
   trustedOrigins: [process.env.FRONTEND_URL || "http://localhost:3000"],
   database: pool,
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    sendResetPassword: async ({ user, url }) => {
+    sendResetPassword: async ({ user, url, token }) => {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Reset your password — Twedar",
@@ -23,16 +32,19 @@ export const auth = betterAuth({
           <h2>Password Reset</h2>
           <p>Hi ${user.name},</p>
           <p>Click the link below to reset your password:</p>
-          <p><a href="${url}">Reset Password</a></p>
+          <p><a href="${resetUrl}">Reset Password</a></p>
           <p>If you didn't request this, you can safely ignore this email.</p>
         `,
-        text: `Reset your password by visiting: ${url}`,
+        text: `Reset your password by visiting: ${resetUrl}`,
       });
     },
   },
   emailVerification: {
     sendOnSignUp: true,
-    sendVerificationEmail: async ({ user, url }) => {
+    sendVerificationEmail: async ({ user, token }) => {
+      const backendUrl = process.env.BETTER_AUTH_URL || "http://localhost:5000";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const verifyUrl = `${backendUrl}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent(`${frontendUrl}/verify-email`)}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Verify your email — Twedar",
@@ -40,10 +52,10 @@ export const auth = betterAuth({
           <h2>Welcome to Twedar!</h2>
           <p>Hi ${user.name},</p>
           <p>Please verify your email address by clicking the link below:</p>
-          <p><a href="${url}">Verify Email</a></p>
+          <p><a href="${verifyUrl}">Verify Email</a></p>
           <p>If you didn't create an account, you can safely ignore this email.</p>
         `,
-        text: `Verify your email by visiting: ${url}`,
+        text: `Verify your email by visiting: ${verifyUrl}`,
       });
     },
     autoSignInAfterVerification: true,
@@ -56,6 +68,16 @@ export const auth = betterAuth({
     apple: {
       clientId: process.env.APPLE_CLIENT_ID || "",
       clientSecret: process.env.APPLE_CLIENT_SECRET || "",
+    },
+  },
+  user: {
+    additionalFields: {
+      accountType: {
+        type: "string",
+        required: false,
+        input: true,
+        defaultValue: "couple",
+      },
     },
   },
   plugins: [
@@ -85,6 +107,13 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (user) => {
+          const rec = user as Record<string, unknown>;
+          const accountType = rec.accountType as string | undefined;
+          const allowed = ["couple", "vendor"];
+          const role = accountType && allowed.includes(accountType) ? accountType : "couple";
+          return { data: { ...user, role } };
+        },
         after: async (user) => {
           if ((user as Record<string, unknown>).role === "vendor") {
             try {

@@ -40,9 +40,17 @@ export function getDashboardPath(role?: string): string {
   return ROLE_DASHBOARD_MAP[role] || "/dashboard";
 }
 
+export async function forgetPassword(email: string, redirectTo: string = "/reset-password") {
+  return authClient.requestPasswordReset({ email, redirectTo });
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  return authClient.resetPassword({ token, newPassword });
+}
+
 export async function apiFetch(input: RequestInfo, init?: RequestInit) {
   const baseURL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
   const url =
     typeof input === "string" && input.startsWith("/")
       ? `${baseURL}${input}`
@@ -50,7 +58,6 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 
   const res = await fetch(url, {
     ...init,
-    credentials: "include",
   });
 
   if (res.status === 401 && typeof window !== "undefined") {
