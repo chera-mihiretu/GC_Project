@@ -42,18 +42,27 @@ export default function AdminDashboard() {
           Welcome, {session?.user?.name}! System management panel.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          {["Users", "Vendors", "Reports", "Settings"].map((item) => (
+          {[
+            { name: "Users", href: "" },
+            { name: "Vendors", href: "/admin/vendors" },
+            { name: "Reports", href: "" },
+            { name: "Settings", href: "" },
+          ].map((item) => (
             <div
-              key={item}
+              key={item.name}
+              onClick={() => item.href && router.push(item.href)}
               style={{
                 padding: 24,
                 border: "1px solid #eee",
                 borderRadius: 12,
                 background: "#fafafa",
+                cursor: item.href ? "pointer" : "default",
               }}
             >
-              <h3 style={{ marginBottom: 8 }}>{item}</h3>
-              <p style={{ color: "#999", fontSize: 14 }}>Coming soon</p>
+              <h3 style={{ marginBottom: 8 }}>{item.name}</h3>
+              <p style={{ color: "#999", fontSize: 14 }}>
+                {item.href ? "Manage →" : "Coming soon"}
+              </p>
             </div>
           ))}
         </div>
