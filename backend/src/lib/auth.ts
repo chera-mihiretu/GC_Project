@@ -14,7 +14,7 @@ export const auth = betterAuth({
   database: pool,
   advanced: {
     defaultCookieAttributes: {
-      sameSite: "none" as const,
+      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
     },
@@ -70,6 +70,16 @@ export const auth = betterAuth({
       clientSecret: process.env.APPLE_CLIENT_SECRET || "",
     },
   },
+  user: {
+    additionalFields: {
+      accountType: {
+        type: "string",
+        required: false,
+        input: true,
+        defaultValue: "couple",
+      },
+    },
+  },
   plugins: [
     organization({
       ac,
@@ -97,6 +107,13 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (user) => {
+          const rec = user as Record<string, unknown>;
+          const accountType = rec.accountType as string | undefined;
+          const allowed = ["couple", "vendor"];
+          const role = accountType && allowed.includes(accountType) ? accountType : "couple";
+          return { data: { ...user, role } };
+        },
         after: async (user) => {
           if ((user as Record<string, unknown>).role === "vendor") {
             try {

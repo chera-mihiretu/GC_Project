@@ -22,11 +22,28 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
 
+    try {
+      const checkRes = await fetch("/api/v1/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const checkData = await checkRes.json();
+      if (!checkData.available) {
+        setError("An account with this email already exists. Please sign in instead.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // If the check fails, proceed with signup and let Better Auth handle it
+    }
+
     const { data, error: authError } = await signUp.email({
       name,
       email,
       password,
-    });
+      accountType: role,
+    } as Parameters<typeof signUp.email>[0]);
 
     setLoading(false);
 

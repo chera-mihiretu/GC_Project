@@ -10,7 +10,8 @@
     "dev": "nodemon",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch --forceExit --detectOpenHandles",
-    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage --forceExit --detectOpenHandles"
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage --forceExit --detectOpenHandles",
+    "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
   "keywords": [],
   "license": "ISC",

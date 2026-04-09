@@ -41,7 +41,7 @@ export function getDashboardPath(role?: string): string {
 }
 
 export async function forgetPassword(email: string, redirectTo: string = "/reset-password") {
-  return authClient.forgetPassword({ email, redirectTo });
+  return authClient.requestPasswordReset({ email, redirectTo });
 }
 
 export async function resetPassword(token: string, newPassword: string) {
