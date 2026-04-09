@@ -7,6 +7,7 @@ import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { FiMenu, FiX, FiLogOut, FiHeart } from "react-icons/fi";
 import type { IconType } from "react-icons";
+import NotificationBell from "@/components/realtime/notification-bell";
 
 export interface NavItem {
   label: string;
@@ -155,6 +156,7 @@ export default function DashboardShell({
               </span>
             </div>
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-gray-900 leading-tight">
                   {session?.user?.name ?? "User"}
