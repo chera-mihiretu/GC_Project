@@ -8,6 +8,9 @@ import { ensureBucketExists } from "./features/vendor/infrastructure/supabase-st
 import vendorRoutes from "./features/vendor/presentation/vendor.routes.js";
 import adminVendorRoutes from "./features/vendor/presentation/admin-vendor.routes.js";
 import publicVendorRoutes from "./features/vendor/presentation/public-vendor.routes.js";
+import notificationRoutes from "./features/realtime/presentation/notification.routes.js";
+import chatRoutes from "./features/realtime/presentation/chat.routes.js";
+import { initRealtimeTables } from "./features/realtime/infrastructure/init-tables.js";
 
 const app = express();
 
@@ -51,9 +54,15 @@ app.get("/api/v1/health", (_req: Request, res: Response) => {
 app.use("/api/v1/vendor", vendorRoutes);
 app.use("/api/v1/admin/vendors", adminVendorRoutes);
 app.use("/api/v1/vendors", publicVendorRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/conversations", chatRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
+});
+
+initRealtimeTables().catch((err) => {
+  console.error("Failed to initialize realtime tables:", err);
 });
 
 ensureBucketExists().catch((err) => {
