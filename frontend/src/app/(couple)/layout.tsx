@@ -3,6 +3,7 @@
 import AuthGuard from "@/components/auth-guard";
 import DashboardShell from "@/components/layouts/dashboard-shell";
 import type { NavItem } from "@/components/layouts/dashboard-shell";
+import { SocketProvider } from "@/components/realtime/socket-provider";
 import {
   FiGrid,
   FiDollarSign,
@@ -26,9 +27,11 @@ export default function CoupleLayout({
 }) {
   return (
     <AuthGuard allowedRoles={["couple", "user"]}>
-      <DashboardShell navItems={navItems} roleLabel="Couple" accentColor="rose">
-        {children}
-      </DashboardShell>
+      <SocketProvider>
+        <DashboardShell navItems={navItems} roleLabel="Couple" accentColor="rose">
+          {children}
+        </DashboardShell>
+      </SocketProvider>
     </AuthGuard>
   );
 }

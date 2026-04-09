@@ -3,6 +3,7 @@
 import AuthGuard from "@/components/auth-guard";
 import DashboardShell from "@/components/layouts/dashboard-shell";
 import type { NavItem } from "@/components/layouts/dashboard-shell";
+import { SocketProvider } from "@/components/realtime/socket-provider";
 import {
   FiGrid,
   FiShoppingBag,
@@ -26,9 +27,11 @@ export default function AdminLayout({
 }) {
   return (
     <AuthGuard allowedRoles={["admin"]}>
-      <DashboardShell navItems={navItems} roleLabel="Admin" accentColor="amber">
-        {children}
-      </DashboardShell>
+      <SocketProvider>
+        <DashboardShell navItems={navItems} roleLabel="Admin" accentColor="amber">
+          {children}
+        </DashboardShell>
+      </SocketProvider>
     </AuthGuard>
   );
 }
