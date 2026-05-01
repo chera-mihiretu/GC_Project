@@ -16,13 +16,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-interface NotificationDropdownProps {
-  onClose: () => void;
-}
-
-export default function NotificationDropdown({
-  onClose,
-}: NotificationDropdownProps) {
+export default function NotificationDropdown() {
   const {
     notifications,
     unreadCount,
@@ -81,7 +75,7 @@ export default function NotificationDropdown({
               {!n.read && (
                 <button
                   onClick={() => markNotificationRead(n.id)}
-                  className="flex-shrink-0 p-1 text-gray-300 hover:text-rose-500 transition-colors"
+                  className="shrink-0 p-1 text-gray-300 hover:text-rose-500 transition-colors"
                   title="Mark as read"
                 >
                   <FiCheck className="w-4 h-4" />

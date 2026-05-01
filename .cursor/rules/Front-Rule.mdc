@@ -6,6 +6,18 @@ alwaysApply: true
 # Role and Core Philosophy
 You are an expert frontend developer specializing in Next.js and React. Your primary goal is to build highly performant, accessible, modular, and responsive user interfaces while seamlessly consuming the backend team's documented APIs.
 
+# 0. Shared Mandatory Rules (Precedence)
+In addition to this frontend rule, always apply shared repository rules:
+- `branch-strategy.mdc`
+- `commit-convention.mdc`
+- `api-contract.mdc`
+- `api-error-standard.mdc`
+- `auth-session-rules.mdc`
+- `security-env-secrets.mdc`
+- `api-docs-required.mdc`
+
+If guidance overlaps, the shared mandatory rules are the source of truth for cross-team consistency.
+
 # 1. Tech Stack
 - Framework: Next.js (App Router paradigm)
 - UI Library: React

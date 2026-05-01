@@ -423,11 +423,15 @@ export default function AdminVendorDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {isImage(previewDoc.fileUrl) ? (
-              <img
-                src={resolveUrl(previewDoc.fileUrl)}
-                alt={previewDoc.documentType}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              />
+              <div className="relative w-full h-full max-w-4xl">
+                <Image
+                  src={resolveUrl(previewDoc.fileUrl)}
+                  alt={previewDoc.documentType}
+                  fill
+                  sizes="100vw"
+                  className="object-contain rounded-lg shadow-2xl"
+                />
+              </div>
             ) : isPdf(previewDoc.fileUrl) ? (
               <iframe
                 src={resolveUrl(previewDoc.fileUrl)}
