@@ -35,13 +35,7 @@ export default function VendorProfileSetup() {
     fetchProfile();
   }, [fetchProfile]);
 
-  async function handleSaveProfile(data: {
-    businessName: string;
-    category: string;
-    description: string;
-    phoneNumber: string;
-    location: string;
-  }) {
+  async function handleSaveProfile(data: Record<string, unknown>) {
     if (profile) {
       const result = await updateVendorProfile(data);
       setProfile(result.vendorProfile);
@@ -83,7 +77,7 @@ export default function VendorProfileSetup() {
     (profile.status === VendorStatus.REGISTERED ||
       profile.status === VendorStatus.REJECTED) &&
     profile.businessName &&
-    profile.category &&
+    (profile.category?.length ?? 0) > 0 &&
     profile.phoneNumber &&
     profile.location &&
     (profile.documents?.length ?? 0) > 0;

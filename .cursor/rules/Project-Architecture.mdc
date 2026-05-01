@@ -1,0 +1,131 @@
+---
+description: Twedar project architecture reference - directory structure, modules, data flow, and system boundaries
+alwaysApply: true
+---
+
+# Twedar Platform Architecture
+
+## System Overview
+
+Twedar is an AI-Enabled Smart Wedding Planning Platform. Monorepo with two workspaces:
+
+```
+twedar/
+├── backend/          # Node.js + Express + TypeScript (port 5000)
+├── frontend/         # Next.js 16 + React 19 + TypeScript (port 3000)
+```
+
+## Backend Architecture (Clean Architecture)
+
+```
+backend/src/
+├── app.ts                  # Express app setup, route mounting
+├── server.ts               # HTTP + Socket.IO server bootstrap
+├── lib/
+│   ├── auth.ts             # Better Auth instance (email/password, Google, Apple, Organization plugin, Admin plugin)
+│   ├── db.ts               # PostgreSQL pool (Supabase PostgreSQL)
+│   └── permissions.ts      # Organization-level access control statements
+├── features/
+│   ├── auth/               # Session validation, RBAC middleware, role types
+│   ├── vendor/             # Profile CRUD, documents (Supabase storage), verification state machine, admin actions, public listing
+│   ├── realtime/           # Socket.IO server, conversations, chat messages, notifications, presence
+│   └── email/              # Nodemailer transporter, send-email use case
+└── scripts/
+    └── seed-admin.ts       # Admin user seeding
+```
+
+Each feature module follows:
+```
+features/<name>/
+├── domain/           # Types, interfaces, business rules (no external deps)
+├── use-cases/        # Application logic (depends only on domain)
+├── infrastructure/   # DB repositories, external services, init-tables
+└── presentation/     # Express routes, controllers, Socket handlers
+```
+
+**Dependency rule:** domain ← use-cases ← infrastructure/presentation. Inner layers never import outer layers.
+
+## Frontend Architecture (Next.js App Router)
+
+```
+frontend/src/
+├── app/
+│   ├── (auth)/           # Login, register, verify-email, reset-password, social-callback
+│   ├── (couple)/         # Dashboard, vendors discovery, vendor detail, messages
+│   ├── (vendor)/         # Vendor dashboard, profile setup, messages
+│   ├── (admin)/          # Admin dashboard, vendor moderation
+│   ├── layout.tsx        # Root layout (fonts, metadata)
+│   └── page.tsx          # Public marketing homepage
+├── components/
+│   ├── auth-guard.tsx    # Client-side role gate (wraps protected layouts)
+│   ├── layouts/          # DashboardShell with sidebar nav
+│   ├── realtime/         # ChatList, ChatWindow, NotificationDropdown, PresenceDot
+│   ├── vendor/           # VendorProfileForm, DocumentUpload, LocationMapPicker
+│   └── ui/              # Shared UI primitives
+├── hooks/                # useSocket, useChat, useNotifications
+├── services/             # API fetch wrappers (auth, vendor, public-vendor, admin-vendor)
+├── lib/
+│   ├── auth-client.ts    # Better Auth React client (signIn, signUp, useSession)
+│   └── socket-client.ts  # Socket.IO singleton
+└── types/                # Shared TS interfaces (auth, vendor, realtime)
+```
+
+## Database (PostgreSQL on Supabase)
+
+Tables managed by this codebase:
+- `vendor_profiles` — business data, geo, portfolio JSONB, price range, status workflow
+- `vendor_documents` — FK to vendor_profiles, Supabase storage URLs
+- `conversation` — two-participant unique pair
+- `chat_message` — FK to conversation, content, sender, isRead
+- `notification` — user-targeted, type, title, body, isRead
+
+Tables managed by Better Auth (auto-migrated):
+- `user`, `session`, `account`, `verification`, `organization`, `member`, `invitation`
+
+## Authentication & Roles
+
+| Role | Route Group | Access |
+|------|------------|--------|
+| couple | `(couple)/*` | Wedding planning, vendor discovery, chat, budget |
+| vendor | `(vendor)/*` | Business profile, documents, chat, bookings |
+| admin | `(admin)/*` | Vendor moderation, user management, analytics |
+
+- Sessions: HTTP-only cookies (not JWT in localStorage)
+- OAuth: Google + Apple (couples only)
+- Organizations: Each vendor is a Better Auth Organization (owner + staff members)
+
+## API Structure
+
+All custom APIs under `/api/v1/`:
+- `/api/v1/vendor/*` — authenticated vendor endpoints
+- `/api/v1/admin/vendors/*` — admin-only vendor management
+- `/api/v1/vendors/*` — public vendor discovery (no auth)
+- `/api/v1/conversations/*` — authenticated chat REST
+- `/api/v1/notifications/*` — authenticated notification REST
+
+Better Auth endpoints: `/api/auth/*` (register, login, session, social, verify, reset)
+
+Frontend proxies `/api/*` to backend via `next.config.ts` rewrites.
+
+## Real-Time (Socket.IO)
+
+- Server created alongside Express HTTP server
+- Auth: session cookie validated on connection
+- Rooms: `user:{userId}` for notifications, `conversation:{id}` for chat
+- Events: `chat:send`, `chat:newMessage`, `chat:typing`, `chat:markRead`, `notification:new`, `presence:update`
+
+## External Services
+
+- **Supabase** — PostgreSQL database (via `pg.Pool` connection pooler) + Object storage for vendor documents
+- **Nodemailer** — Transactional email (verification, reset, org invites)
+
+## Modules NOT Yet Implemented
+
+These are planned but have zero code. Do not reference existing implementations:
+- Budget & Expense Management
+- AI Recommendation Engine (Python ML + Redis cache)
+- Booking & Scheduling
+- Payment Integration (Chapa, Telebirr, CBE Birr)
+- Review & Feedback System
+- Couple Wedding Project (checklist, guest list, timeline)
+- Flutter Mobile App

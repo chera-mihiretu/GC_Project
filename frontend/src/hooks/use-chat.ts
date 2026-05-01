@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { getSocket, type TypedSocket } from "@/lib/socket-client";
 import { apiFetch } from "@/services/auth.service";
 import type {
@@ -25,7 +25,10 @@ export function useChat(conversationId: string | null) {
 
     function onMessage(message: ChatMessage) {
       if (message.conversationId === conversationId) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
       }
     }
 
@@ -44,7 +47,7 @@ export function useChat(conversationId: string | null) {
       if (data.conversationId === conversationId) {
         setMessages((prev) =>
           prev.map((m) =>
-            m.senderId !== data.readBy ? { ...m, read: true } : m,
+            m.senderId !== data.readBy && !m.read ? { ...m, read: true } : m,
           ),
         );
       }
@@ -101,9 +104,11 @@ export function useChat(conversationId: string | null) {
     socketRef.current?.emit("chat:mark-read", { conversationId });
   }, [conversationId]);
 
+  const typingUsersList = useMemo(() => Array.from(typingUsers), [typingUsers]);
+
   return {
     messages,
-    typingUsers: Array.from(typingUsers),
+    typingUsers: typingUsersList,
     fetchMessages,
     sendMessage,
     sendTyping,
@@ -113,10 +118,13 @@ export function useChat(conversationId: string | null) {
 
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const hasFetchedRef = useRef(false);
 
   const fetchConversations = useCallback(async () => {
-    setLoading(true);
+    if (!hasFetchedRef.current) {
+      setInitialLoading(true);
+    }
     try {
       const res = await apiFetch("/api/v1/conversations");
       if (res.ok) {
@@ -126,9 +134,45 @@ export function useConversations() {
     } catch {
       // Network error
     } finally {
-      setLoading(false);
+      hasFetchedRef.current = true;
+      setInitialLoading(false);
     }
   }, []);
 
-  return { conversations, loading, fetchConversations };
+  const updateConversationFromMessage = useCallback(
+    (msg: ChatMessage, currentUserId: string) => {
+      setConversations((prev) => {
+        const idx = prev.findIndex((c) => c.id === msg.conversationId);
+        if (idx === -1) return prev;
+
+        const updated = { ...prev[idx] };
+        updated.lastMessageContent = msg.content;
+        updated.lastMessageAt = msg.createdAt;
+        if (msg.senderId !== currentUserId) {
+          updated.unreadCount = (updated.unreadCount ?? 0) + 1;
+        }
+
+        const next = [...prev];
+        next.splice(idx, 1);
+        return [updated, ...next];
+      });
+    },
+    [],
+  );
+
+  const clearUnread = useCallback((conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === conversationId ? { ...c, unreadCount: 0 } : c,
+      ),
+    );
+  }, []);
+
+  return {
+    conversations,
+    loading: initialLoading,
+    fetchConversations,
+    updateConversationFromMessage,
+    clearUnread,
+  };
 }

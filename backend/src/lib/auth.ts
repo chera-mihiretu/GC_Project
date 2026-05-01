@@ -2,20 +2,26 @@ import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins";
 import { admin } from "better-auth/plugins";
 import { pool } from "../config/db.js";
+import { env } from "../config/env.js";
 import { getSendEmailUseCase } from "../features/email/index.js";
-import dotenv from "dotenv";
 import { ac, ownerRole, memberRole } from "./permissions.js";
 
-dotenv.config();
-
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
-  trustedOrigins: [process.env.FRONTEND_URL || "http://localhost:3000"],
+  baseURL: env.BETTER_AUTH_URL,
+  trustedOrigins: [env.FRONTEND_URL],
   database: pool,
+  session: {
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    updateAge: 60 * 60 * 24,       // refresh session token daily on active use
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,              // cache session in cookie for 5 min to reduce DB lookups
+    },
+  },
   advanced: {
     defaultCookieAttributes: {
-      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
-      secure: process.env.NODE_ENV === "production",
+      sameSite: env.isProduction ? "none" as const : "lax" as const,
+      secure: env.isProduction,
       httpOnly: true,
     },
   },
@@ -23,8 +29,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url, token }) => {
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-      const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+      const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${token}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Reset your password — Twedar",
@@ -42,9 +47,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, token }) => {
-      const backendUrl = process.env.BETTER_AUTH_URL || "http://localhost:5000";
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-      const verifyUrl = `${backendUrl}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent(`${frontendUrl}/verify-email`)}`;
+      const verifyUrl = `${env.BETTER_AUTH_URL}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent(`${env.FRONTEND_URL}/verify-email`)}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Verify your email — Twedar",
@@ -62,12 +65,12 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
     apple: {
-      clientId: process.env.APPLE_CLIENT_ID || "",
-      clientSecret: process.env.APPLE_CLIENT_SECRET || "",
+      clientId: env.APPLE_CLIENT_ID,
+      clientSecret: env.APPLE_CLIENT_SECRET,
     },
   },
   user: {
@@ -88,8 +91,7 @@ export const auth = betterAuth({
         member: memberRole,
       },
       async sendInvitationEmail(data) {
-        const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-        const inviteLink = `${baseUrl}/accept-invitation/${data.id}`;
+        const inviteLink = `${env.FRONTEND_URL}/accept-invitation/${data.id}`;
         void getSendEmailUseCase().execute({
           to: data.email,
           subject: `You've been invited to ${data.organization.name} — Twedar`,

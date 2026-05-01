@@ -17,20 +17,36 @@ All endpoints require authentication as a **vendor** role.
 ```json
 {
   "businessName": "Addis Catering",
-  "category": "catering",
+  "category": ["catering", "cake"],
   "description": "Premium Ethiopian catering for weddings",
   "phoneNumber": "+251911234567",
-  "location": "Addis Ababa"
+  "location": "Bole, Addis Ababa",
+  "latitude": 9.005401,
+  "longitude": 38.764142,
+  "priceRangeMin": 15000,
+  "priceRangeMax": 45000,
+  "yearsOfExperience": 8,
+  "socialMedia": {
+    "instagram": "https://instagram.com/addiscatering",
+    "telegram": "https://t.me/addiscatering"
+  }
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `businessName` | string | No | Business display name |
-| `category` | string | No | Business category |
+| `category` | string[] | No | Array of business categories (multi-select) |
 | `description` | string | No | Business description |
 | `phoneNumber` | string | No | Contact number |
-| `location` | string | No | City or area |
+| `location` | string | No | Street/city name |
+| `latitude` | number | No | Decimal(10,8) for geo-search |
+| `longitude` | number | No | Decimal(11,8) for geo-search |
+| `priceRangeMin` | number | No | Minimum price (ETB) |
+| `priceRangeMax` | number | No | Maximum price (ETB) |
+| `portfolio` | string[] | No | Array of image/video URLs |
+| `yearsOfExperience` | number | No | Years in business |
+| `socialMedia` | object | No | JSON object with platform URLs |
 
 **Response — Success (201):**
 ```json
@@ -39,10 +55,19 @@ All endpoints require authentication as a **vendor** role.
     "id": "vp_abc123",
     "userId": "usr_xyz",
     "businessName": "Addis Catering",
-    "category": "catering",
+    "category": ["catering", "cake"],
     "description": "Premium Ethiopian catering for weddings",
     "phoneNumber": "+251911234567",
-    "location": "Addis Ababa",
+    "location": "Bole, Addis Ababa",
+    "latitude": 9.005401,
+    "longitude": 38.764142,
+    "priceRangeMin": 15000,
+    "priceRangeMax": 45000,
+    "portfolio": [],
+    "yearsOfExperience": 8,
+    "socialMedia": { "instagram": "https://instagram.com/addiscatering" },
+    "rating": 0,
+    "reviewCount": 0,
     "status": "registered",
     "rejectionReason": null,
     "createdAt": "2026-04-07T10:00:00.000Z",
@@ -59,13 +84,26 @@ All endpoints require authentication as a **vendor** role.
 
 **Auth:** `requireAuth` + `requireRole("vendor")`
 
-**Request Body (partial):**
+**Request Body (partial — any subset of fields):**
 ```json
 {
   "description": "Updated description",
-  "phoneNumber": "+251922345678"
+  "phoneNumber": "+251922345678",
+  "latitude": 9.015,
+  "longitude": 38.77,
+  "priceRangeMin": 20000,
+  "socialMedia": { "instagram": "https://instagram.com/newhandle" }
 }
 ```
+
+All fields from Create (section 1.1) are accepted.
+
+**Re-verification Rule:** If a **verified** vendor changes any of these critical fields, their status is automatically reverted to `pending_verification` and they must be re-approved by an admin:
+- `category`
+- `latitude`
+- `longitude`
+- `priceRangeMin`
+- `priceRangeMax`
 
 **Response — Success (200):** Returns updated `vendorProfile`.
 
@@ -84,7 +122,7 @@ All endpoints require authentication as a **vendor** role.
     "id": "vp_abc123",
     "userId": "usr_xyz",
     "businessName": "Addis Catering",
-    "category": "catering",
+    "category": ["catering", "cake"],
     "status": "registered",
     "rejectionReason": null,
     "documents": [
@@ -294,3 +332,7 @@ No authentication required. Only returns `verified` vendors.
 3. **Uploaded files are served** from `/uploads/vendors/` as static files.
 4. **Rejection reason** is in `vendorProfile.rejectionReason` — display it when status is `rejected`.
 5. **Admin actions** return the updated vendor profile so you can update UI state without refetching.
+6. **`rating` and `reviewCount`** are system-managed (read-only). Do not send them in create/update requests.
+7. **`portfolio`** is an array of URLs. Portfolio images are uploaded separately and URLs stored in this field.
+8. **Location map** — Use the `latitude`/`longitude` fields for the Leaflet map picker. The `location` text field is the human-readable address.
+9. **Re-verification warning** — When a verified vendor edits critical fields (`category`, coordinates, or price range), their profile returns to `pending_verification`. Show a warning before saving.

@@ -1,6 +1,7 @@
-import type { Conversation, ChatMessage } from "../domain/types.js";
+import type { Conversation, EnrichedConversation, ChatMessage } from "../domain/types.js";
 import {
   getConversationsByUser,
+  getEnrichedConversationsByUser,
   getConversationById,
   getMessagesByConversation,
 } from "../infrastructure/conversation.repository.js";
@@ -9,6 +10,12 @@ export async function listUserConversations(
   userId: string,
 ): Promise<Conversation[]> {
   return getConversationsByUser(userId);
+}
+
+export async function listEnrichedUserConversations(
+  userId: string,
+): Promise<EnrichedConversation[]> {
+  return getEnrichedConversationsByUser(userId);
 }
 
 export async function getConversation(

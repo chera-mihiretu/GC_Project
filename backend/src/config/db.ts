@@ -1,15 +1,12 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
-import dotenv from "dotenv";
+import pg from "pg";
+import { env } from "./env.js";
 
-dotenv.config();
+const isSupabase = env.DATABASE_URL.includes("supabase");
 
-neonConfig.webSocketConstructor = ws;
-
-const connectionString =
-  process.env.DATABASE_URL || "postgres://localhost:5432/twedar";
-
-export const pool = new Pool({ connectionString });
+export const pool = new pg.Pool({
+  connectionString: env.DATABASE_URL,
+  ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
+});
 
 const connectDB = async (): Promise<void> => {
   const result = await pool.query("SELECT 1");

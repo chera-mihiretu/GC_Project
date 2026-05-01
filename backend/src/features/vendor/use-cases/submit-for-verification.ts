@@ -24,7 +24,7 @@ export async function submitForVerification(
     );
   }
 
-  if (!profile.businessName || !profile.category || !profile.phoneNumber || !profile.location) {
+  if (!profile.businessName || !profile.category?.length || !profile.phoneNumber || !profile.location) {
     throw Object.assign(
       new Error(
         "Profile is incomplete. Business name, category, phone number, and location are required.",

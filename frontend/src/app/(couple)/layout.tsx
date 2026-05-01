@@ -10,6 +10,7 @@ import {
   FiCheckSquare,
   FiUsers,
   FiSearch,
+  FiMessageSquare,
 } from "react-icons/fi";
 
 const navItems: NavItem[] = [
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
   { label: "Checklist", href: "/checklist", icon: FiCheckSquare },
   { label: "Guest List", href: "/guests", icon: FiUsers },
   { label: "Find Vendors", href: "/vendors", icon: FiSearch },
+  { label: "Messages", href: "/messages", icon: FiMessageSquare },
 ];
 
 export default function CoupleLayout({
