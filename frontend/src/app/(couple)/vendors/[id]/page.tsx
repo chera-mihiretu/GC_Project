@@ -78,7 +78,7 @@ export default function VendorDetailPage() {
       {/* Header section */}
       <div className="bg-white rounded-xl border border-gray-200/80 p-6">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 flex-shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 shrink-0">
             <FiTag className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
@@ -86,7 +86,7 @@ export default function VendorDetailPage() {
               <h1 className="text-2xl font-bold text-gray-900">
                 {vendor.businessName || "Unnamed Vendor"}
               </h1>
-              <FiCheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <FiCheckCircle className="w-5 h-5 text-green-500 shrink-0" />
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
               {vendor.category && (

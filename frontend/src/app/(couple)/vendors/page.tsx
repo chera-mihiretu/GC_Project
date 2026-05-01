@@ -43,7 +43,7 @@ export default function VendorBrowsePage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-display)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-display">
           Find Vendors
         </h1>
         <p className="text-gray-500 mt-1">
@@ -117,7 +117,7 @@ export default function VendorBrowsePage() {
               <Link key={vendor.id} href={`/vendors/${vendor.id}`}>
                 <div className="bg-white rounded-xl border border-gray-200/80 p-5 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer h-full flex flex-col">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 shrink-0">
                       <FiSearch className="w-5 h-5" />
                     </div>
                     <FiCheckCircle className="w-4 h-4 text-green-500" />
