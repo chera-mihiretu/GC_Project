@@ -1,0 +1,31 @@
+---
+description: Mandatory Better Auth session and frontend auth behavior rules
+alwaysApply: true
+---
+
+# Auth and Session Rules (Mandatory)
+
+Use Better Auth with secure cookie sessions as the single auth model.
+
+## Session model
+
+- Use HTTP-only secure session cookies.
+- Do not store auth tokens in `localStorage` or `sessionStorage`.
+- All auth traffic must run over HTTPS/TLS in deployed environments.
+
+## Frontend behavior
+
+- Check session using `GET /api/auth/session` on app load.
+- If any protected API call returns `401`, redirect user to login flow.
+- Social login must use browser navigation to `GET /api/auth/social/{provider}` and not `fetch()`.
+
+## Role routing baseline
+
+- `couple` -> `/dashboard`
+- `vendor` -> `/vendor/dashboard`
+- `admin` -> `/admin/dashboard`
+
+## Security behavior
+
+- Never expose session internals in logs or client-visible debug messages.
+- Enforce RBAC checks server-side for every protected endpoint.

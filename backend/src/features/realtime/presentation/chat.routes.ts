@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { requireAuth } from "../../auth/presentation/auth.middleware.js";
 import {
-  listUserConversations,
+  listEnrichedUserConversations,
   getConversation,
   getConversationMessages,
 } from "../use-cases/get-conversation.js";
@@ -13,7 +13,7 @@ router.use(requireAuth());
 
 router.get("/", async (req: Request, res: Response) => {
   const userId = req.authContext!.user.id;
-  const conversations = await listUserConversations(userId);
+  const conversations = await listEnrichedUserConversations(userId);
   res.json({ conversations });
 });
 

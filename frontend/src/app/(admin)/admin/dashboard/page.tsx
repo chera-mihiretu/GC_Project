@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { listVendorsAdmin } from "@/services/admin-vendor.service";
-import VendorStatusBadge from "@/components/admin/vendor-status-badge";
 import StatCard from "@/components/ui/stat-card";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
 import {
@@ -66,7 +65,7 @@ export default function AdminDashboard() {
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-display)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-display">
           Dashboard
         </h1>
         <p className="text-gray-500 mt-1">

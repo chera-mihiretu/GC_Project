@@ -1,0 +1,28 @@
+---
+description: Mandatory migration safety rules for backend schema changes
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Database Migration Safety (Mandatory for Backend DB Changes)
+
+## Backward compatibility
+
+- Prefer additive and backward-compatible schema changes first.
+- Avoid destructive changes in the same release where old code may still run.
+
+## Migration standards
+
+- Use clear migration naming with timestamp or ordered sequence.
+- Include both forward migration intent and rollback strategy.
+- Validate data migrations against expected row counts and constraints.
+
+## Deployment safety
+
+- Apply schema changes in an order that supports zero or low-downtime rollout.
+- Gate risky migrations with reviewer approval and deployment notes.
+
+## Neon and connection safety
+
+- PostgreSQL connections must use Neon-compatible SSL settings.
+- Never embed database credentials directly in source code.

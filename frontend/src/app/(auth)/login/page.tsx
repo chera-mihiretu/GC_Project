@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 import { getDashboardPath, loginWithGoogle, loginWithApple } from "@/services/auth.service";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="animate-pulse h-96" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -45,6 +54,16 @@ export default function LoginPage() {
       <p className="text-slate-500 mb-6">
         Sign in to continue planning your special day
       </p>
+
+      {searchParams.get("error") === "no_account" && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          No account found with this email.{" "}
+          <a href="/register" className="font-semibold text-rose-500 hover:text-rose-600 underline">
+            Create an account
+          </a>{" "}
+          first, then sign in.
+        </div>
+      )}
 
       {/* Social buttons first for better UX */}
       <div className="flex flex-col gap-2.5 mb-6">

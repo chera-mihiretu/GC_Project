@@ -1,6 +1,7 @@
 import { Server as HttpServer } from "http";
 import { Server } from "socket.io";
 import { fromNodeHeaders } from "better-auth/node";
+import { env } from "../../../config/env.js";
 import { auth } from "../../../lib/auth.js";
 import type {
   ServerToClientEvents,
@@ -32,9 +33,8 @@ export function createSocketServer(httpServer: HttpServer): TypedIO {
     Record<string, never>,
     SocketData
   >(httpServer, {
-    path: "/api/socket.io",
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      origin: env.FRONTEND_URL,
       credentials: true,
       methods: ["GET", "POST"],
     },

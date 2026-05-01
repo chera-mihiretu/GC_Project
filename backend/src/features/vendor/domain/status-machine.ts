@@ -7,6 +7,7 @@ const VALID_TRANSITIONS: Record<VendorStatus, VendorStatus[]> = {
     VendorStatus.REJECTED,
   ],
   [VendorStatus.VERIFIED]: [
+    VendorStatus.PENDING_VERIFICATION,
     VendorStatus.SUSPENDED,
     VendorStatus.DEACTIVATED,
   ],

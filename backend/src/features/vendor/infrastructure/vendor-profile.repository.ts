@@ -9,15 +9,30 @@ import {
   type PaginatedResult,
 } from "../domain/types.js";
 
+function toNumber(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isNaN(n) ? null : n;
+}
+
 function rowToProfile(row: Record<string, unknown>): VendorProfile {
   return {
     id: row.id as string,
     userId: row.user_id as string,
     businessName: row.business_name as string | null,
-    category: row.category as string | null,
+    category: Array.isArray(row.category) ? row.category as string[] : null,
     description: row.description as string | null,
     phoneNumber: row.phone_number as string | null,
     location: row.location as string | null,
+    latitude: toNumber(row.latitude),
+    longitude: toNumber(row.longitude),
+    priceRangeMin: toNumber(row.price_range_min),
+    priceRangeMax: toNumber(row.price_range_max),
+    portfolio: Array.isArray(row.portfolio) ? row.portfolio as string[] : [],
+    yearsOfExperience: toNumber(row.years_of_experience),
+    socialMedia: (row.social_media as Record<string, string>) ?? null,
+    rating: toNumber(row.rating) ?? 0,
+    reviewCount: toNumber(row.review_count) ?? 0,
     status: row.status as VendorStatus,
     rejectionReason: row.rejection_reason as string | null,
     createdAt: new Date(row.created_at as string),
@@ -30,17 +45,27 @@ export async function createProfile(
 ): Promise<VendorProfile> {
   const id = crypto.randomUUID();
   const { rows } = await pool.query(
-    `INSERT INTO vendor_profiles (id, user_id, business_name, category, description, phone_number, location, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO vendor_profiles
+       (id, user_id, business_name, category, description, phone_number,
+        location, latitude, longitude, price_range_min, price_range_max,
+        portfolio, years_of_experience, social_media, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [
       id,
       dto.userId,
       dto.businessName ?? null,
-      dto.category ?? null,
+      dto.category ? JSON.stringify(dto.category) : null,
       dto.description ?? null,
       dto.phoneNumber ?? null,
       dto.location ?? null,
+      dto.latitude ?? null,
+      dto.longitude ?? null,
+      dto.priceRangeMin ?? null,
+      dto.priceRangeMax ?? null,
+      JSON.stringify(dto.portfolio ?? []),
+      dto.yearsOfExperience ?? null,
+      dto.socialMedia ? JSON.stringify(dto.socialMedia) : null,
       VendorStatus.REGISTERED,
     ],
   );
@@ -81,7 +106,7 @@ export async function update(
   }
   if (dto.category !== undefined) {
     fields.push(`category = $${idx++}`);
-    values.push(dto.category);
+    values.push(JSON.stringify(dto.category));
   }
   if (dto.description !== undefined) {
     fields.push(`description = $${idx++}`);
@@ -94,6 +119,34 @@ export async function update(
   if (dto.location !== undefined) {
     fields.push(`location = $${idx++}`);
     values.push(dto.location);
+  }
+  if (dto.latitude !== undefined) {
+    fields.push(`latitude = $${idx++}`);
+    values.push(dto.latitude);
+  }
+  if (dto.longitude !== undefined) {
+    fields.push(`longitude = $${idx++}`);
+    values.push(dto.longitude);
+  }
+  if (dto.priceRangeMin !== undefined) {
+    fields.push(`price_range_min = $${idx++}`);
+    values.push(dto.priceRangeMin);
+  }
+  if (dto.priceRangeMax !== undefined) {
+    fields.push(`price_range_max = $${idx++}`);
+    values.push(dto.priceRangeMax);
+  }
+  if (dto.portfolio !== undefined) {
+    fields.push(`portfolio = $${idx++}`);
+    values.push(JSON.stringify(dto.portfolio));
+  }
+  if (dto.yearsOfExperience !== undefined) {
+    fields.push(`years_of_experience = $${idx++}`);
+    values.push(dto.yearsOfExperience);
+  }
+  if (dto.socialMedia !== undefined) {
+    fields.push(`social_media = $${idx++}`);
+    values.push(JSON.stringify(dto.socialMedia));
   }
 
   if (fields.length === 0) return findById(id);
@@ -143,8 +196,8 @@ export async function findByStatus(
     values.push(filters.status);
   }
   if (filters.category) {
-    conditions.push(`vp.category = $${idx++}`);
-    values.push(filters.category);
+    conditions.push(`vp.category @> $${idx++}::jsonb`);
+    values.push(JSON.stringify([filters.category]));
   }
   if (filters.location) {
     conditions.push(`LOWER(vp.location) LIKE $${idx++}`);

@@ -17,6 +17,15 @@ export interface Conversation {
   createdAt: Date;
 }
 
+export interface EnrichedConversation extends Conversation {
+  participantOneName: string;
+  participantTwoName: string;
+  participantOneImage: string | null;
+  participantTwoImage: string | null;
+  lastMessageContent: string | null;
+  unreadCount: number;
+}
+
 export interface ChatMessage {
   id: string;
   conversationId: string;
