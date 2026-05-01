@@ -12,10 +12,15 @@ function VerifyEmailContent() {
   const router = useRouter();
   const token = searchParams.get("token");
   const { data: session, isPending } = useSession();
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading",
-  );
+  const [verificationStatus, setVerificationStatus] = useState<
+    "loading" | "success" | "error"
+  >("loading");
   const [countdown, setCountdown] = useState(5);
+  const status = session?.user
+    ? "success"
+    : token
+      ? verificationStatus
+      : "error";
 
   const redirectToDashboard = useCallback(() => {
     const role = (session?.user as Record<string, unknown> | undefined)
@@ -26,19 +31,12 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (isPending) return;
 
-    if (session?.user) {
-      setStatus("success");
-      return;
-    }
+    if (session?.user || !token) return;
 
-    if (token) {
-      authClient
-        .verifyEmail({ query: { token } })
-        .then(() => setStatus("success"))
-        .catch(() => setStatus("error"));
-    } else {
-      setStatus("error");
-    }
+    authClient
+      .verifyEmail({ query: { token } })
+      .then(() => setVerificationStatus("success"))
+      .catch(() => setVerificationStatus("error"));
   }, [token, session, isPending]);
 
   useEffect(() => {
@@ -85,7 +83,7 @@ function VerifyEmailContent() {
         </p>
         <button
           onClick={redirectToDashboard}
-          className="inline-block px-8 py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5 cursor-pointer"
+          className="inline-block px-8 py-3 bg-linear-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5 cursor-pointer"
         >
           Go to dashboard now
         </button>
@@ -105,7 +103,7 @@ function VerifyEmailContent() {
       </p>
       <a
         href="/register"
-        className="inline-block px-8 py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
+        className="inline-block px-8 py-3 bg-linear-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
       >
         Back to registration
       </a>

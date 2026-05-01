@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { getSocket, disconnectSocket, type TypedSocket } from "@/lib/socket-client";
 
 export function useSocket() {
-  const [connected, setConnected] = useState(false);
-  const socketRef = useRef<TypedSocket | null>(null);
+  const [socket] = useState<TypedSocket>(() => getSocket());
+  const [connected, setConnected] = useState(() => socket.connected);
 
   useEffect(() => {
-    const socket = getSocket();
-    socketRef.current = socket;
-
     function onConnect() {
       setConnected(true);
     }
@@ -24,8 +21,6 @@ export function useSocket() {
 
     if (!socket.connected) {
       socket.connect();
-    } else {
-      setConnected(true);
     }
 
     return () => {
@@ -33,7 +28,7 @@ export function useSocket() {
       socket.off("disconnect", onDisconnect);
       disconnectSocket();
     };
-  }, []);
+  }, [socket]);
 
-  return { socket: socketRef.current, connected };
+  return { socket, connected };
 }

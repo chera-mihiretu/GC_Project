@@ -1,0 +1,26 @@
+---
+description: Mandatory API documentation updates in same PR as API changes
+alwaysApply: true
+---
+
+# API Docs Required (Mandatory)
+
+API documentation is part of the deliverable, not follow-up work.
+
+## Same-PR requirement
+
+- Any API endpoint addition, removal, or contract change must include docs updates in the same PR.
+- Documentation location: `backend/docs/api/*`.
+
+## Required endpoint documentation fields
+
+- Endpoint and method
+- Purpose and business context
+- Request format: headers, params, query, and body schema
+- Response format: success and error status codes with payload schemas
+- Example request payload
+- Example response payload
+
+## Release rule
+
+- Do not approve or merge API-affecting PRs without updated docs.
