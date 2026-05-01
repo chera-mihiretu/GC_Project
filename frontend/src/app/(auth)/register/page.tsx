@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
 import { loginWithGoogle, loginWithApple } from "@/services/auth.service";
@@ -12,6 +12,14 @@ import { FaApple } from "react-icons/fa";
 type RoleOption = "couple" | "vendor";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="animate-pulse h-96" />}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [name, setName] = useState("");

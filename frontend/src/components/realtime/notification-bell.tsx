@@ -38,7 +38,7 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {open && <NotificationDropdown />}
+      {open && <NotificationDropdown onClose={() => setOpen(false)} />}
     </div>
   );
 }

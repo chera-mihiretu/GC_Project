@@ -12,6 +12,7 @@ import {
   submitForVerification,
 } from "@/services/vendor.service";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
+import type { VendorProfileFormData } from "@/components/vendor/vendor-profile-form";
 
 export default function VendorProfileSetup() {
   const router = useRouter();
@@ -35,12 +36,12 @@ export default function VendorProfileSetup() {
     fetchProfile();
   }, [fetchProfile]);
 
-  async function handleSaveProfile(data: Record<string, unknown>) {
+  async function handleSaveProfile(data: VendorProfileFormData) {
     if (profile) {
-      const result = await updateVendorProfile(data);
+      const result = await updateVendorProfile(data as unknown as Record<string, unknown>);
       setProfile(result.vendorProfile);
     } else {
-      const result = await createVendorProfile(data);
+      const result = await createVendorProfile(data as unknown as Record<string, unknown>);
       setProfile(result.vendorProfile);
     }
   }
