@@ -1,0 +1,36 @@
+---
+description: Mandatory branch naming, PR ownership, and merge routing
+alwaysApply: true
+---
+
+# Branch Strategy (Mandatory)
+
+Use this strategy for every code change.
+
+## Branch format
+
+`<team>-<developer>-<type>/<ticket>-<short-slug>`
+
+- `team`: `frontend`, `backend`, or `repo`
+- `developer`: PR owner username
+- `type`: `feat`, `fix`, `refactor`, `docs`, `chore`, `perf`, `build`, `ci`
+- `ticket`: issue id when available (recommended)
+
+Examples:
+- `frontend-envy-feat/GC-142-dashboard-cards`
+- `backend-envy-fix/GC-209-auth-cookie-expiry`
+- `repo-envy-chore/engineering-standards`
+
+## PR routing
+
+- `frontend-*` branches must target `main-frontend`
+- `backend-*` branches must target `main-backend`
+- `repo-*` branches for shared workflow, docs, CI, or repo-wide standards may target `main` by pull request
+- Do not push directly to `main`
+
+## PR title format
+
+`[<team>][<developer>][<type>] <short-title>`
+
+Example:
+- `[backend][envy][fix] Better Auth session expiry handling`
