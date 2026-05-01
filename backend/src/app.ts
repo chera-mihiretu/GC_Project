@@ -11,6 +11,8 @@ import publicVendorRoutes from "./features/vendor/presentation/public-vendor.rou
 import notificationRoutes from "./features/realtime/presentation/notification.routes.js";
 import chatRoutes from "./features/realtime/presentation/chat.routes.js";
 import { initRealtimeTables } from "./features/realtime/infrastructure/init-tables.js";
+import bookingRoutes from "./features/booking/presentation/booking.routes.js";
+import { initBookingTables } from "./features/booking/infrastructure/init-tables.js";
 
 const app = express();
 
@@ -56,6 +58,7 @@ app.use("/api/v1/admin/vendors", adminVendorRoutes);
 app.use("/api/v1/vendors", publicVendorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/conversations", chatRoutes);
+app.use("/api/v1/bookings", bookingRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
@@ -63,6 +66,10 @@ initVendorTables().catch((err) => {
 
 initRealtimeTables().catch((err) => {
   console.error("Failed to initialize realtime tables:", err);
+});
+
+initBookingTables().catch((err) => {
+  console.error("Failed to initialize booking tables:", err);
 });
 
 ensureBucketExists().catch((err) => {
