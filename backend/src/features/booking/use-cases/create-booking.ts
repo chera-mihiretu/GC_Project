@@ -78,10 +78,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
     type: "booking_request",
     title: "New Booking Request",
     body: `You have a new booking request for ${serviceCategory} on ${eventDate}.`,
-    metadata: { bookingId: booking.id, coupleId },
-  }).catch(() => {
-    // Non-critical: notification failure should not abort booking creation
-  });
+    metadata: { bookingId: booking.id, coupleId, vendorProfileId },
+  }).catch(() => {});
 
   return booking;
 }

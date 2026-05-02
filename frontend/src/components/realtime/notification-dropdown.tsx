@@ -29,6 +29,19 @@ function getNotificationHref(n: Notification): string | null {
       return "/vendor/dashboard";
     case "vendor_rejected":
       return "/vendor/profile/setup";
+    case "booking_request":
+      return meta.bookingId
+        ? `/vendor/bookings/${meta.bookingId}`
+        : "/vendor/bookings";
+    case "booking_status_update":
+      if (meta.recipientRole === "vendor") {
+        return meta.bookingId
+          ? `/vendor/bookings/${meta.bookingId}`
+          : "/vendor/bookings";
+      }
+      return meta.bookingId
+        ? `/bookings/${meta.bookingId}`
+        : "/bookings";
     default:
       return null;
   }
