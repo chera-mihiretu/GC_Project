@@ -275,7 +275,7 @@ export default function VendorDetailPage() {
               <BookingRequestForm
                 vendorProfileId={vendor.id}
                 vendorId={vendor.userId}
-                serviceCategory={Array.isArray(vendor.category) ? vendor.category[0] || "" : ""}
+                serviceCategory={Array.isArray(vendor.category) && vendor.category.length > 0 ? vendor.category[0] : "general"}
                 onSuccess={() => setBookingSuccess(true)}
               />
             )}
