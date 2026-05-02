@@ -57,6 +57,7 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
       : input;
 
   const res = await fetch(url, {
+    credentials: "include",
     ...init,
   });
 
