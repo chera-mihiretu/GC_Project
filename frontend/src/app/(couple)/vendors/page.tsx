@@ -9,12 +9,12 @@ import { VENDOR_CATEGORIES } from "@/types/vendor";
 import {
   FiSearch,
   FiMapPin,
-  FiStar,
   FiArrowRight,
   FiChevronLeft,
   FiChevronRight,
   FiShoppingBag,
 } from "react-icons/fi";
+import { StarRating } from "@/components/review/star-rating";
 
 const SORT_OPTIONS = [
   { label: "Newest", sortBy: "createdAt" as const, order: "desc" as const },
@@ -266,7 +266,7 @@ function VendorCard({ vendor }: { vendor: VendorProfile }) {
             </h3>
             {vendor.rating > 0 && (
               <div className="flex items-center gap-1 shrink-0">
-                <FiStar className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <StarRating value={vendor.rating} readonly size="sm" />
                 <span className="text-xs font-medium text-gray-700">
                   {vendor.rating.toFixed(1)}
                 </span>

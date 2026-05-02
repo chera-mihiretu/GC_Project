@@ -28,6 +28,10 @@ export interface ReviewListFilters {
   limit?: number;
 }
 
+export interface ReviewWithAuthor extends Review {
+  authorName: string;
+}
+
 export interface PaginatedResult<T> {
   data: T[];
   total: number;

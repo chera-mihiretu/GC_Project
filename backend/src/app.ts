@@ -18,7 +18,10 @@ import { initBookingTables } from "./features/booking/infrastructure/init-tables
 import { initAvailabilityTable } from "./features/vendor/infrastructure/init-availability-table.js";
 import availabilityRoutes from "./features/vendor/presentation/availability.routes.js";
 import reviewRoutes from "./features/review/presentation/review.routes.js";
+import adminReviewRoutes from "./features/review/presentation/admin-review.routes.js";
 import { initReviewTables } from "./features/review/infrastructure/init-tables.js";
+import { initReviewPhotoTables } from "./features/review/infrastructure/init-photos-table.js";
+import { ensureReviewBucketExists } from "./features/review/infrastructure/review-storage.js";
 
 const app = express();
 
@@ -117,6 +120,7 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/conversations", chatRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/admin/reviews", adminReviewRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
@@ -130,8 +134,14 @@ initBookingTables().catch((err) => {
   console.error("Failed to initialize booking tables:", err);
 });
 
-initReviewTables().catch((err) => {
-  console.error("Failed to initialize review tables:", err);
+initReviewTables()
+  .then(() => initReviewPhotoTables())
+  .catch((err) => {
+    console.error("Failed to initialize review tables:", err);
+  });
+
+ensureReviewBucketExists().catch((err) => {
+  console.error("Failed to ensure review photos bucket:", err);
 });
 
 initAvailabilityTable().catch((err) => {

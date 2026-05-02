@@ -7,8 +7,14 @@ export interface Review {
   rating: number;
   comment: string | null;
   isApproved: boolean;
+  photos?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ReviewWithAuthor extends Review {
+  authorName: string;
+  vendorName?: string;
 }
 
 export interface CreateReviewRequest {

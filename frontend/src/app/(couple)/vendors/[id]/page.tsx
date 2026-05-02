@@ -11,7 +11,6 @@ import {
   FiArrowLeft,
   FiMapPin,
   FiPhone,
-  FiStar,
   FiMessageSquare,
   FiCheckCircle,
   FiExternalLink,
@@ -21,6 +20,8 @@ import {
   FiAlertCircle,
   FiX,
 } from "react-icons/fi";
+import { StarRating } from "@/components/review/star-rating";
+import { ReviewList } from "@/components/review/review-list";
 
 function formatPrice(min: number | null, max: number | null) {
   if (min == null && max == null) return null;
@@ -187,7 +188,7 @@ export default function VendorDetailPage() {
 
             {vendor.rating > 0 && (
               <div className="flex items-center gap-1.5 mt-2">
-                <FiStar className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <StarRating value={vendor.rating} readonly size="sm" />
                 <span className="text-sm font-medium text-gray-700">
                   {vendor.rating.toFixed(1)}
                 </span>
@@ -254,6 +255,12 @@ export default function VendorDetailPage() {
                 No portfolio images yet.
               </p>
             )}
+          </div>
+
+          {/* Reviews section */}
+          <div className="bg-white rounded-xl border border-gray-200/80 p-6">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Reviews</h2>
+            <ReviewList vendorProfileId={vendor.id} />
           </div>
 
           {/* Booking Request section */}

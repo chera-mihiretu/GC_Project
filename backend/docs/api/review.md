@@ -161,8 +161,144 @@
 
 ---
 
+## POST /api/v1/reviews/:reviewId/photos
+
+**Description:** Upload photos for an existing review. Max 5 photos per review, max 5MB each, images only.
+
+**Auth:** Required (session cookie). Role: `couple` (must own the review).
+
+### Request
+
+**Content-Type:** `multipart/form-data`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| photos | File[] | Yes | Image files (jpeg, png, webp). Max 5 total per review. |
+
+### Response
+
+**201 Created:**
+```json
+{
+  "photos": [
+    { "id": "uuid", "reviewId": "uuid", "url": "https://...", "createdAt": "..." }
+  ]
+}
+```
+
+---
+
+## GET /api/v1/reviews/:reviewId/photos
+
+**Description:** Get all photos for a review.
+
+**Auth:** None required (public).
+
+### Response
+
+**200 OK:**
+```json
+{
+  "photos": [
+    { "id": "uuid", "reviewId": "uuid", "url": "https://...", "createdAt": "..." }
+  ]
+}
+```
+
+---
+
+## GET /api/v1/vendors/:vendorId/reviews
+
+**Description:** List approved reviews for a vendor profile (public endpoint).
+
+**Auth:** None required.
+
+### Request
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| page | integer | 1 | Page number |
+| limit | integer | 10 | Results per page (max 100) |
+
+### Response
+
+**200 OK:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "bookingId": "uuid",
+      "coupleId": "user_id",
+      "vendorId": "user_id",
+      "vendorProfileId": "vp_id",
+      "rating": 5,
+      "comment": "Great service!",
+      "isApproved": true,
+      "authorName": "Jane Doe",
+      "createdAt": "2027-06-20T14:30:00.000Z",
+      "updatedAt": "2027-06-20T14:30:00.000Z"
+    }
+  ],
+  "total": 25,
+  "page": 1,
+  "limit": 10
+}
+```
+
+---
+
+## GET /api/v1/admin/reviews
+
+**Description:** List all reviews for admin moderation. Filterable by approval status.
+
+**Auth:** Required (session cookie). Role: `admin`.
+
+### Request
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| isApproved | boolean | (all) | Filter by approval status |
+| page | integer | 1 | Page number |
+| limit | integer | 20 | Results per page |
+
+### Response
+
+**200 OK:** Same paginated format as vendor reviews, with additional `vendorName` field.
+
+---
+
+## PATCH /api/v1/admin/reviews/:id
+
+**Description:** Approve or reject a review. Recalculates vendor aggregate rating.
+
+**Auth:** Required (session cookie). Role: `admin`.
+
+### Request
+
+**Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| action | string | Yes | `"approve"` or `"reject"` |
+
+### Response
+
+**200 OK:**
+```json
+{
+  "review": { ... }
+}
+```
+
+---
+
 ## Side Effects
 
 When a review is successfully created:
 1. The vendor's aggregate `rating` and `review_count` on `vendor_profiles` are recalculated.
 2. A real-time notification of type `new_review` is sent to the vendor.
+
+When a review is moderated (approved/rejected):
+1. The vendor's aggregate `rating` and `review_count` are recalculated based on approved reviews only.

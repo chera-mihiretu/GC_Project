@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
 import { createReview } from "../use-cases/create-review.js";
 import * as reviewRepo from "../infrastructure/review.repository.js";
+import { uploadReviewPhotos } from "../use-cases/upload-review-photos.js";
+import * as photoRepo from "../infrastructure/review-photo.repository.js";
 
 const STATUS_CODE_MAP: Record<number, string> = {
   400: "BAD_REQUEST",
@@ -54,6 +56,41 @@ export async function handleGetReviewByBooking(req: Request, res: Response): Pro
     }
 
     res.json({ review });
+  } catch (err) {
+    handleError(res, err);
+  }
+}
+
+export async function handleUploadPhotos(req: Request, res: Response): Promise<void> {
+  try {
+    const coupleId = req.authContext!.user.id;
+    const reviewId = req.params.reviewId as string;
+    const files = (req.files as Express.Multer.File[]) ?? [];
+
+    if (files.length === 0) {
+      res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "No photos provided" },
+      });
+      return;
+    }
+
+    const photos = await uploadReviewPhotos({
+      reviewId,
+      coupleId,
+      files: files.map((f) => ({ buffer: f.buffer, mimetype: f.mimetype })),
+    });
+
+    res.status(201).json({ photos });
+  } catch (err) {
+    handleError(res, err);
+  }
+}
+
+export async function handleGetPhotos(req: Request, res: Response): Promise<void> {
+  try {
+    const reviewId = req.params.reviewId as string;
+    const photos = await photoRepo.findByReviewId(reviewId);
+    res.json({ photos });
   } catch (err) {
     handleError(res, err);
   }
