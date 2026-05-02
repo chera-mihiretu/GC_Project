@@ -14,6 +14,10 @@ import {
 import { getBooking, updateBookingStatus } from "@/services/booking.service";
 import { BookingStatus, type BookingDetail } from "@/types/booking";
 import BookingStatusTimeline from "@/components/booking/booking-status-timeline";
+import { getReviewByBooking } from "@/services/review.service";
+import { ReviewForm } from "@/components/review/review-form";
+import { StarRating } from "@/components/review/star-rating";
+import type { Review } from "@/types/review";
 
 export default function CoupleBookingDetailPage() {
   const params = useParams();
@@ -24,6 +28,8 @@ export default function CoupleBookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [existingReview, setExistingReview] = useState<Review | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   const fetchBooking = useCallback(async () => {
     setLoading(true);
@@ -38,9 +44,27 @@ export default function CoupleBookingDetailPage() {
     }
   }, [bookingId]);
 
+  const fetchReview = useCallback(async () => {
+    setReviewLoading(true);
+    try {
+      const review = await getReviewByBooking(bookingId);
+      setExistingReview(review);
+    } catch {
+      // Non-critical: silently fail
+    } finally {
+      setReviewLoading(false);
+    }
+  }, [bookingId]);
+
   useEffect(() => {
     fetchBooking();
   }, [fetchBooking]);
+
+  useEffect(() => {
+    if (booking?.status === BookingStatus.COMPLETED) {
+      fetchReview();
+    }
+  }, [booking?.status, fetchReview]);
 
   async function handleCancel() {
     if (!booking) return;
@@ -173,6 +197,36 @@ export default function CoupleBookingDetailPage() {
           updatedAt={booking.updatedAt}
         />
       </div>
+
+      {/* Review section — only for completed bookings */}
+      {booking.status === BookingStatus.COMPLETED && (
+        <div className="bg-white rounded-xl border border-gray-200/80 p-6">
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">Your Review</h2>
+          {reviewLoading ? (
+            <div className="space-y-3 animate-pulse">
+              <div className="h-6 w-32 bg-gray-100 rounded" />
+              <div className="h-16 w-full bg-gray-100 rounded" />
+            </div>
+          ) : existingReview ? (
+            <div className="space-y-3">
+              <StarRating value={existingReview.rating} readonly size="md" />
+              {existingReview.comment && (
+                <p className="text-sm text-gray-600">{existingReview.comment}</p>
+              )}
+              <p className="text-xs text-gray-400">
+                Submitted on{" "}
+                {new Date(existingReview.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          ) : (
+            <ReviewForm bookingId={bookingId} onSuccess={fetchReview} />
+          )}
+        </div>
+      )}
     </div>
   );
 }

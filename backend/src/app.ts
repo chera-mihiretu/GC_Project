@@ -17,6 +17,8 @@ import bookingRoutes from "./features/booking/presentation/booking.routes.js";
 import { initBookingTables } from "./features/booking/infrastructure/init-tables.js";
 import { initAvailabilityTable } from "./features/vendor/infrastructure/init-availability-table.js";
 import availabilityRoutes from "./features/vendor/presentation/availability.routes.js";
+import reviewRoutes from "./features/review/presentation/review.routes.js";
+import { initReviewTables } from "./features/review/infrastructure/init-tables.js";
 
 const app = express();
 
@@ -114,6 +116,7 @@ app.use("/api/v1/vendors", publicVendorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/conversations", chatRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
@@ -125,6 +128,10 @@ initRealtimeTables().catch((err) => {
 
 initBookingTables().catch((err) => {
   console.error("Failed to initialize booking tables:", err);
+});
+
+initReviewTables().catch((err) => {
+  console.error("Failed to initialize review tables:", err);
 });
 
 initAvailabilityTable().catch((err) => {
