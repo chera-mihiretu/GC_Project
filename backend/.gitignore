@@ -5,3 +5,4 @@ dist/
 *.log
 uploads/vendors/*
 !uploads/vendors/.gitkeep
+scripts/seed-users.ts

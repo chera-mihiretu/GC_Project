@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getVendorDetail, startConversation } from "@/services/public-vendor.service";
+import BookingRequestForm from "@/components/booking/booking-request-form";
 import type { VendorProfile } from "@/types/vendor";
 import {
   FiArrowLeft,
@@ -40,6 +41,7 @@ export default function VendorDetailPage() {
   const [error, setError] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const fetchVendor = useCallback(async () => {
     setLoading(true);
@@ -135,8 +137,7 @@ export default function VendorDetailPage() {
       {/* Header card */}
       <div className="bg-white rounded-xl border border-gray-200/80 p-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          {/* Avatar or first portfolio image */}
-          <div className="relative w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+          <div className="relative w-20 h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0">
             {portfolio[0] ? (
               <Image
                 src={portfolio[0]}
@@ -154,7 +155,7 @@ export default function VendorDetailPage() {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900 font-[family-name:var(--font-display)]">
+              <h1 className="text-xl font-bold text-gray-900 font-display">
                 {vendor.businessName ?? "Unnamed Vendor"}
               </h1>
               {vendor.status === "verified" && (
@@ -164,7 +165,6 @@ export default function VendorDetailPage() {
               )}
             </div>
 
-            {/* Category badges */}
             {cats.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {cats.map((c) => (
@@ -185,7 +185,6 @@ export default function VendorDetailPage() {
               </div>
             )}
 
-            {/* Rating */}
             {vendor.rating > 0 && (
               <div className="flex items-center gap-1.5 mt-2">
                 <FiStar className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -199,11 +198,10 @@ export default function VendorDetailPage() {
             )}
           </div>
 
-          {/* Chat button */}
           <button
             onClick={handleChat}
             disabled={chatLoading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-rose-500 text-white font-medium text-sm hover:bg-rose-600 disabled:opacity-60 transition-colors flex-shrink-0"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-rose-500 text-white font-medium text-sm hover:bg-rose-600 disabled:opacity-60 transition-colors shrink-0"
           >
             {chatLoading ? (
               <FiLoader className="w-4 h-4 animate-spin" />
@@ -218,7 +216,6 @@ export default function VendorDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* About */}
           {vendor.description && (
             <div className="bg-white rounded-xl border border-gray-200/80 p-6">
               <h2 className="text-sm font-semibold text-gray-900 mb-3">About</h2>
@@ -258,44 +255,67 @@ export default function VendorDetailPage() {
               </p>
             )}
           </div>
+
+          {/* Booking Request section */}
+          <div className="bg-white rounded-xl border border-gray-200/80 p-6">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">
+              Request a Booking
+            </h2>
+            {bookingSuccess ? (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                <FiCheckCircle className="w-8 h-8 text-green-500 mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-green-800 mb-1">
+                  Booking request sent!
+                </h3>
+                <p className="text-xs text-green-600">
+                  The vendor will respond soon. You can track your bookings in your dashboard.
+                </p>
+              </div>
+            ) : (
+              <BookingRequestForm
+                vendorProfileId={vendor.id}
+                vendorId={vendor.userId}
+                serviceCategory={Array.isArray(vendor.category) ? vendor.category[0] || "" : ""}
+                onSuccess={() => setBookingSuccess(true)}
+              />
+            )}
+          </div>
         </div>
 
         {/* Sidebar details */}
         <div className="space-y-6">
-          {/* Details card */}
           <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-4">
             <h2 className="text-sm font-semibold text-gray-900">Details</h2>
 
             {vendor.phoneNumber && (
               <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                <FiPhone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <FiPhone className="w-4 h-4 text-gray-400 shrink-0" />
                 {vendor.phoneNumber}
               </div>
             )}
 
             {vendor.location && (
               <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                <FiMapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <FiMapPin className="w-4 h-4 text-gray-400 shrink-0" />
                 {vendor.location}
               </div>
             )}
 
             {price && (
               <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                <FiDollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <FiDollarSign className="w-4 h-4 text-gray-400 shrink-0" />
                 {price}
               </div>
             )}
 
             {vendor.yearsOfExperience != null && (
               <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                <FiBriefcase className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <FiBriefcase className="w-4 h-4 text-gray-400 shrink-0" />
                 {vendor.yearsOfExperience} year{vendor.yearsOfExperience !== 1 ? "s" : ""} of experience
               </div>
             )}
           </div>
 
-          {/* Social media */}
           {Object.keys(socialMedia).length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-3">
               <h2 className="text-sm font-semibold text-gray-900">Social Media</h2>
@@ -314,7 +334,6 @@ export default function VendorDetailPage() {
             </div>
           )}
 
-          {/* Chat CTA (mobile sticky alternative) */}
           <button
             onClick={handleChat}
             disabled={chatLoading}
@@ -343,7 +362,6 @@ export default function VendorDetailPage() {
             <FiX className="w-5 h-5" />
           </button>
 
-          {/* Navigation */}
           {portfolio.length > 1 && (
             <>
               <button

@@ -90,7 +90,7 @@ export default function VendorListingPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-display)]">
+        <h1 className="text-2xl font-bold text-gray-900 font-display">
           Find Vendors
         </h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -265,7 +265,7 @@ function VendorCard({ vendor }: { vendor: VendorProfile }) {
               {vendor.businessName ?? "Unnamed Vendor"}
             </h3>
             {vendor.rating > 0 && (
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
                 <FiStar className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                 <span className="text-xs font-medium text-gray-700">
                   {vendor.rating.toFixed(1)}
@@ -296,7 +296,7 @@ function VendorCard({ vendor }: { vendor: VendorProfile }) {
           <div className="mt-auto pt-2 space-y-1">
             {vendor.location && (
               <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <FiMapPin className="w-3 h-3 flex-shrink-0" />
+                <FiMapPin className="w-3 h-3 shrink-0" />
                 <span className="truncate">{vendor.location}</span>
               </div>
             )}
