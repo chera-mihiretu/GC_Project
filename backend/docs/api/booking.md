@@ -105,6 +105,28 @@ Requires an authenticated session with role `couple`.
 }
 ```
 
+**400 Bad Request** — Vendor has not marked this date as available (BK-06).
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Vendor is not available on the selected date"
+  }
+}
+```
+
+**409 Conflict** — The vendor already has a confirmed (accepted/deposit_paid) booking on this date (BK-07).
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "This vendor is already booked on the selected date"
+  }
+}
+```
+
 **409 Conflict** — Duplicate pending/accepted booking for the same couple, vendor, and date.
 
 ```json
@@ -294,6 +316,17 @@ Requires an authenticated session. Access is scoped to the booking's participant
 
 **404 Not Found** — Booking does not exist.
 
+**409 Conflict** — Vendor already has a confirmed booking on this date (BK-07). Only applies when accepting.
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "You already have a confirmed booking on this date"
+  }
+}
+```
+
 ### Example Request (Vendor accepts)
 
 ```bash
@@ -330,3 +363,4 @@ pending → declined (terminal)
 - A notification of type `booking_request` is sent to the vendor on creation.
 - A notification of type `booking_status_update` is sent to the other party on status change.
 - Duplicate detection: a couple cannot have two active bookings (pending or accepted) with the same vendor for the same event date.
+- Date conflict detection (BK-07): a vendor cannot have two confirmed bookings (accepted or deposit_paid) on the same date. Checked at both creation time (blocks new requests for confirmed dates) and acceptance time (prevents race conditions).

@@ -59,6 +59,14 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
     );
   }
 
+  const dateBooked = await bookingRepo.isDateBookedForVendor(vendorProfileId, eventDate);
+  if (dateBooked) {
+    throw Object.assign(
+      new Error("This vendor is already booked on the selected date"),
+      { statusCode: 409 },
+    );
+  }
+
   const duplicate = await bookingRepo.existsForCoupleAndVendor(
     coupleId,
     vendorProfileId,
