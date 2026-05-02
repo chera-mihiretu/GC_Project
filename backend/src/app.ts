@@ -15,6 +15,8 @@ import chatRoutes from "./features/realtime/presentation/chat.routes.js";
 import { initRealtimeTables } from "./features/realtime/infrastructure/init-tables.js";
 import bookingRoutes from "./features/booking/presentation/booking.routes.js";
 import { initBookingTables } from "./features/booking/infrastructure/init-tables.js";
+import { initAvailabilityTable } from "./features/vendor/infrastructure/init-availability-table.js";
+import availabilityRoutes from "./features/vendor/presentation/availability.routes.js";
 
 const app = express();
 
@@ -106,6 +108,7 @@ app.get("/api/v1/health", (_req: Request, res: Response) => {
 });
 
 app.use("/api/v1/vendor", vendorRoutes);
+app.use("/api/v1/vendor/availability", availabilityRoutes);
 app.use("/api/v1/admin/vendors", adminVendorRoutes);
 app.use("/api/v1/vendors", publicVendorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
@@ -122,6 +125,10 @@ initRealtimeTables().catch((err) => {
 
 initBookingTables().catch((err) => {
   console.error("Failed to initialize booking tables:", err);
+});
+
+initAvailabilityTable().catch((err) => {
+  console.error("Failed to initialize availability table:", err);
 });
 
 ensureBucketExists().catch((err) => {
