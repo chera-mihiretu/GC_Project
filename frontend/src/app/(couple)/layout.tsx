@@ -10,6 +10,7 @@ import {
   FiCheckSquare,
   FiUsers,
   FiSearch,
+  FiCalendar,
   FiMessageSquare,
 } from "react-icons/fi";
 
@@ -19,6 +20,7 @@ const navItems: NavItem[] = [
   { label: "Checklist", href: "/checklist", icon: FiCheckSquare },
   { label: "Guest List", href: "/guests", icon: FiUsers },
   { label: "Find Vendors", href: "/vendors", icon: FiSearch },
+  { label: "My Bookings", href: "/bookings", icon: FiCalendar },
   { label: "Messages", href: "/messages", icon: FiMessageSquare },
 ];
 

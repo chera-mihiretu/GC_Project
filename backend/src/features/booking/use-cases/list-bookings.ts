@@ -1,4 +1,4 @@
-import { type Booking, type BookingListFilters, type PaginatedResult } from "../domain/types.js";
+import { type Booking, type BookingDetail, type BookingListFilters, type PaginatedResult } from "../domain/types.js";
 import * as bookingRepo from "../infrastructure/booking.repository.js";
 
 export async function listBookingsForCouple(
@@ -18,8 +18,8 @@ export async function listBookingsForVendor(
 export async function getBookingById(
   id: string,
   userId: string,
-): Promise<Booking> {
-  const booking = await bookingRepo.findById(id);
+): Promise<BookingDetail> {
+  const booking = await bookingRepo.findByIdWithDetails(id);
 
   if (!booking) {
     throw Object.assign(new Error("Booking not found"), { statusCode: 404 });

@@ -55,10 +55,10 @@ export default function VendorDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Welcome header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-display)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-display">
           Welcome, {firstName}
         </h1>
         <p className="text-gray-500 mt-1">

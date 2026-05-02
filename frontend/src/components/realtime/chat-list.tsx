@@ -123,7 +123,7 @@ export default function ChatList({
               isSelected ? "bg-rose-50/60" : "hover:bg-gray-50"
             }`}
           >
-            <div className="relative flex-shrink-0">
+            <div className="relative shrink-0">
               {other.image ? (
                 <Image
                   src={other.image}
@@ -134,7 +134,7 @@ export default function ChatList({
                   unoptimized
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-semibold text-slate-600">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-semibold text-slate-600">
                   {other.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -155,7 +155,7 @@ export default function ChatList({
                 >
                   {other.name}
                 </p>
-                <span className="text-[10px] text-gray-400 flex-shrink-0">
+                <span className="text-[10px] text-gray-400 shrink-0">
                   {formatTime(conv.lastMessageAt)}
                 </span>
               </div>
@@ -168,7 +168,7 @@ export default function ChatList({
                   {conv.lastMessageContent ?? "No messages yet"}
                 </p>
                 {unread > 0 && (
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 )}

@@ -1,5 +1,5 @@
 import { apiFetch } from "./auth.service";
-import type { Booking, BookingStatus, CreateBookingRequest } from "@/types/booking";
+import type { Booking, BookingDetail, BookingStatus, CreateBookingRequest } from "@/types/booking";
 
 const BASE = "/api/v1/bookings";
 
@@ -53,7 +53,7 @@ export async function listBookings(
   return res.json();
 }
 
-export async function getBooking(id: string): Promise<Booking> {
+export async function getBooking(id: string): Promise<BookingDetail> {
   const res = await apiFetch(`${BASE}/${id}`);
 
   if (!res.ok) {

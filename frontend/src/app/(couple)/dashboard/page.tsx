@@ -50,10 +50,10 @@ export default function CoupleDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Welcome header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-display)]">
+        <h1 className="text-3xl font-bold text-gray-900 font-display">
           Welcome back, {firstName}
         </h1>
         <p className="text-gray-500 mt-1">
@@ -103,7 +103,7 @@ export default function CoupleDashboard() {
             const Icon = action.icon;
             const content = (
               <div className="bg-white rounded-xl border border-gray-200/80 p-5 flex items-center gap-4 group hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer">
-                <div className="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 flex-shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 shrink-0">
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -121,7 +121,7 @@ export default function CoupleDashboard() {
                     {action.description}
                   </p>
                 </div>
-                <FiArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
+                <FiArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
               </div>
             );
 

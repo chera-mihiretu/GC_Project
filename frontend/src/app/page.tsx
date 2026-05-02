@@ -15,7 +15,7 @@ import {
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white via-rose-25/40 to-warm-50">
+    <div className="min-h-screen flex flex-col bg-linear-to-b from-white via-rose-25/40 to-warm-50">
       <header className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Link
@@ -77,7 +77,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-xl text-[15px] font-semibold shadow-[0_2px_12px_rgba(244,63,94,0.28)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_20px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-linear-to-r from-rose-500 to-rose-600 text-white rounded-xl text-[15px] font-semibold shadow-[0_2px_12px_rgba(244,63,94,0.28)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_20px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
                 >
                   Start Planning for Free
                   <FiArrowRight className="w-4 h-4" aria-hidden />
@@ -92,10 +92,10 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-rose-100/50 to-champagne-100/80 rounded-[2rem] blur-2xl opacity-70" />
+              <div className="absolute -inset-4 bg-linear-to-br from-rose-100/50 to-champagne-100/80 rounded-4xl blur-2xl opacity-70" />
               <div className="relative rounded-[1.75rem] border border-slate-200/80 bg-white/90 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.12)] p-6 sm:p-8">
                 <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-rose-100 via-champagne-50 to-rose-50 flex items-center justify-center">
+                  <div className="relative aspect-4/3 rounded-2xl overflow-hidden bg-linear-to-br from-rose-100 via-champagne-50 to-rose-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23fda4af%22%20fill-opacity%3D%220.15%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-60" />
                     <FiHeart className="relative w-20 h-20 text-rose-400/90 drop-shadow-sm" strokeWidth={1.25} aria-hidden />
                     <span className="sr-only">Happy couple — illustration</span>
@@ -195,7 +195,7 @@ export default function Home() {
                 key={title}
                 className="rounded-2xl border border-slate-200/90 bg-white p-6 md:p-7 shadow-[0_2px_12px_rgba(15,23,42,0.04)] hover:border-rose-200/80 hover:shadow-[0_8px_30px_rgba(244,63,94,0.08)] transition-all"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-100 to-rose-50 flex items-center justify-center text-rose-600 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-rose-100 to-rose-50 flex items-center justify-center text-rose-600 mb-4">
                   <Icon className="w-6 h-6" aria-hidden />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-slate-900 mb-2">{title}</h3>

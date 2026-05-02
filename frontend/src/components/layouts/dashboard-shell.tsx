@@ -62,7 +62,7 @@ export default function DashboardShell({
   const sidebarContent = (
     <>
       <div className="flex items-center gap-2.5 px-5 py-6">
-        <div className="w-9 h-9 bg-gradient-to-br from-rose-400 to-rose-600 rounded-xl flex items-center justify-center text-white">
+        <div className="w-9 h-9 bg-linear-to-br from-rose-400 to-rose-600 rounded-xl flex items-center justify-center text-white">
           <FiHeart className="w-4 h-4" />
         </div>
         <span className="text-lg font-bold text-white tracking-tight">
@@ -85,7 +85,7 @@ export default function DashboardShell({
                   : `text-slate-400 ${accent.hover} border-l-2 border-transparent`
               }`}
             >
-              <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+              <Icon className="w-[18px] h-[18px] shrink-0" />
               {item.label}
             </Link>
           );
@@ -165,7 +165,7 @@ export default function DashboardShell({
                   {session?.user?.email ?? ""}
                 </p>
               </div>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-rose-500 flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-9 h-9 rounded-full bg-linear-to-br from-rose-400 to-rose-500 flex items-center justify-center text-white text-sm font-bold">
                 {(session?.user?.name ?? "U").charAt(0).toUpperCase()}
               </div>
             </div>

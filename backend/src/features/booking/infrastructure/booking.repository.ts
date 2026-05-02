@@ -3,6 +3,7 @@ import { transition } from "../domain/status-machine.js";
 import {
   BookingStatus,
   type Booking,
+  type BookingDetail,
   type CreateBookingDTO,
   type BookingListFilters,
   type PaginatedResult,
@@ -51,6 +52,22 @@ export async function findById(id: string): Promise<Booking | null> {
     [id],
   );
   return rows.length ? rowToBooking(rows[0]) : null;
+}
+
+export async function findByIdWithDetails(id: string): Promise<BookingDetail | null> {
+  const { rows } = await pool.query(
+    `SELECT b.*, vp.business_name
+     FROM bookings b
+     JOIN vendor_profiles vp ON vp.id = b.vendor_profile_id
+     WHERE b.id = $1`,
+    [id],
+  );
+  if (!rows.length) return null;
+  const row = rows[0];
+  return {
+    ...rowToBooking(row),
+    businessName: row.business_name as string,
+  };
 }
 
 export async function findByCoupleId(

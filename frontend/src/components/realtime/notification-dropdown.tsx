@@ -126,7 +126,7 @@ export default function NotificationDropdown({
                       e.stopPropagation();
                       markNotificationRead(n.id);
                     }}
-                    className="flex-shrink-0 p-1 text-gray-300 hover:text-rose-500 transition-colors"
+                    className="shrink-0 p-1 text-gray-300 hover:text-rose-500 transition-colors"
                     title="Mark as read"
                   >
                     <FiCheck className="w-4 h-4" />

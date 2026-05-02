@@ -26,7 +26,7 @@ export default function StatCard({
   return (
     <div className="bg-white rounded-xl border border-gray-200/80 p-5 flex items-start gap-4">
       <div
-        className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${colorMap[color]}`}
+        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${colorMap[color]}`}
       >
         <Icon className="w-5 h-5" />
       </div>

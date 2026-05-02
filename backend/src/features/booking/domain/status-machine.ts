@@ -8,6 +8,7 @@ const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   ],
   [BookingStatus.ACCEPTED]: [
     BookingStatus.DEPOSIT_PAID,
+    BookingStatus.COMPLETED,
     BookingStatus.CANCELLED,
   ],
   [BookingStatus.DEPOSIT_PAID]: [

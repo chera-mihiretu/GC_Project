@@ -62,7 +62,7 @@ export default function AdminDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "Admin";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 font-display">
