@@ -79,15 +79,15 @@ export default function VendorMessagesPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto h-[calc(100vh-8rem)]">
-      <h1 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-display)] mb-4">
+    <div className="h-[calc(100vh-8rem)]">
+      <h1 className="text-2xl font-bold text-gray-900 font-display mb-4">
         Messages
       </h1>
 
       <div className="bg-white rounded-xl border border-gray-200/80 overflow-hidden flex h-[calc(100%-3rem)]">
         {/* Conversation list */}
         <div
-          className={`w-full sm:w-80 sm:border-r border-gray-200/80 flex-shrink-0 overflow-y-auto ${
+          className={`w-full sm:w-80 sm:border-r border-gray-200/80 shrink-0 overflow-y-auto ${
             selectedConv ? "hidden sm:block" : "block"
           }`}
         >

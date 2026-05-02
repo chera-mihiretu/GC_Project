@@ -34,7 +34,7 @@ const MessageBubble = memo(function MessageBubble({
             : "bg-gray-100 text-gray-800 rounded-bl-md"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words">{content}</p>
+        <p className="whitespace-pre-wrap wrap-break-word">{content}</p>
         <div
           className={`flex items-center gap-1.5 mt-1 ${
             isMine ? "justify-end" : ""
@@ -115,8 +115,8 @@ export default function ChatWindow({
     <div className="flex flex-col h-full">
       {/* Contact header */}
       {contactName && (
-        <div className="px-4 py-3 border-b border-gray-200/80 flex items-center gap-3 bg-white flex-shrink-0">
-          <div className="relative flex-shrink-0">
+        <div className="px-4 py-3 border-b border-gray-200/80 flex items-center gap-3 bg-white shrink-0">
+          <div className="relative shrink-0">
             {contactImage ? (
               <Image
                 src={contactImage}
@@ -127,7 +127,7 @@ export default function ChatWindow({
                 unoptimized
               />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-semibold text-slate-600">
+              <div className="w-9 h-9 rounded-full bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-semibold text-slate-600">
                 {contactName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -168,13 +168,13 @@ export default function ChatWindow({
 
       {/* Typing indicator */}
       {typingUsers.length > 0 && (
-        <div className="px-4 py-1.5 text-xs text-gray-400 italic flex-shrink-0">
+        <div className="px-4 py-1.5 text-xs text-gray-400 italic shrink-0">
           {contactName ?? "Someone"} is typing…
         </div>
       )}
 
       {/* Input */}
-      <div className="border-t border-gray-200 p-3 flex gap-2 flex-shrink-0">
+      <div className="border-t border-gray-200 p-3 flex gap-2 shrink-0">
         <input
           type="text"
           value={input}

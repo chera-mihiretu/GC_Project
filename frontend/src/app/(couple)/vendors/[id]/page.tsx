@@ -75,7 +75,7 @@ export default function VendorDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="space-y-6">
         <div className="h-6 w-40 bg-gray-100 rounded animate-pulse" />
         <div className="bg-white rounded-xl border border-gray-200/80 overflow-hidden animate-pulse">
           <div className="h-64 bg-gray-100" />
@@ -91,7 +91,7 @@ export default function VendorDetailPage() {
 
   if (error && !vendor) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div>
         <Link
           href="/vendors"
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6"
@@ -119,7 +119,7 @@ export default function VendorDetailPage() {
   const socialMedia = vendor.socialMedia ?? {};
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Back link */}
       <Link
         href="/vendors"

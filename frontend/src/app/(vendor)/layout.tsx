@@ -7,6 +7,7 @@ import { SocketProvider } from "@/components/realtime/socket-provider";
 import {
   FiGrid,
   FiUser,
+  FiCalendar,
   FiFileText,
   FiImage,
   FiMessageSquare,
@@ -15,6 +16,7 @@ import {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/vendor/dashboard", icon: FiGrid },
   { label: "Profile", href: "/vendor/profile/setup", icon: FiUser },
+  { label: "Bookings", href: "/vendor/bookings", icon: FiCalendar },
   { label: "Documents", href: "/vendor/documents", icon: FiFileText },
   { label: "Portfolio", href: "/vendor/portfolio", icon: FiImage },
   { label: "Messages", href: "/vendor/messages", icon: FiMessageSquare },

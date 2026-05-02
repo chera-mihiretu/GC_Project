@@ -1,0 +1,50 @@
+---
+description: Enforces consistent spacing between sidebar and page content across all dashboard pages
+globs:
+  - frontend/src/app/(couple)/**/*.tsx
+  - frontend/src/app/(vendor)/**/*.tsx
+  - frontend/src/app/(admin)/**/*.tsx
+alwaysApply: false
+---
+
+# Dashboard Layout Consistency (Mandatory)
+
+All pages inside the `(couple)`, `(vendor)`, and `(admin)` route groups render inside `DashboardShell`, which provides consistent padding via `<main className="flex-1 p-4 sm:p-6 lg:p-8">`.
+
+## Rules
+
+- **Do NOT** add `max-w-*` with `mx-auto` on the outermost wrapper of a page component. This creates inconsistent distances between the sidebar and the content across pages.
+- Page content must fill the available width naturally. The shell's padding is the only spacing between sidebar and content.
+- If a specific section within a page needs constrained width (e.g., a form, a modal, a text block), apply `max-w-*` on that inner element only — not on the page's root div.
+
+## Correct
+
+```tsx
+export default function SomeDashboardPage() {
+  return (
+    <div className="space-y-6">
+      <h1>Page Title</h1>
+      {/* Full-width content */}
+      <div className="grid grid-cols-3 gap-4">...</div>
+      {/* Constrained inner section is fine */}
+      <form className="max-w-lg">...</form>
+    </div>
+  );
+}
+```
+
+## Incorrect
+
+```tsx
+export default function SomeDashboardPage() {
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* This centers the entire page and creates uneven sidebar gaps */}
+    </div>
+  );
+}
+```
+
+## Scope
+
+This rule applies only to pages rendered inside `DashboardShell`. The public marketing homepage (`app/page.tsx`) and auth pages (`app/(auth)/*`) have their own layouts and are exempt.

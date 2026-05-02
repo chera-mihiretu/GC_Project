@@ -6,9 +6,9 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/30">
+    <div className="flex min-h-screen bg-linear-to-br from-slate-50 to-rose-50/30">
       {/* Hero panel */}
-      <div className="hidden lg:flex relative flex-1 bg-gradient-to-br from-rose-400 via-rose-500 to-pink-600 overflow-hidden">
+      <div className="hidden lg:flex relative flex-1 bg-linear-to-br from-rose-400 via-rose-500 to-pink-600 overflow-hidden">
         {/* Animated background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -17,7 +17,7 @@ export default function AuthLayout({
         </div>
 
         {/* Gradient overlays for depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-rose-600/50 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-rose-600/50 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
 
         {/* Floating decorative elements */}
@@ -78,7 +78,7 @@ export default function AuthLayout({
         <div className="w-full max-w-[380px]">
           {/* Brand */}
           <div className="flex items-center gap-2.5 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-rose-400 to-rose-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/25">
+            <div className="w-10 h-10 bg-linear-to-br from-rose-400 to-rose-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/25">
               <FiHeart className="w-5 h-5" />
             </div>
             <span className="text-2xl font-bold text-slate-800 tracking-tight">

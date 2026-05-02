@@ -23,6 +23,10 @@ export interface Booking {
   updatedAt: Date;
 }
 
+export interface BookingDetail extends Booking {
+  businessName: string;
+}
+
 export interface CreateBookingDTO {
   coupleId: string;
   vendorId: string;

@@ -23,6 +23,10 @@ export interface Booking {
   updatedAt: string;
 }
 
+export interface BookingDetail extends Booking {
+  businessName: string;
+}
+
 export interface CreateBookingRequest {
   vendorProfileId: string;
   serviceCategory: string;
