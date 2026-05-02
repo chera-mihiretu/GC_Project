@@ -18,14 +18,25 @@ import {
   FiUser,
   FiFileText,
   FiSend,
+  FiUsers,
 } from "react-icons/fi";
+
+interface DashboardStats {
+  totalBookings: number;
+  pendingBookings: number;
+  unreadMessages: number;
+}
 
 export default function VendorDashboard() {
   const { data: session } = useSession();
   const router = useRouter();
   const [profile, setProfile] = useState<VendorProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bookingCount, setBookingCount] = useState(0);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBookings: 0,
+    pendingBookings: 0,
+    unreadMessages: 0,
+  });
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -38,12 +49,26 @@ export default function VendorDashboard() {
     }
   }, []);
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const [allBookings, pendingBookings] = await Promise.all([
+        listBookings({ limit: 1 }).catch(() => null),
+        listBookings({ status: "pending", limit: 1 }).catch(() => null),
+      ]);
+      setStats({
+        totalBookings: allBookings?.total ?? 0,
+        pendingBookings: pendingBookings?.total ?? 0,
+        unreadMessages: 0,
+      });
+    } catch {
+      // Stats are non-critical
+    }
+  }, []);
+
   useEffect(() => {
     fetchProfile();
-    listBookings({ limit: 1 })
-      .then((res) => setBookingCount(res.total))
-      .catch(() => {});
-  }, [fetchProfile]);
+    fetchStats();
+  }, [fetchProfile, fetchStats]);
 
   if (loading) {
     return (
@@ -212,25 +237,25 @@ export default function VendorDashboard() {
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              icon={FiEye}
-              label="Profile Views"
-              value="0"
-              subtext="This month"
+              icon={FiCalendar}
+              label="Total Bookings"
+              value={String(stats.totalBookings)}
+              subtext="All time"
               color="blue"
             />
             <StatCard
-              icon={FiMessageSquare}
-              label="Inquiries"
-              value="0"
-              subtext="New messages"
-              color="green"
+              icon={FiEye}
+              label="Pending"
+              value={String(stats.pendingBookings)}
+              subtext="Awaiting response"
+              color="amber"
             />
             <StatCard
-              icon={FiCalendar}
-              label="Bookings"
-              value={bookingCount.toString()}
-              subtext="Total"
-              color="amber"
+              icon={FiMessageSquare}
+              label="Messages"
+              value={String(stats.unreadMessages)}
+              subtext="Unread"
+              color="green"
             />
             <StatCard
               icon={FiStar}
@@ -249,7 +274,7 @@ export default function VendorDashboard() {
               </h2>
               <button
                 onClick={() => router.push("/vendor/profile/setup")}
-                className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
               >
                 Edit Profile <FiArrowRight className="w-3 h-3" />
               </button>
@@ -270,28 +295,29 @@ export default function VendorDashboard() {
             </div>
           </div>
 
-          {/* Feature cards */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Quick access cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: "Portfolio", icon: FiEye },
-              { label: "Pricing", icon: FiCalendar },
-              { label: "Schedule", icon: FiCalendar },
-              { label: "Messages", icon: FiMessageSquare },
+              { label: "Bookings", icon: FiCalendar, href: "/vendor/bookings" },
+              { label: "Availability", icon: FiEye, href: "/vendor/availability" },
+              { label: "Team", icon: FiUsers, href: "/vendor/team" },
+              { label: "Messages", icon: FiMessageSquare, href: "/vendor/messages" },
             ].map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.label}
-                  className="bg-white rounded-xl border border-gray-200/80 p-6 flex items-center gap-4"
+                  onClick={() => router.push(item.href)}
+                  className="cursor-pointer bg-white rounded-xl border border-gray-200/80 p-6 flex items-center gap-4 hover:border-blue-200 hover:shadow-sm transition-all"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-gray-500" />
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 text-sm">
                       {item.label}
                     </h3>
-                    <p className="text-xs text-gray-400">Coming soon</p>
+                    <p className="text-xs text-gray-400">Manage</p>
                   </div>
                 </div>
               );
