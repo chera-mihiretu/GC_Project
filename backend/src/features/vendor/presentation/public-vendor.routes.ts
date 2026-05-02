@@ -5,11 +5,28 @@ import {
 } from "./public-vendor.controller.js";
 import { getVendorAvailabilityForMonth } from "../use-cases/manage-availability.js";
 import { findById } from "../infrastructure/vendor-profile.repository.js";
+import { findByVendorProfileIdWithAuthor } from "../../review/infrastructure/review.repository.js";
 
 const router = Router();
 
 router.get("/", handleListVendors);
 router.get("/:vendorId", handleGetVendor);
+
+router.get("/:vendorId/reviews", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const vendorProfileId = req.params.vendorId as string;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+
+    const result = await findByVendorProfileIdWithAuthor(vendorProfileId, { page, limit });
+    res.json(result);
+  } catch (err) {
+    const error = err as Error & { statusCode?: number };
+    res.status(error.statusCode ?? 500).json({
+      error: { code: "SERVER_ERROR", message: error.message },
+    });
+  }
+});
 
 router.get("/:vendorId/availability", async (req: Request, res: Response): Promise<void> => {
   try {
