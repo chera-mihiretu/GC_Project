@@ -183,3 +183,30 @@ export async function existsForCoupleAndVendor(
   );
   return rows.length > 0;
 }
+
+export async function isDateBookedForVendor(
+  vendorProfileId: string,
+  eventDate: string,
+  excludeBookingId?: string,
+): Promise<boolean> {
+  const params: unknown[] = [
+    vendorProfileId,
+    eventDate,
+    BookingStatus.ACCEPTED,
+    BookingStatus.DEPOSIT_PAID,
+  ];
+  let excludeClause = "";
+  if (excludeBookingId) {
+    excludeClause = " AND id != $5";
+    params.push(excludeBookingId);
+  }
+  const { rows } = await pool.query(
+    `SELECT 1 FROM bookings
+     WHERE vendor_profile_id = $1
+       AND event_date = $2
+       AND status IN ($3, $4)${excludeClause}
+     LIMIT 1`,
+    params,
+  );
+  return rows.length > 0;
+}

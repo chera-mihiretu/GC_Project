@@ -54,6 +54,20 @@ export async function updateBookingStatus(input: UpdateBookingStatusInput): Prom
     );
   }
 
+  if (newStatus === BookingStatus.ACCEPTED) {
+    const conflict = await bookingRepo.isDateBookedForVendor(
+      booking.vendorProfileId,
+      booking.eventDate,
+      bookingId,
+    );
+    if (conflict) {
+      throw Object.assign(
+        new Error("You already have a confirmed booking on this date"),
+        { statusCode: 409 },
+      );
+    }
+  }
+
   const updated = await bookingRepo.updateStatus(bookingId, newStatus, declineReason);
 
   const notifyUserId = userRole === "vendor" ? booking.coupleId : booking.vendorId;
