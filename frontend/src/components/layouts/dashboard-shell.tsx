@@ -95,8 +95,12 @@ export default function DashboardShell({
       <div className="px-3 pb-5">
         <button
           onClick={async () => {
-            await signOut();
-            router.push("/login");
+            try {
+              await signOut();
+            } catch {
+              // Proceed with redirect even if sign-out request fails
+            }
+            window.location.href = "/login";
           }}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-white/5 transition-colors"
         >
