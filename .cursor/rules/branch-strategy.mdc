@@ -23,9 +23,7 @@ Examples:
 
 ## PR routing
 
-- `frontend-*` branches must target `main-frontend`
-- `backend-*` branches must target `main-backend`
-- `repo-*` branches for shared workflow, docs, CI, or repo-wide standards may target `main` by pull request
+- All feature branches target `main` by pull request
 - Do not push directly to `main`
 
 ## PR title format

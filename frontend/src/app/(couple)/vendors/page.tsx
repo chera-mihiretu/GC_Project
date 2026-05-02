@@ -178,7 +178,7 @@ export default function VendorListingPage() {
               key={i}
               className="bg-white rounded-xl border border-gray-200/80 overflow-hidden animate-pulse"
             >
-              <div className="aspect-[16/10] bg-gray-100" />
+              <div className="aspect-16/10 bg-gray-100" />
               <div className="p-4 space-y-3">
                 <div className="h-4 bg-gray-100 rounded w-3/4" />
                 <div className="h-3 bg-gray-100 rounded w-1/2" />
@@ -242,7 +242,7 @@ function VendorCard({ vendor }: { vendor: VendorProfile }) {
     <Link href={`/vendors/${vendor.id}`}>
       <div className="group bg-white rounded-xl border border-gray-200/80 overflow-hidden hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer h-full flex flex-col">
         {/* Image */}
-        <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
+        <div className="relative aspect-16/10 bg-gray-100 overflow-hidden">
           {thumb ? (
             <Image
               src={thumb}
