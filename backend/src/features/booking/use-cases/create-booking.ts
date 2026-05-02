@@ -15,9 +15,14 @@ export interface CreateBookingInput {
 export async function createBooking(input: CreateBookingInput): Promise<Booking> {
   const { coupleId, vendorProfileId, serviceCategory, eventDate, message } = input;
 
-  if (!vendorProfileId || !serviceCategory || !eventDate) {
+  const missing: string[] = [];
+  if (!vendorProfileId) missing.push("vendorProfileId");
+  if (!serviceCategory) missing.push("serviceCategory");
+  if (!eventDate) missing.push("eventDate");
+
+  if (missing.length > 0) {
     throw Object.assign(
-      new Error("vendorProfileId, serviceCategory, and eventDate are required"),
+      new Error(`Missing required fields: ${missing.join(", ")}`),
       { statusCode: 400 },
     );
   }

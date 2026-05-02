@@ -8,7 +8,7 @@ Creates a new booking request from a couple to a verified vendor. The couple sel
 
 ### Authentication
 
-Requires an authenticated session with role `couple` or `user`.
+Requires an authenticated session with role `couple`.
 
 ### Request
 
@@ -57,7 +57,8 @@ Requires an authenticated session with role `couple` or `user`.
 ```json
 {
   "error": {
-    "message": "vendorProfileId, serviceCategory, and eventDate are required"
+    "code": "BAD_REQUEST",
+    "message": "Missing required fields: serviceCategory"
   }
 }
 ```
@@ -65,15 +66,8 @@ Requires an authenticated session with role `couple` or `user`.
 ```json
 {
   "error": {
+    "code": "BAD_REQUEST",
     "message": "eventDate must be a valid future date"
-  }
-}
-```
-
-```json
-{
-  "error": {
-    "message": "Vendor is not currently accepting bookings"
   }
 }
 ```
@@ -89,7 +83,7 @@ Requires an authenticated session with role `couple` or `user`.
 }
 ```
 
-**403 Forbidden** — User role is not `couple` or `user`.
+**403 Forbidden** — User role is not `couple`.
 
 ```json
 {
@@ -105,6 +99,7 @@ Requires an authenticated session with role `couple` or `user`.
 ```json
 {
   "error": {
+    "code": "BAD_REQUEST",
     "message": "Vendor profile not found"
   }
 }
@@ -115,26 +110,91 @@ Requires an authenticated session with role `couple` or `user`.
 ```json
 {
   "error": {
+    "code": "BAD_REQUEST",
     "message": "You already have a pending or accepted booking with this vendor for the same date"
   }
+}
+```
+
+---
+
+## GET /api/v1/bookings
+
+### Description
+
+Lists bookings for the authenticated user. Couples see their own bookings; vendors see bookings made to them.
+
+### Authentication
+
+Requires an authenticated session (any role with bookings).
+
+### Request
+
+**Query Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| status | string | No | Filter by status: `pending`, `accepted`, `declined`, `deposit_paid`, `completed`, `cancelled` |
+| page | number | No | Page number (default: 1) |
+| limit | number | No | Items per page (default: 20) |
+
+### Response
+
+**200 OK**
+
+```json
+{
+  "data": [
+    {
+      "id": "bk-789-uuid",
+      "coupleId": "couple-123",
+      "vendorId": "vendor-user-456",
+      "vendorProfileId": "vp-456-uuid",
+      "serviceCategory": "photography",
+      "eventDate": "2027-06-15",
+      "message": "We would love to book you!",
+      "status": "pending",
+      "declineReason": null,
+      "createdAt": "2026-05-01T19:34:00.000Z",
+      "updatedAt": "2026-05-01T19:34:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
 }
 ```
 
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/bookings \
-  -H "Content-Type: application/json" \
-  -b "session=<session-cookie>" \
-  -d '{
-    "vendorProfileId": "vp-456-uuid",
-    "serviceCategory": "photography",
-    "eventDate": "2027-06-15",
-    "message": "We would love to book you for our wedding!"
-  }'
+curl http://localhost:5000/api/v1/bookings?status=pending&page=1&limit=10 \
+  -b "session=<session-cookie>"
 ```
 
-### Example Response
+---
+
+## GET /api/v1/bookings/:id
+
+### Description
+
+Gets a single booking by ID. The authenticated user must be either the couple or vendor involved.
+
+### Authentication
+
+Requires an authenticated session. User must be a participant of the booking.
+
+### Request
+
+**Path Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string (UUID) | Yes | Booking ID |
+
+### Response
+
+**200 OK**
 
 ```json
 {
@@ -145,7 +205,7 @@ curl -X POST http://localhost:5000/api/v1/bookings \
     "vendorProfileId": "vp-456-uuid",
     "serviceCategory": "photography",
     "eventDate": "2027-06-15",
-    "message": "We would love to book you for our wedding!",
+    "message": "We would love to book you!",
     "status": "pending",
     "declineReason": null,
     "createdAt": "2026-05-01T19:34:00.000Z",
@@ -154,7 +214,107 @@ curl -X POST http://localhost:5000/api/v1/bookings \
 }
 ```
 
-### Booking Status Flow
+### Error Responses
+
+**403 Forbidden** — User is not a participant.
+
+**404 Not Found** — Booking does not exist.
+
+---
+
+## PATCH /api/v1/bookings/:id/status
+
+### Description
+
+Updates the status of a booking. Vendors can accept, decline, or complete. Couples can cancel.
+
+### Authentication
+
+Requires an authenticated session. Access is scoped to the booking's participants.
+
+### Request
+
+**Path Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string (UUID) | Yes | Booking ID |
+
+**Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| status | string | Yes | New status value |
+| declineReason | string | Conditional | Required when status is `declined` |
+
+**Allowed transitions by role:**
+
+| Current Status | Vendor can set | Couple can set |
+|----------------|----------------|----------------|
+| pending | accepted, declined | cancelled |
+| accepted | completed | cancelled |
+| deposit_paid | completed | cancelled |
+
+### Response
+
+**200 OK**
+
+```json
+{
+  "booking": {
+    "id": "bk-789-uuid",
+    "coupleId": "couple-123",
+    "vendorId": "vendor-user-456",
+    "vendorProfileId": "vp-456-uuid",
+    "serviceCategory": "photography",
+    "eventDate": "2027-06-15",
+    "message": "We would love to book you!",
+    "status": "accepted",
+    "declineReason": null,
+    "createdAt": "2026-05-01T19:34:00.000Z",
+    "updatedAt": "2026-05-02T10:00:00.000Z"
+  }
+}
+```
+
+### Error Responses
+
+**400 Bad Request** — Missing status or decline reason.
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "A reason is required when declining a booking"
+  }
+}
+```
+
+**403 Forbidden** — User not authorized for this transition.
+
+**404 Not Found** — Booking does not exist.
+
+### Example Request (Vendor accepts)
+
+```bash
+curl -X PATCH http://localhost:5000/api/v1/bookings/bk-789-uuid/status \
+  -H "Content-Type: application/json" \
+  -b "session=<session-cookie>" \
+  -d '{"status": "accepted"}'
+```
+
+### Example Request (Vendor declines)
+
+```bash
+curl -X PATCH http://localhost:5000/api/v1/bookings/bk-789-uuid/status \
+  -H "Content-Type: application/json" \
+  -b "session=<session-cookie>" \
+  -d '{"status": "declined", "declineReason": "Fully booked on that date"}'
+```
+
+---
+
+## Booking Status Flow
 
 ```
 pending → accepted → deposit_paid → completed
@@ -167,5 +327,6 @@ pending → declined (terminal)
 ### Notes
 
 - The `vendorId` field is auto-populated from the vendor profile's `userId`.
-- A notification of type `booking_request` is sent to the vendor in real-time via Socket.IO.
+- A notification of type `booking_request` is sent to the vendor on creation.
+- A notification of type `booking_status_update` is sent to the other party on status change.
 - Duplicate detection: a couple cannot have two active bookings (pending or accepted) with the same vendor for the same event date.
