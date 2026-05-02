@@ -1,0 +1,27 @@
+---
+description: Ensure all clickable elements use cursor pointer styling
+globs: frontend/**/*.tsx
+alwaysApply: false
+---
+
+# Cursor Pointer on Clickable Elements
+
+All interactive/clickable elements must have `cursor: pointer` styling.
+
+## Rules
+
+- Every `<button>` element must include `cursor-pointer` (Tailwind) or `style={{ cursor: 'pointer' }}`.
+- Every element with an `onClick` handler must include `cursor-pointer` or `style={{ cursor: 'pointer' }}`.
+- This applies to `<div>`, `<span>`, `<a>`, `<li>`, or any other element that has `onClick`.
+
+## Examples
+
+```tsx
+// ❌ BAD — missing cursor pointer
+<button onClick={handleClick}>Submit</button>
+<div onClick={toggleMenu}>Menu</div>
+
+// ✅ GOOD — cursor pointer applied
+<button className="cursor-pointer" onClick={handleClick}>Submit</button>
+<div className="cursor-pointer" onClick={toggleMenu}>Menu</div>
+```
