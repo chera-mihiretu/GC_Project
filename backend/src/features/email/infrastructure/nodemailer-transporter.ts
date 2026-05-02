@@ -5,6 +5,7 @@ import type {
   EmailSendResult,
   EmailTransporter,
 } from "../domain/types.js";
+import { env } from "../../../config/env.js";
 
 export interface SmtpConfig {
   host: string;
@@ -16,11 +17,11 @@ export interface SmtpConfig {
 }
 
 export function loadSmtpConfig(): SmtpConfig {
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM;
+  const host = env.SMTP_HOST;
+  const port = env.SMTP_PORT;
+  const user = env.SMTP_USER;
+  const pass = env.SMTP_PASS;
+  const from = env.SMTP_FROM;
 
   if (!host || !port || !user || !pass || !from) {
     throw new Error(

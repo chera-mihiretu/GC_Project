@@ -373,6 +373,58 @@ The user is redirected to the callback URL with a session cookie set.
 }
 ```
 
+### 11. Set Role After Social Sign-Up — `PATCH /api/v1/auth/set-role`
+
+**Description:** Allows a newly created social-login user to change their role from the default `"couple"` to `"vendor"`. Only works if the user's current role is `"couple"`. If the new role is `"vendor"`, automatically creates the vendor organization.
+
+**Authentication:** Required (session cookie)
+
+**Request:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `role` | `"couple" \| "vendor"` | Yes | The desired role |
+
+```json
+{
+  "role": "vendor"
+}
+```
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `200` | Role updated successfully |
+| `400` | Invalid or missing role |
+| `401` | Not authenticated |
+| `409` | User already has a non-default role |
+| `500` | Server error |
+
+**Success Response (200):**
+
+```json
+{
+  "user": {
+    "id": "abc123",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "role": "vendor"
+  }
+}
+```
+
+**Error Response (409):**
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "Role can only be changed from the default"
+  }
+}
+```
+
 ---
 
 ## Error Code Reference
@@ -401,7 +453,8 @@ The user is redirected to the callback URL with a session cookie set.
    - `vendor` → `/vendor/dashboard`
    - `admin` → `/admin/dashboard`
 4. **Social login is a redirect.** For Google/Apple login, navigate the browser to `GET /api/auth/social/{provider}` — do not use `fetch()`.
-5. **Handle 401 globally.** If any API call returns 401, redirect to the login page.
+5. **Post-OAuth role assignment.** New users who sign up via Google/Apple default to `"couple"`. To register as a vendor via social OAuth, the frontend stores the desired role in `localStorage` before the OAuth redirect, then calls `PATCH /api/v1/auth/set-role` after callback.
+6. **Handle 401 globally.** If any API call returns 401, redirect to the login page.
 6. **Handle 403 on sign-in.** A `403` response on sign-in means the user's email is not yet verified. Show a "check your inbox" message. A new verification email is sent automatically.
 7. **Auto sign-in after verification.** When the user clicks the verification link, they are automatically signed in and redirected — no manual login step needed.
 8. **Password reset flow.** Call `POST /api/auth/forget-password` to trigger a reset email. The `redirectTo` URL receives the reset token as a query param. Submit the new password via `POST /api/auth/reset-password`.

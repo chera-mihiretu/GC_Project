@@ -1,0 +1,37 @@
+---
+description: Mandatory API request and response contract conventions
+alwaysApply: true
+---
+
+# API Contract (Mandatory)
+
+All API work must follow one shared contract across frontend and backend.
+
+## Base path and versioning
+
+- Use versioned REST paths under `/api/v1` unless explicitly documented otherwise.
+- Breaking changes require a versioning plan in API docs.
+
+## JSON conventions
+
+- Use consistent JSON key casing across all endpoints.
+- Use ISO 8601 UTC timestamps for date-time values.
+- Represent money consistently for all endpoints (same format everywhere).
+- Keep identifiers stable and documented (`id` type and format per resource).
+
+## Request conventions
+
+- Validate path params, query params, and body at the boundary layer.
+- For list endpoints, standardize query keys: `page`, `limit`, `sort`, `order`, and filters.
+- Document allowed ranges for pagination and default values.
+
+## Response conventions
+
+- Success payload shape must be predictable per resource.
+- Use consistent pagination metadata for list endpoints.
+- Use documented HTTP status semantics consistently (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `409`, `422`, `500`).
+
+## Change management
+
+- Endpoint contract changes must be reflected in `backend/docs/api/*` in the same PR.
+- Frontend DTOs must be updated to mirror documented request/response shapes.

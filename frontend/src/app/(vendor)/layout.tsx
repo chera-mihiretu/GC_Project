@@ -3,6 +3,7 @@
 import AuthGuard from "@/components/auth-guard";
 import DashboardShell from "@/components/layouts/dashboard-shell";
 import type { NavItem } from "@/components/layouts/dashboard-shell";
+import { SocketProvider } from "@/components/realtime/socket-provider";
 import {
   FiGrid,
   FiUser,
@@ -26,9 +27,11 @@ export default function VendorLayout({
 }) {
   return (
     <AuthGuard allowedRoles={["vendor"]}>
-      <DashboardShell navItems={navItems} roleLabel="Vendor" accentColor="blue">
-        {children}
-      </DashboardShell>
+      <SocketProvider>
+        <DashboardShell navItems={navItems} roleLabel="Vendor" accentColor="blue">
+          {children}
+        </DashboardShell>
+      </SocketProvider>
     </AuthGuard>
   );
 }

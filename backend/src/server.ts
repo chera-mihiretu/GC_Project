@@ -2,11 +2,7 @@ import { createServer } from "http";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { createSocketServer } from "./features/realtime/infrastructure/socket-server.js";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const PORT = process.env.PORT || 5000;
+import { env } from "./config/env.js";
 
 const httpServer = createServer(app);
 createSocketServer(httpServer);
@@ -14,8 +10,8 @@ createSocketServer(httpServer);
 connectDB()
   .then(() => {
     console.log("Connected to PostgreSQL");
-    httpServer.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    httpServer.listen(env.PORT, () => {
+      console.log(`Server running on port ${env.PORT}`);
     });
   })
   .catch((err: unknown) => {

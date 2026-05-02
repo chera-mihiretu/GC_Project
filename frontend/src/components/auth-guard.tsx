@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -12,12 +13,27 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const retried = useRef(false);
+
+  const verifyAndRedirect = useCallback(async () => {
+    if (retried.current) return;
+    retried.current = true;
+
+    try {
+      const { data } = await authClient.getSession();
+      if (!data?.user) {
+        router.replace("/login");
+      }
+    } catch {
+      router.replace("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
     if (isPending) return;
 
     if (!session?.user) {
-      router.replace("/login");
+      verifyAndRedirect();
       return;
     }
 
@@ -27,9 +43,9 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         router.replace("/login");
       }
     }
-  }, [session, isPending, allowedRoles, router]);
+  }, [session, isPending, allowedRoles, router, verifyAndRedirect]);
 
-  if (isPending) {
+  if (isPending || (!session?.user && !retried.current)) {
     return (
       <div
         style={{

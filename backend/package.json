@@ -17,7 +17,6 @@
   "keywords": [],
   "license": "ISC",
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
     "@supabase/supabase-js": "^2.102.1",
     "better-auth": "^1.5.6",
     "cors": "^2.8.6",
@@ -26,8 +25,7 @@
     "multer": "^2.1.1",
     "nodemailer": "^8.0.4",
     "pg": "^8.16.0",
-    "socket.io": "^4.8.3",
-    "ws": "^8.20.0"
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -38,7 +36,6 @@
     "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.15.4",
     "@types/supertest": "^7.2.0",
-    "@types/ws": "^8.18.1",
     "jest": "^30.3.0",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2",

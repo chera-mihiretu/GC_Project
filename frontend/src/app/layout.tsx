@@ -15,9 +15,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Twedarr — Smart Wedding Planning",
+  title: "Twedarr — Smart Wedding Planning Platform",
   description:
-    "AI-powered wedding planning platform. Plan your perfect day with smart tools for budgeting, vendor management, guest lists, and more.",
+    "Plan your dream wedding with verified local vendors, AI-powered recommendations, and real-time budgeting — all in one place.",
 };
 
 export default function RootLayout({

@@ -192,7 +192,7 @@ export default function AdminVendorDetailPage() {
                     {/* Thumbnail / preview area */}
                     <button
                       onClick={() => setPreviewDoc(doc)}
-                      className="w-full relative aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
+                      className="w-full relative aspect-4/3 bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
                     >
                       {imageFile ? (
                         <Image
@@ -229,7 +229,7 @@ export default function AdminVendorDetailPage() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-gray-700 p-1 flex-shrink-0"
+                        className="text-gray-400 hover:text-gray-700 p-1 shrink-0"
                         title="Download"
                       >
                         <FiDownload size={15} />
@@ -381,15 +381,15 @@ export default function AdminVendorDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 text-white min-w-0">
-              <FiImage className="w-4 h-4 flex-shrink-0 opacity-60" />
+              <FiImage className="w-4 h-4 shrink-0 opacity-60" />
               <span className="text-sm font-medium capitalize truncate">
                 {previewDoc.documentType.replace(/_/g, " ")}
               </span>
-              <span className="text-xs opacity-40 flex-shrink-0">
+              <span className="text-xs opacity-40 shrink-0">
                 {new Date(previewDoc.uploadedAt).toLocaleDateString()}
               </span>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <a
                 href={resolveUrl(previewDoc.fileUrl)}
                 target="_blank"
@@ -423,11 +423,15 @@ export default function AdminVendorDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {isImage(previewDoc.fileUrl) ? (
-              <img
-                src={resolveUrl(previewDoc.fileUrl)}
-                alt={previewDoc.documentType}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              />
+              <div className="relative w-full h-full max-w-4xl">
+                <Image
+                  src={resolveUrl(previewDoc.fileUrl)}
+                  alt={previewDoc.documentType}
+                  fill
+                  sizes="100vw"
+                  className="object-contain rounded-lg shadow-2xl"
+                />
+              </div>
             ) : isPdf(previewDoc.fileUrl) ? (
               <iframe
                 src={resolveUrl(previewDoc.fileUrl)}

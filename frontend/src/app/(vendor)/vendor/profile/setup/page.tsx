@@ -12,6 +12,7 @@ import {
   submitForVerification,
 } from "@/services/vendor.service";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
+import type { VendorProfileFormData } from "@/components/vendor/vendor-profile-form";
 
 export default function VendorProfileSetup() {
   const router = useRouter();
@@ -35,18 +36,12 @@ export default function VendorProfileSetup() {
     fetchProfile();
   }, [fetchProfile]);
 
-  async function handleSaveProfile(data: {
-    businessName: string;
-    category: string;
-    description: string;
-    phoneNumber: string;
-    location: string;
-  }) {
+  async function handleSaveProfile(data: VendorProfileFormData) {
     if (profile) {
-      const result = await updateVendorProfile(data);
+      const result = await updateVendorProfile(data as unknown as Record<string, unknown>);
       setProfile(result.vendorProfile);
     } else {
-      const result = await createVendorProfile(data);
+      const result = await createVendorProfile(data as unknown as Record<string, unknown>);
       setProfile(result.vendorProfile);
     }
   }
@@ -83,7 +78,7 @@ export default function VendorProfileSetup() {
     (profile.status === VendorStatus.REGISTERED ||
       profile.status === VendorStatus.REJECTED) &&
     profile.businessName &&
-    profile.category &&
+    (profile.category?.length ?? 0) > 0 &&
     profile.phoneNumber &&
     profile.location &&
     (profile.documents?.length ?? 0) > 0;

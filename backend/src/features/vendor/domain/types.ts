@@ -21,10 +21,19 @@ export interface VendorProfile {
   id: string;
   userId: string;
   businessName: string | null;
-  category: string | null;
+  category: string[] | null;
   description: string | null;
   phoneNumber: string | null;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  priceRangeMin: number | null;
+  priceRangeMax: number | null;
+  portfolio: string[];
+  yearsOfExperience: number | null;
+  socialMedia: Record<string, string> | null;
+  rating: number;
+  reviewCount: number;
   status: VendorStatus;
   rejectionReason: string | null;
   createdAt: Date;
@@ -42,19 +51,42 @@ export interface VendorDocument {
 export interface CreateVendorProfileDTO {
   userId: string;
   businessName?: string;
-  category?: string;
+  category?: string[];
   description?: string;
   phoneNumber?: string;
   location?: string;
+  latitude?: number;
+  longitude?: number;
+  priceRangeMin?: number;
+  priceRangeMax?: number;
+  portfolio?: string[];
+  yearsOfExperience?: number;
+  socialMedia?: Record<string, string>;
 }
 
 export interface UpdateVendorProfileDTO {
   businessName?: string;
-  category?: string;
+  category?: string[];
   description?: string;
   phoneNumber?: string;
   location?: string;
+  latitude?: number;
+  longitude?: number;
+  priceRangeMin?: number;
+  priceRangeMax?: number;
+  portfolio?: string[];
+  yearsOfExperience?: number;
+  socialMedia?: Record<string, string>;
 }
+
+// Fields that trigger re-verification when changed on a verified profile
+export const RE_VERIFICATION_FIELDS: (keyof UpdateVendorProfileDTO)[] = [
+  "category",
+  "latitude",
+  "longitude",
+  "priceRangeMin",
+  "priceRangeMax",
+];
 
 export interface VendorListFilters {
   status?: VendorStatus;

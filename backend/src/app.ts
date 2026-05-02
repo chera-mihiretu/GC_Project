@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
+import { env } from "./config/env.js";
 import { auth } from "./lib/auth.js";
 import { pool } from "./config/db.js";
 import { initVendorTables } from "./features/vendor/infrastructure/init-tables.js";
@@ -8,6 +9,7 @@ import { ensureBucketExists } from "./features/vendor/infrastructure/supabase-st
 import vendorRoutes from "./features/vendor/presentation/vendor.routes.js";
 import adminVendorRoutes from "./features/vendor/presentation/admin-vendor.routes.js";
 import publicVendorRoutes from "./features/vendor/presentation/public-vendor.routes.js";
+import { requireAuth } from "./features/auth/presentation/auth.middleware.js";
 import notificationRoutes from "./features/realtime/presentation/notification.routes.js";
 import chatRoutes from "./features/realtime/presentation/chat.routes.js";
 import { initRealtimeTables } from "./features/realtime/infrastructure/init-tables.js";
@@ -17,7 +19,7 @@ import { initBookingTables } from "./features/booking/infrastructure/init-tables
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: env.FRONTEND_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -47,7 +49,46 @@ app.post("/api/v1/auth/check-email", async (req: Request, res: Response) => {
   }
 });
 
-app.use(express.json());
+app.patch("/api/v1/auth/set-role", requireAuth(), async (req: Request, res: Response) => {
+  const userId = req.authContext!.user.id;
+  const currentRole = req.authContext!.user.role;
+  const { role } = req.body ?? {};
+
+  if (!role || !["couple", "vendor"].includes(role)) {
+    res.status(400).json({ error: { code: "BAD_REQUEST", message: "role must be 'couple' or 'vendor'" } });
+    return;
+  }
+
+  if (currentRole !== "couple") {
+    res.status(409).json({ error: { code: "CONFLICT", message: "Role can only be changed from the default" } });
+    return;
+  }
+
+  if (role === "couple") {
+    res.json({ user: req.authContext!.user });
+    return;
+  }
+
+  try {
+    await pool.query('UPDATE "user" SET role = $1 WHERE id = $2', [role, userId]);
+
+    if (role === "vendor") {
+      await auth.api.createOrganization({
+        body: {
+          name: `${req.authContext!.user.name}'s Business`,
+          slug: `vendor-${userId}`,
+        },
+        headers: new Headers({ "x-user-id": userId }),
+      });
+    }
+
+    const updated = await pool.query('SELECT id, name, email, role FROM "user" WHERE id = $1', [userId]);
+    res.json({ user: updated.rows[0] });
+  } catch (err) {
+    console.error("Failed to set role:", err);
+    res.status(500).json({ error: { code: "SERVER_ERROR", message: "Failed to update role" } });
+  }
+});
 
 app.get("/api/v1/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });

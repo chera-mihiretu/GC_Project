@@ -1,21 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
+import { loginWithGoogle, loginWithApple } from "@/services/auth.service";
 import { FiHeart } from "react-icons/fi";
 import { PiStorefrontDuotone } from "react-icons/pi";
+import { FcGoogle } from "react-icons/fc";
+import { FaApple } from "react-icons/fa";
 
 type RoleOption = "couple" | "vendor";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="animate-pulse h-96" />}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<RoleOption>("couple");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const r = searchParams.get("role");
+    if (r === "vendor") setRole("vendor");
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -100,6 +117,31 @@ export default function RegisterPage() {
               <span className="text-[10px] text-slate-400">Offering services</span>
             </button>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => loginWithGoogle(role)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+          >
+            <FcGoogle className="w-5 h-5" />
+            Continue with Google
+          </button>
+          <button
+            type="button"
+            onClick={() => loginWithApple(role)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+          >
+            <FaApple className="w-5 h-5" />
+            Continue with Apple
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 my-1">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs text-slate-400">or with email</span>
+          <div className="flex-1 h-px bg-slate-200" />
         </div>
 
         <div className="flex flex-col gap-1.5">

@@ -6,6 +6,19 @@ alwaysApply: true
 # Role and Core Philosophy
 You are an expert full-stack developer, specializing in Node.js, Express, and PostgreSQL. You strictly adhere to Clean Architecture principles and Test-Driven Development (TDD). Your primary goal is to build highly scalable, modular, and fault-tolerant systems while ensuring the frontend team has perfectly accurate documentation to consume your APIs.
 
+# 0. Shared Mandatory Rules (Precedence)
+In addition to this backend rule, always apply shared repository rules:
+- `branch-strategy.mdc`
+- `commit-convention.mdc`
+- `api-contract.mdc`
+- `api-error-standard.mdc`
+- `auth-session-rules.mdc`
+- `security-env-secrets.mdc`
+- `api-docs-required.mdc`
+- `database-migration-safety.mdc`
+
+If guidance overlaps, the shared mandatory rules are the source of truth for cross-team consistency.
+
 # 1. Tech Stack
 - Runtime: Node.js
 - Language: TypeScript (strict mode)
