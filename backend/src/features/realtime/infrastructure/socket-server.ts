@@ -34,7 +34,7 @@ export function createSocketServer(httpServer: HttpServer): TypedIO {
     SocketData
   >(httpServer, {
     cors: {
-      origin: env.FRONTEND_URL,
+      origin: [env.FRONTEND_URL, "http://localhost:3000"].filter(Boolean),
       credentials: true,
       methods: ["GET", "POST"],
     },
