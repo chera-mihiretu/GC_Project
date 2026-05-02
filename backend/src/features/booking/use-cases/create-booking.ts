@@ -1,6 +1,7 @@
 import { type Booking, type CreateBookingDTO } from "../domain/types.js";
 import * as bookingRepo from "../infrastructure/booking.repository.js";
 import { findById as findVendorProfile } from "../../vendor/infrastructure/vendor-profile.repository.js";
+import { isDateAvailable } from "../../vendor/infrastructure/availability.repository.js";
 import { VendorStatus } from "../../vendor/domain/types.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
 
@@ -46,6 +47,14 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
   if (vendorProfile.status !== VendorStatus.VERIFIED) {
     throw Object.assign(
       new Error("Vendor is not currently accepting bookings"),
+      { statusCode: 400 },
+    );
+  }
+
+  const available = await isDateAvailable(vendorProfileId, eventDate);
+  if (!available) {
+    throw Object.assign(
+      new Error("Vendor is not available on the selected date"),
       { statusCode: 400 },
     );
   }
