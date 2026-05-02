@@ -2,16 +2,23 @@ import { jest, describe, it, expect, beforeEach } from "@jest/globals";
 
 const mockCreate = jest.fn<(...args: any[]) => any>();
 const mockExistsForCoupleAndVendor = jest.fn<(...args: any[]) => any>();
+const mockIsDateBookedForVendor = jest.fn<(...args: any[]) => any>();
 const mockFindVendorProfile = jest.fn<(...args: any[]) => any>();
 const mockSendNotification = jest.fn<(...args: any[]) => any>();
+const mockIsDateAvailable = jest.fn<(...args: any[]) => any>();
 
 jest.unstable_mockModule("../infrastructure/booking.repository.js", () => ({
   create: mockCreate,
   existsForCoupleAndVendor: mockExistsForCoupleAndVendor,
+  isDateBookedForVendor: mockIsDateBookedForVendor,
 }));
 
 jest.unstable_mockModule("../../vendor/infrastructure/vendor-profile.repository.js", () => ({
   findById: mockFindVendorProfile,
+}));
+
+jest.unstable_mockModule("../../vendor/infrastructure/availability.repository.js", () => ({
+  isDateAvailable: mockIsDateAvailable,
 }));
 
 jest.unstable_mockModule("../../realtime/use-cases/send-notification.js", () => ({
@@ -46,11 +53,13 @@ describe("createBooking use case", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSendNotification.mockResolvedValue({});
+    mockIsDateAvailable.mockResolvedValue(true);
+    mockIsDateBookedForVendor.mockResolvedValue(false);
+    mockExistsForCoupleAndVendor.mockResolvedValue(false);
   });
 
   it("should create a booking when all inputs are valid", async () => {
     mockFindVendorProfile.mockResolvedValue(mockVendorProfile);
-    mockExistsForCoupleAndVendor.mockResolvedValue(false);
     mockCreate.mockResolvedValue({
       id: "booking-001",
       coupleId: "couple-123",
@@ -106,6 +115,16 @@ describe("createBooking use case", () => {
 
     await expect(createBooking(validInput)).rejects.toMatchObject({
       statusCode: 400,
+    });
+  });
+
+  it("should reject when vendor is not available on the selected date", async () => {
+    mockFindVendorProfile.mockResolvedValue(mockVendorProfile);
+    mockIsDateAvailable.mockResolvedValue(false);
+
+    await expect(createBooking(validInput)).rejects.toMatchObject({
+      statusCode: 400,
+      message: "Vendor is not available on the selected date",
     });
   });
 

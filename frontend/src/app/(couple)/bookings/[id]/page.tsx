@@ -92,7 +92,8 @@ export default function CoupleBookingDetailPage() {
 
   const canCancel =
     booking.status === BookingStatus.PENDING ||
-    booking.status === BookingStatus.ACCEPTED;
+    booking.status === BookingStatus.ACCEPTED ||
+    booking.status === BookingStatus.DEPOSIT_PAID;
 
   const eventDate = new Date(booking.eventDate).toLocaleDateString("en-US", {
     weekday: "long",
