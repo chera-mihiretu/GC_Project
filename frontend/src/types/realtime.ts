@@ -13,6 +13,12 @@ export interface Conversation {
   id: string;
   participantOne: string;
   participantTwo: string;
+  participantOneName?: string;
+  participantTwoName?: string;
+  participantOneImage?: string | null;
+  participantTwoImage?: string | null;
+  lastMessageContent?: string | null;
+  unreadCount?: number;
   lastMessageAt: string;
   createdAt: string;
 }

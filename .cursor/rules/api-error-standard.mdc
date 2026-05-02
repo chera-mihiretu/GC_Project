@@ -1,0 +1,32 @@
+---
+description: Mandatory uniform API error envelope for all endpoints
+alwaysApply: true
+---
+
+# API Error Standard (Mandatory)
+
+Every non-2xx API response must follow one error envelope.
+
+## Error payload
+
+```json
+{
+  "code": "STRING_CODE",
+  "message": "Human readable message",
+  "details": [],
+  "requestId": "optional-correlation-id"
+}
+```
+
+## Field rules
+
+- `code` is stable and machine-readable.
+- `message` is user-safe and non-sensitive.
+- `details` is optional and only includes actionable validation or domain issues.
+- `requestId` is optional but recommended for tracing.
+
+## Behavior rules
+
+- Do not return ad-hoc error shapes.
+- Do not leak secrets, stack traces, SQL fragments, tokens, or passwords.
+- Keep status code semantics aligned with `api-contract.mdc`.

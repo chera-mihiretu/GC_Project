@@ -1,0 +1,32 @@
+---
+description: Mandatory conventional commit format and types
+alwaysApply: true
+---
+
+# Commit Convention (Mandatory)
+
+All commits must use Conventional Commits.
+
+## Format
+
+`<type>(<scope>): <short-description>`
+
+Use lowercase for type and scope. Keep subject concise and imperative.
+
+## Allowed types
+
+- `feat`: new feature
+- `fix`: bug fix
+- `refactor`: internal code restructure without behavior change
+- `docs`: documentation only
+- `chore`: maintenance or non-feature changes
+- `perf`: performance improvement
+- `build`: build tooling or dependency changes
+- `ci`: CI workflow changes
+- `revert`: revert a previous commit
+
+## Examples
+
+- `feat(auth): add vendor staff invite endpoint`
+- `fix(api): return 401 for expired sessions`
+- `docs(api): update booking endpoint examples`

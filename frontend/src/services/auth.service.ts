@@ -13,17 +13,37 @@ export async function registerWithEmail(
   return authClient.signUp.email({ name, email, password });
 }
 
-export async function loginWithGoogle() {
+export async function loginWithGoogle(role?: "couple" | "vendor") {
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+  if (typeof window !== "undefined") {
+    if (role) {
+      localStorage.setItem("pendingAccountRole", role);
+      localStorage.setItem("socialLoginIntent", "register");
+    } else {
+      localStorage.removeItem("pendingAccountRole");
+      localStorage.setItem("socialLoginIntent", "login");
+    }
+  }
   return authClient.signIn.social({
     provider: "google",
-    callbackURL: "/auth/callback",
+    callbackURL: `${origin}/auth/social-callback`,
   });
 }
 
-export async function loginWithApple() {
+export async function loginWithApple(role?: "couple" | "vendor") {
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+  if (typeof window !== "undefined") {
+    if (role) {
+      localStorage.setItem("pendingAccountRole", role);
+      localStorage.setItem("socialLoginIntent", "register");
+    } else {
+      localStorage.removeItem("pendingAccountRole");
+      localStorage.setItem("socialLoginIntent", "login");
+    }
+  }
   return authClient.signIn.social({
     provider: "apple",
-    callbackURL: "/auth/callback",
+    callbackURL: `${origin}/auth/social-callback`,
   });
 }
 
@@ -62,7 +82,16 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
   });
 
   if (res.status === 401 && typeof window !== "undefined") {
-    window.location.href = "/login";
+    try {
+      const sessionRes = await fetch(`${baseURL}/api/auth/get-session`, {
+        credentials: "include",
+      });
+      if (!sessionRes.ok || !(await sessionRes.json())?.session) {
+        window.location.href = "/login";
+      }
+    } catch {
+      // Network error during session check — don't redirect on transient failures
+    }
   }
 
   return res;
