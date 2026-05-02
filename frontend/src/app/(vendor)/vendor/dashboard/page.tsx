@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { getVendorProfile } from "@/services/vendor.service";
+import { listBookings } from "@/services/booking.service";
 import VendorStatusBanner from "@/components/vendor/vendor-status-banner";
 import DocumentUpload from "@/components/vendor/document-upload";
 import StatCard from "@/components/ui/stat-card";
@@ -24,6 +25,7 @@ export default function VendorDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<VendorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bookingCount, setBookingCount] = useState(0);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -38,6 +40,9 @@ export default function VendorDashboard() {
 
   useEffect(() => {
     fetchProfile();
+    listBookings({ limit: 1 })
+      .then((res) => setBookingCount(res.total))
+      .catch(() => {});
   }, [fetchProfile]);
 
   if (loading) {
@@ -223,7 +228,7 @@ export default function VendorDashboard() {
             <StatCard
               icon={FiCalendar}
               label="Bookings"
-              value="0"
+              value={bookingCount.toString()}
               subtext="Total"
               color="amber"
             />

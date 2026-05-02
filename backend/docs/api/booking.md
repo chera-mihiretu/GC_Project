@@ -99,7 +99,7 @@ Requires an authenticated session with role `couple`.
 ```json
 {
   "error": {
-    "code": "BAD_REQUEST",
+    "code": "NOT_FOUND",
     "message": "Vendor profile not found"
   }
 }
@@ -132,7 +132,7 @@ Requires an authenticated session with role `couple`.
 ```json
 {
   "error": {
-    "code": "BAD_REQUEST",
+    "code": "CONFLICT",
     "message": "You already have a pending or accepted booking with this vendor for the same date"
   }
 }
@@ -157,8 +157,8 @@ Requires an authenticated session (any role with bookings).
 | Param | Type | Required | Description |
 |-------|------|----------|-------------|
 | status | string | No | Filter by status: `pending`, `accepted`, `declined`, `deposit_paid`, `completed`, `cancelled` |
-| page | number | No | Page number (default: 1) |
-| limit | number | No | Items per page (default: 20) |
+| page | number | No | Page number (default: 1, min: 1) |
+| limit | number | No | Items per page (default: 20, max: 100) |
 
 ### Response
 
@@ -314,18 +314,48 @@ Requires an authenticated session. Access is scoped to the booking's participant
 
 **403 Forbidden** — User not authorized for this transition.
 
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Only vendors can accept, decline, or complete bookings"
+  }
+}
+```
+
 **404 Not Found** — Booking does not exist.
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Booking not found"
+  }
+}
+```
 
 **409 Conflict** — Vendor already has a confirmed booking on this date (BK-07). Only applies when accepting.
 
 ```json
 {
   "error": {
-    "code": "BAD_REQUEST",
+    "code": "CONFLICT",
     "message": "You already have a confirmed booking on this date"
   }
 }
 ```
+
+**422 Unprocessable Entity** — Invalid status transition.
+
+```json
+{
+  "error": {
+    "code": "UNPROCESSABLE_ENTITY",
+    "message": "Invalid booking status transition: \"completed\" → \"accepted\""
+  }
+}
+```
+
 
 ### Example Request (Vendor accepts)
 
@@ -363,4 +393,5 @@ pending → declined (terminal)
 - A notification of type `booking_request` is sent to the vendor on creation.
 - A notification of type `booking_status_update` is sent to the other party on status change.
 - Duplicate detection: a couple cannot have two active bookings (pending or accepted) with the same vendor for the same event date.
-- Date conflict detection (BK-07): a vendor cannot have two confirmed bookings (accepted or deposit_paid) on the same date. Checked at both creation time (blocks new requests for confirmed dates) and acceptance time (prevents race conditions).
+- Date conflict detection (BK-07): a vendor cannot have two confirmed bookings (accepted or deposit_paid) on the same date. Checked at both creation time (blocks new requests) and acceptance time (prevents race conditions). Enforced by a partial unique index at the database level.
+- Pagination: `limit` is capped at 100 items. Values above 100 are silently reduced.

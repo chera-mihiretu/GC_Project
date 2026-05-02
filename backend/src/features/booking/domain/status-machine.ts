@@ -32,8 +32,9 @@ export function transition(
   to: BookingStatus,
 ): BookingStatus {
   if (!canTransition(from, to)) {
-    throw new Error(
-      `Invalid booking status transition: "${from}" → "${to}"`,
+    throw Object.assign(
+      new Error(`Invalid booking status transition: "${from}" → "${to}"`),
+      { statusCode: 422 },
     );
   }
   return to;

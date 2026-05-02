@@ -147,18 +147,42 @@ export async function updateStatus(
   newStatus: BookingStatus,
   declineReason?: string,
 ): Promise<Booking> {
-  const existing = await findById(id);
-  if (!existing) throw new Error("Booking not found");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  transition(existing.status, newStatus);
+    const { rows: [existing] } = await client.query(
+      "SELECT * FROM bookings WHERE id = $1 FOR UPDATE",
+      [id],
+    );
+    if (!existing) {
+      throw Object.assign(new Error("Booking not found"), { statusCode: 404 });
+    }
 
-  const { rows } = await pool.query(
-    `UPDATE bookings
-     SET status = $1, decline_reason = $2, updated_at = NOW()
-     WHERE id = $3 RETURNING *`,
-    [newStatus, declineReason ?? null, id],
-  );
-  return rowToBooking(rows[0]);
+    transition(rowToBooking(existing).status, newStatus);
+
+    const { rows } = await client.query(
+      `UPDATE bookings
+       SET status = $1, decline_reason = $2, updated_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [newStatus, declineReason ?? null, id],
+    );
+
+    await client.query("COMMIT");
+    return rowToBooking(rows[0]);
+  } catch (err: unknown) {
+    await client.query("ROLLBACK");
+    const pgErr = err as { code?: string };
+    if (pgErr.code === "23505") {
+      throw Object.assign(
+        new Error("This vendor already has a confirmed booking on this date"),
+        { statusCode: 409 },
+      );
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function existsForCoupleAndVendor(

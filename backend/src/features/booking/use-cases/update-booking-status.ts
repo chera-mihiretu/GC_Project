@@ -47,6 +47,13 @@ export async function updateBookingStatus(input: UpdateBookingStatusInput): Prom
     );
   }
 
+  if (newStatus === BookingStatus.DEPOSIT_PAID && userRole !== "couple") {
+    throw Object.assign(
+      new Error("Only couples can mark a booking as deposit paid"),
+      { statusCode: 403 },
+    );
+  }
+
   if (newStatus === BookingStatus.DECLINED && !declineReason) {
     throw Object.assign(
       new Error("A reason is required when declining a booking"),

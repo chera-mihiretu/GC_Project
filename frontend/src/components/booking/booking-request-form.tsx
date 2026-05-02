@@ -47,15 +47,18 @@ export default function BookingRequestForm({
   const [calMonth, setCalMonth] = useState(today.getMonth() + 1);
   const [availability, setAvailability] = useState<AvailabilityRange[]>([]);
   const [loadingAvail, setLoadingAvail] = useState(true);
+  const [availError, setAvailError] = useState(false);
 
   const fetchAvailability = useCallback(async () => {
     setLoadingAvail(true);
+    setAvailError(false);
     try {
       const monthStr = `${calYear}-${String(calMonth).padStart(2, "0")}`;
       const data = await getVendorAvailability(vendorProfileId, monthStr);
       setAvailability(data);
     } catch {
       setAvailability([]);
+      setAvailError(true);
     } finally {
       setLoadingAvail(false);
     }
@@ -164,6 +167,12 @@ export default function BookingRequestForm({
               <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
             </div>
           ) : (
+            <>
+            {availError && (
+              <p className="text-xs text-amber-600 mb-2">
+                Could not load availability. All dates shown as open.
+              </p>
+            )}
             <div className="grid grid-cols-7 gap-0.5">
               {Array.from({ length: firstDay }).map((_, i) => (
                 <div key={`e-${i}`} />
@@ -202,6 +211,7 @@ export default function BookingRequestForm({
                 );
               })}
             </div>
+            </>
           )}
 
           {/* Legend */}
