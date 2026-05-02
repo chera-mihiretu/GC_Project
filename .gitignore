@@ -15,3 +15,7 @@ backend/dist/
 .env.*
 !.env.example
 .~lock.*
+
+# Generated scripts and spreadsheets
+generate_*.py
+Twedar_*.xlsx
