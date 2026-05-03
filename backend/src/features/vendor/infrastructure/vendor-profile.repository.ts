@@ -76,20 +76,38 @@ export async function findByUserId(
   userId: string,
 ): Promise<VendorProfile | null> {
   const { rows } = await pool.query(
-    "SELECT * FROM vendor_profiles WHERE user_id = $1",
+    `SELECT vp.*,
+       (SELECT media_url FROM vendor_portfolio_items
+        WHERE vendor_profile_id = vp.id ORDER BY sort_order LIMIT 1
+       ) AS thumbnail
+     FROM vendor_profiles vp WHERE vp.user_id = $1`,
     [userId],
   );
-  return rows.length ? rowToProfile(rows[0]) : null;
+  if (!rows.length) return null;
+  const profile = rowToProfile(rows[0]);
+  if (rows[0].thumbnail && profile.portfolio.length === 0) {
+    profile.portfolio = [rows[0].thumbnail as string];
+  }
+  return profile;
 }
 
 export async function findById(
   id: string,
 ): Promise<VendorProfile | null> {
   const { rows } = await pool.query(
-    "SELECT * FROM vendor_profiles WHERE id = $1",
+    `SELECT vp.*,
+       (SELECT media_url FROM vendor_portfolio_items
+        WHERE vendor_profile_id = vp.id ORDER BY sort_order LIMIT 1
+       ) AS thumbnail
+     FROM vendor_profiles vp WHERE vp.id = $1`,
     [id],
   );
-  return rows.length ? rowToProfile(rows[0]) : null;
+  if (!rows.length) return null;
+  const profile = rowToProfile(rows[0]);
+  if (rows[0].thumbnail && profile.portfolio.length === 0) {
+    profile.portfolio = [rows[0].thumbnail as string];
+  }
+  return profile;
 }
 
 export async function update(
@@ -227,14 +245,24 @@ export async function findByStatus(
 
   const dataValues = [...values, limit, offset];
   const { rows } = await pool.query(
-    `SELECT vp.* FROM vendor_profiles vp ${where}
+    `SELECT vp.*,
+       (SELECT media_url FROM vendor_portfolio_items
+        WHERE vendor_profile_id = vp.id ORDER BY sort_order LIMIT 1
+       ) AS thumbnail
+     FROM vendor_profiles vp ${where}
      ORDER BY ${sortBy} ${order}
      LIMIT $${idx++} OFFSET $${idx}`,
     dataValues,
   );
 
   return {
-    data: rows.map(rowToProfile),
+    data: rows.map((row) => {
+      const profile = rowToProfile(row);
+      if (row.thumbnail && profile.portfolio.length === 0) {
+        profile.portfolio = [row.thumbnail as string];
+      }
+      return profile;
+    }),
     total,
     page,
     limit,

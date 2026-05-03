@@ -12,7 +12,8 @@
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch --forceExit --detectOpenHandles",
     "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --forceExit --detectOpenHandles",
     "seed:admin": "tsx src/scripts/seed-admin.ts",
-    "seed:users": "tsx src/scripts/seed-users.ts"
+    "seed:users": "tsx src/scripts/seed-users.ts",
+    "seed:vendors": "tsx src/scripts/seed-vendors.ts"
   },
   "keywords": [],
   "license": "ISC",
