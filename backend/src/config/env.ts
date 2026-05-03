@@ -40,6 +40,9 @@ export const env = {
   SUPABASE_URL: required("SUPABASE_URL"),
   SUPABASE_ANON_KEY: required("SUPABASE_ANON_KEY"),
 
+  CHAPA_SECRET_KEY: required("CHAPA_SECRET_KEY"),
+  CHAPA_WEBHOOK_SECRET: required("CHAPA_WEBHOOK_SECRET"),
+
   get isProduction() {
     return this.NODE_ENV === "production";
   },

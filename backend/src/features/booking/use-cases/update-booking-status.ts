@@ -47,10 +47,10 @@ export async function updateBookingStatus(input: UpdateBookingStatusInput): Prom
     );
   }
 
-  if (newStatus === BookingStatus.DEPOSIT_PAID && userRole !== "couple") {
+  if (newStatus === BookingStatus.DEPOSIT_PAID) {
     throw Object.assign(
-      new Error("Only couples can mark a booking as deposit paid"),
-      { statusCode: 403 },
+      new Error("Deposit payment must be made through the payment flow"),
+      { statusCode: 422 },
     );
   }
 

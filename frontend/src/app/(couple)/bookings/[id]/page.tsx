@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   FiArrowLeft,
@@ -10,6 +10,9 @@ import {
   FiMessageSquare,
   FiAlertCircle,
   FiX,
+  FiDollarSign,
+  FiCheckCircle,
+  FiLoader,
 } from "react-icons/fi";
 import { getBooking, updateBookingStatus } from "@/services/booking.service";
 import { BookingStatus, type BookingDetail } from "@/types/booking";
@@ -18,10 +21,16 @@ import { getReviewByBooking } from "@/services/review.service";
 import { ReviewForm } from "@/components/review/review-form";
 import { StarRating } from "@/components/review/star-rating";
 import type { Review } from "@/types/review";
+import {
+  initializePayment,
+  verifyPayment,
+  getPaymentForBooking,
+} from "@/services/payment.service";
+import type { Payment } from "@/types/payment";
 
 export default function CoupleBookingDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const bookingId = params.id as string;
 
   const [booking, setBooking] = useState<BookingDetail | null>(null);
@@ -30,6 +39,12 @@ export default function CoupleBookingDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [existingReview, setExistingReview] = useState<Review | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  const [depositAmount, setDepositAmount] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<Payment | null>(null);
+  const verifyAttempted = useRef(false);
 
   const fetchBooking = useCallback(async () => {
     setLoading(true);
@@ -50,9 +65,18 @@ export default function CoupleBookingDetailPage() {
       const review = await getReviewByBooking(bookingId);
       setExistingReview(review);
     } catch {
-      // Non-critical: silently fail
+      // Non-critical
     } finally {
       setReviewLoading(false);
+    }
+  }, [bookingId]);
+
+  const fetchPaymentInfo = useCallback(async () => {
+    try {
+      const payment = await getPaymentForBooking(bookingId);
+      setPaymentInfo(payment);
+    } catch {
+      // No payment exists yet
     }
   }, [bookingId]);
 
@@ -64,7 +88,60 @@ export default function CoupleBookingDetailPage() {
     if (booking?.status === BookingStatus.COMPLETED) {
       fetchReview();
     }
-  }, [booking?.status, fetchReview]);
+    if (booking?.status === BookingStatus.DEPOSIT_PAID) {
+      fetchPaymentInfo();
+    }
+  }, [booking?.status, fetchReview, fetchPaymentInfo]);
+
+  useEffect(() => {
+    const paymentParam = searchParams.get("payment");
+    const txRef = searchParams.get("tx_ref");
+
+    if (paymentParam === "verifying" && txRef && !verifyAttempted.current) {
+      verifyAttempted.current = true;
+      setVerifying(true);
+
+      verifyPayment(txRef)
+        .then((result) => {
+          setBooking((prev) =>
+            prev ? { ...prev, status: result.booking.status as BookingStatus } : prev,
+          );
+          setPaymentInfo(result.payment);
+          if (result.payment.status === "failed") {
+            setError("Payment was not completed. Please try again.");
+          }
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Failed to verify payment");
+        })
+        .finally(() => {
+          setVerifying(false);
+          window.history.replaceState({}, "", `/bookings/${bookingId}`);
+        });
+    }
+  }, [searchParams, bookingId]);
+
+  async function handlePayDeposit() {
+    if (!booking) return;
+    const amount = parseFloat(depositAmount);
+    if (!amount || amount <= 0) {
+      setError("Please enter a valid deposit amount");
+      return;
+    }
+
+    setPaymentLoading(true);
+    setError("");
+    try {
+      const result = await initializePayment({
+        bookingId: booking.id,
+        amount,
+      });
+      window.location.href = result.checkoutUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start payment");
+      setPaymentLoading(false);
+    }
+  }
 
   async function handleCancel() {
     if (!booking) return;
@@ -119,6 +196,8 @@ export default function CoupleBookingDetailPage() {
     booking.status === BookingStatus.ACCEPTED ||
     booking.status === BookingStatus.DEPOSIT_PAID;
 
+  const showPayDeposit = booking.status === BookingStatus.ACCEPTED;
+
   const eventDate = new Date(booking.eventDate).toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -132,11 +211,18 @@ export default function CoupleBookingDetailPage() {
         <FiArrowLeft className="w-4 h-4" /> Back to Bookings
       </Link>
 
+      {verifying && (
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
+          <FiLoader className="w-4 h-4 shrink-0 animate-spin" />
+          Verifying your payment...
+        </div>
+      )}
+
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
           <FiAlertCircle className="w-4 h-4 shrink-0" />
           {error}
-          <button onClick={() => setError("")} className="ml-auto text-red-400 hover:text-red-600">
+          <button className="cursor-pointer ml-auto text-red-400 hover:text-red-600" onClick={() => setError("")}>
             <FiX className="w-4 h-4" />
           </button>
         </div>
@@ -155,7 +241,7 @@ export default function CoupleBookingDetailPage() {
             <button
               onClick={handleCancel}
               disabled={actionLoading}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
             >
               {actionLoading ? "Cancelling..." : "Cancel Booking"}
             </button>
@@ -188,6 +274,81 @@ export default function CoupleBookingDetailPage() {
         )}
       </div>
 
+      {/* Pay deposit section */}
+      {showPayDeposit && (
+        <div className="bg-white rounded-xl border border-green-200 p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <FiDollarSign className="w-5 h-5 text-green-600" />
+            <h2 className="text-sm font-semibold text-gray-900">Pay Deposit</h2>
+          </div>
+          <p className="text-sm text-gray-500">
+            Your booking has been accepted. Pay the deposit to confirm your reservation.
+          </p>
+          {(booking.priceRangeMin || booking.priceRangeMax) && (
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Vendor price range:</span>{" "}
+              {booking.priceRangeMin?.toLocaleString() ?? "—"} – {booking.priceRangeMax?.toLocaleString() ?? "—"} ETB
+            </p>
+          )}
+          <div className="flex items-end gap-3 max-w-sm">
+            <div className="flex-1">
+              <label htmlFor="deposit-amount" className="block text-xs font-medium text-gray-600 mb-1">
+                Amount (ETB)
+              </label>
+              <input
+                id="deposit-amount"
+                type="number"
+                min="1"
+                step="0.01"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="e.g. 5000"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={handlePayDeposit}
+              disabled={paymentLoading || !depositAmount}
+              className="cursor-pointer px-5 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {paymentLoading ? "Redirecting..." : "Pay with Chapa"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Payment confirmation */}
+      {booking.status === BookingStatus.DEPOSIT_PAID && paymentInfo && (
+        <div className="bg-green-50 rounded-xl border border-green-200 p-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <FiCheckCircle className="w-5 h-5 text-green-600" />
+            <h2 className="text-sm font-semibold text-green-800">Deposit Paid</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-green-600 mb-0.5">Amount</p>
+              <p className="font-medium text-green-900">
+                {paymentInfo.amount.toLocaleString()} {paymentInfo.currency}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-green-600 mb-0.5">Reference</p>
+              <p className="font-medium text-green-900 font-mono text-xs">
+                {paymentInfo.chapaRef ?? paymentInfo.txRef}
+              </p>
+            </div>
+            {paymentInfo.paymentMethod && (
+              <div>
+                <p className="text-xs text-green-600 mb-0.5">Method</p>
+                <p className="font-medium text-green-900 capitalize">
+                  {paymentInfo.paymentMethod}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Status timeline */}
       <div className="bg-white rounded-xl border border-gray-200/80 p-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">Status Timeline</h2>
@@ -198,7 +359,7 @@ export default function CoupleBookingDetailPage() {
         />
       </div>
 
-      {/* Review section — only for completed bookings */}
+      {/* Review section */}
       {booking.status === BookingStatus.COMPLETED && (
         <div className="bg-white rounded-xl border border-gray-200/80 p-6">
           <h2 className="text-sm font-semibold text-gray-900 mb-4">Your Review</h2>

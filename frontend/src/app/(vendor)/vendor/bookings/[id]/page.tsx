@@ -11,11 +11,14 @@ import {
   FiAlertCircle,
   FiX,
   FiCheck,
+  FiCheckCircle,
 } from "react-icons/fi";
 import { getBooking, updateBookingStatus } from "@/services/booking.service";
 import { BookingStatus, type BookingDetail } from "@/types/booking";
 import BookingStatusTimeline from "@/components/booking/booking-status-timeline";
 import DeclineBookingModal from "@/components/booking/decline-booking-modal";
+import { getPaymentForBooking } from "@/services/payment.service";
+import type { Payment } from "@/types/payment";
 
 export default function VendorBookingDetailPage() {
   const params = useParams();
@@ -26,6 +29,7 @@ export default function VendorBookingDetailPage() {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<Payment | null>(null);
 
   const fetchBooking = useCallback(async () => {
     setLoading(true);
@@ -40,9 +44,24 @@ export default function VendorBookingDetailPage() {
     }
   }, [bookingId]);
 
+  const fetchPaymentInfo = useCallback(async () => {
+    try {
+      const payment = await getPaymentForBooking(bookingId);
+      setPaymentInfo(payment);
+    } catch {
+      // No payment exists
+    }
+  }, [bookingId]);
+
   useEffect(() => {
     fetchBooking();
   }, [fetchBooking]);
+
+  useEffect(() => {
+    if (booking?.status === BookingStatus.DEPOSIT_PAID) {
+      fetchPaymentInfo();
+    }
+  }, [booking?.status, fetchPaymentInfo]);
 
   async function handleAccept() {
     if (!booking) return;
@@ -216,6 +235,38 @@ export default function VendorBookingDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Payment received indicator */}
+      {booking.status === BookingStatus.DEPOSIT_PAID && paymentInfo && (
+        <div className="bg-green-50 rounded-xl border border-green-200 p-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <FiCheckCircle className="w-5 h-5 text-green-600" />
+            <h2 className="text-sm font-semibold text-green-800">Deposit Payment Received</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-green-600 mb-0.5">Amount</p>
+              <p className="font-medium text-green-900">
+                {paymentInfo.amount.toLocaleString()} {paymentInfo.currency}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-green-600 mb-0.5">Reference</p>
+              <p className="font-medium text-green-900 font-mono text-xs">
+                {paymentInfo.chapaRef ?? paymentInfo.txRef}
+              </p>
+            </div>
+            {paymentInfo.paymentMethod && (
+              <div>
+                <p className="text-xs text-green-600 mb-0.5">Method</p>
+                <p className="font-medium text-green-900 capitalize">
+                  {paymentInfo.paymentMethod}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Status timeline */}
       <div className="bg-white rounded-xl border border-gray-200/80 p-6">

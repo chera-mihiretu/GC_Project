@@ -25,6 +25,8 @@ export interface Booking {
 
 export interface BookingDetail extends Booking {
   businessName: string;
+  priceRangeMin: number | null;
+  priceRangeMax: number | null;
 }
 
 export interface CreateBookingRequest {

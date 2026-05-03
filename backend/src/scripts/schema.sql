@@ -232,6 +232,31 @@ CREATE TABLE IF NOT EXISTS couple_profiles (
 
 CREATE INDEX IF NOT EXISTS idx_couple_profiles_user_id ON couple_profiles(user_id);
 
+-- ---------------------------------------------------------------------------
+-- 7. Payment Feature Tables (Chapa Integration)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS payments (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    booking_id      UUID NOT NULL REFERENCES bookings(id),
+    couple_id       TEXT NOT NULL,
+    vendor_id       TEXT NOT NULL,
+    tx_ref          VARCHAR(255) UNIQUE NOT NULL,
+    chapa_ref       VARCHAR(255),
+    amount          DECIMAL(12,2) NOT NULL,
+    currency        VARCHAR(3) NOT NULL DEFAULT 'ETB',
+    status          VARCHAR(20) NOT NULL DEFAULT 'pending',
+    payment_method  VARCHAR(50),
+    checkout_url    TEXT,
+    webhook_payload JSONB,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_payments_booking_id ON payments(booking_id);
+CREATE INDEX IF NOT EXISTS idx_payments_tx_ref ON payments(tx_ref);
+CREATE INDEX IF NOT EXISTS idx_payments_couple_id ON payments(couple_id);
+
 -- Realtime indexes
 CREATE INDEX IF NOT EXISTS idx_notification_user_id ON notification(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversation_participants ON conversation(participant_one, participant_two);
