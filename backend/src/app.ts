@@ -28,6 +28,8 @@ import { sendNotification } from "./features/realtime/use-cases/send-notificatio
 import { getSendEmailUseCase } from "./features/email/index.js";
 import coupleRoutes from "./features/couple/presentation/couple.routes.js";
 import { initCoupleTables } from "./features/couple/infrastructure/init-tables.js";
+import paymentRoutes from "./features/payment/presentation/payment.routes.js";
+import { initPaymentTables } from "./features/payment/infrastructure/init-tables.js";
 
 const app = express();
 
@@ -321,6 +323,7 @@ app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/admin/reviews", adminReviewRoutes);
 app.use("/api/v1/couple", coupleRoutes);
+app.use("/api/v1/payments", paymentRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
@@ -351,6 +354,12 @@ initAvailabilityTable().catch((err) => {
 initCoupleTables().catch((err) => {
   console.error("Failed to initialize couple tables:", err);
 });
+
+initBookingTables()
+  .then(() => initPaymentTables())
+  .catch((err) => {
+    console.error("Failed to initialize payment tables:", err);
+  });
 
 ensureBucketExists().catch((err) => {
   console.error("Failed to ensure Supabase storage bucket:", err);

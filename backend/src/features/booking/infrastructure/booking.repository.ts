@@ -56,7 +56,7 @@ export async function findById(id: string): Promise<Booking | null> {
 
 export async function findByIdWithDetails(id: string): Promise<BookingDetail | null> {
   const { rows } = await pool.query(
-    `SELECT b.*, vp.business_name
+    `SELECT b.*, vp.business_name, vp.price_range_min, vp.price_range_max
      FROM bookings b
      JOIN vendor_profiles vp ON vp.id = b.vendor_profile_id
      WHERE b.id = $1`,
@@ -67,6 +67,8 @@ export async function findByIdWithDetails(id: string): Promise<BookingDetail | n
   return {
     ...rowToBooking(row),
     businessName: row.business_name as string,
+    priceRangeMin: row.price_range_min ? parseFloat(row.price_range_min as string) : null,
+    priceRangeMax: row.price_range_max ? parseFloat(row.price_range_max as string) : null,
   };
 }
 
