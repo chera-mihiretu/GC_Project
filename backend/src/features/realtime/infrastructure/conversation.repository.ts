@@ -82,7 +82,16 @@ export async function getConversationsByUser(
 
 export async function getEnrichedConversationsByUser(
   userId: string,
-): Promise<EnrichedConversation[]> {
+  limit = 20,
+  offset = 0,
+): Promise<{ conversations: EnrichedConversation[]; total: number }> {
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total FROM conversation
+     WHERE participant_one = $1 OR participant_two = $1`,
+    [userId],
+  );
+  const total = countResult.rows[0]?.total ?? 0;
+
   const result = await pool.query(
     `SELECT
        c.*,
@@ -107,10 +116,11 @@ export async function getEnrichedConversationsByUser(
          AND read = FALSE
      ) unread ON TRUE
      WHERE c.participant_one = $1 OR c.participant_two = $1
-     ORDER BY c.last_message_at DESC`,
-    [userId],
+     ORDER BY c.last_message_at DESC
+     LIMIT $2 OFFSET $3`,
+    [userId, limit, offset],
   );
-  return result.rows.map(rowToEnrichedConversation);
+  return { conversations: result.rows.map(rowToEnrichedConversation), total };
 }
 
 export async function getConversationById(

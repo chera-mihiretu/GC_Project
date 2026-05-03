@@ -8,6 +8,7 @@ import {
 } from "../use-cases/validate-session.js";
 import type { SessionContext } from "../domain/types.js";
 import type { UserRole } from "../domain/roles.js";
+import { pool } from "../../../config/db.js";
 
 declare global {
   namespace Express {
@@ -63,6 +64,22 @@ export function requireRole(...roles: UserRole[]) {
     }
 
     if (!hasAnyRole(context, roles)) {
+      if (roles.includes("vendor" as UserRole)) {
+        try {
+          const result = await pool.query(
+            `SELECT m."organizationId" FROM "member" m WHERE m."userId" = $1 LIMIT 1`,
+            [context.user.id],
+          );
+          if (result.rows.length > 0) {
+            req.authContext = context;
+            next();
+            return;
+          }
+        } catch {
+          // Fall through to forbidden
+        }
+      }
+
       res.status(403).json({
         error: {
           code: "FORBIDDEN",

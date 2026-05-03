@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
+import ImpersonationBanner from "@/components/impersonation-banner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${playfair.variable}`}>
       <body suppressHydrationWarning className="min-h-screen bg-warm-50 text-slate-800 font-body antialiased">
+        <ImpersonationBanner />
         {children}
       </body>
     </html>

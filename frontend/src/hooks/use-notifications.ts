@@ -5,9 +5,13 @@ import { getSocket, type TypedSocket } from "@/lib/socket-client";
 import { apiFetch } from "@/services/auth.service";
 import type { Notification } from "@/types/realtime";
 
+const NOTIFICATIONS_PAGE_SIZE = 20;
+
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const socketRef = useRef<TypedSocket | null>(null);
 
   useEffect(() => {
@@ -42,16 +46,38 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/v1/notifications?limit=20&offset=0");
+      const res = await apiFetch(
+        `/api/v1/notifications?limit=${NOTIFICATIONS_PAGE_SIZE}&offset=0`,
+      );
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications);
         setUnreadCount(data.unreadCount);
+        setHasMore(data.notifications.length >= NOTIFICATIONS_PAGE_SIZE);
       }
     } catch {
       // Network error — leave current state
     }
   }, []);
+
+  const fetchMoreNotifications = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const res = await apiFetch(
+        `/api/v1/notifications?limit=${NOTIFICATIONS_PAGE_SIZE}&offset=${notifications.length}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const fetched = data.notifications as Notification[];
+        setNotifications((prev) => [...prev, ...fetched]);
+        setHasMore(fetched.length >= NOTIFICATIONS_PAGE_SIZE);
+      }
+    } catch {
+      // Network error
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [notifications.length]);
 
   const markRead = useCallback((id: string) => {
     socketRef.current?.emit("notification:mark-read", { id });
@@ -64,7 +90,10 @@ export function useNotifications() {
   return {
     notifications,
     unreadCount,
+    hasMore,
+    loadingMore,
     fetchNotifications,
+    fetchMoreNotifications,
     markRead,
     markAllRead,
   };

@@ -4,7 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getVendorDetail, startConversation } from "@/services/public-vendor.service";
+import {
+  getVendorDetail,
+  startConversation,
+  getVendorPortfolio,
+  getVendorPortfolioByCategory,
+  type PublicPortfolioItem,
+} from "@/services/public-vendor.service";
 import BookingRequestForm from "@/components/booking/booking-request-form";
 import type { VendorProfile } from "@/types/vendor";
 import {
@@ -19,6 +25,8 @@ import {
   FiLoader,
   FiAlertCircle,
   FiX,
+  FiFilm,
+  FiImage,
 } from "react-icons/fi";
 import { StarRating } from "@/components/review/star-rating";
 import { ReviewList } from "@/components/review/review-list";
@@ -42,20 +50,54 @@ export default function VendorDetailPage() {
   const [error, setError] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [lightboxItems, setLightboxItems] = useState<PublicPortfolioItem[]>([]);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [portfolioItems, setPortfolioItems] = useState<Record<string, PublicPortfolioItem[]>>({});
+  const [portfolioTotals, setPortfolioTotals] = useState<Record<string, number>>({});
+  const [loadingMorePortfolio, setLoadingMorePortfolio] = useState(false);
+  const [activePortfolioTab, setActivePortfolioTab] = useState("");
 
   const fetchVendor = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const data = await getVendorDetail(vendorId);
+      const [data, pItems] = await Promise.all([
+        getVendorDetail(vendorId),
+        getVendorPortfolio(vendorId),
+      ]);
       setVendor(data);
+      setPortfolioItems(pItems);
+      const newTotals: Record<string, number> = {};
+      for (const [cat, items] of Object.entries(pItems)) {
+        newTotals[cat] = items.length;
+      }
+      setPortfolioTotals(newTotals);
+      const tabKeys = Object.keys(pItems);
+      if (tabKeys.length > 0) setActivePortfolioTab(tabKeys[0]);
     } catch {
       setError("Failed to load vendor details.");
     } finally {
       setLoading(false);
     }
   }, [vendorId]);
+
+  const loadMorePortfolio = useCallback(async () => {
+    if (!activePortfolioTab || loadingMorePortfolio) return;
+    setLoadingMorePortfolio(true);
+    try {
+      const currentItems = portfolioItems[activePortfolioTab] ?? [];
+      const result = await getVendorPortfolioByCategory(vendorId, activePortfolioTab, 12, currentItems.length);
+      setPortfolioItems((prev) => ({
+        ...prev,
+        [activePortfolioTab]: [...(prev[activePortfolioTab] ?? []), ...result.items],
+      }));
+      setPortfolioTotals((prev) => ({ ...prev, [activePortfolioTab]: result.total }));
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMorePortfolio(false);
+    }
+  }, [activePortfolioTab, portfolioItems, vendorId, loadingMorePortfolio]);
 
   useEffect(() => {
     fetchVendor();
@@ -116,8 +158,11 @@ export default function VendorDetailPage() {
 
   const cats = vendor.category ?? [];
   const price = formatPrice(vendor.priceRangeMin, vendor.priceRangeMax);
-  const portfolio = vendor.portfolio ?? [];
   const socialMedia = vendor.socialMedia ?? {};
+  const portfolioTabs = Object.keys(portfolioItems);
+  const allPortfolioFlat = Object.values(portfolioItems).flat();
+  const firstImage = allPortfolioFlat.find((i) => i.mediaType === "image");
+  const currentTabItems = portfolioItems[activePortfolioTab] ?? [];
 
   return (
     <div className="space-y-6">
@@ -139,9 +184,9 @@ export default function VendorDetailPage() {
       <div className="bg-white rounded-xl border border-gray-200/80 p-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="relative w-20 h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-            {portfolio[0] ? (
+            {firstImage ? (
               <Image
-                src={portfolio[0]}
+                src={firstImage.mediaUrl}
                 alt={vendor.businessName ?? "Vendor"}
                 fill
                 className="object-cover"
@@ -226,34 +271,103 @@ export default function VendorDetailPage() {
             </div>
           )}
 
-          {/* Portfolio gallery */}
+          {/* Portfolio gallery with category tabs */}
           <div className="bg-white rounded-xl border border-gray-200/80 p-6">
             <h2 className="text-sm font-semibold text-gray-900 mb-3">Portfolio</h2>
-            {portfolio.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {portfolio.map((url, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setLightboxIdx(i)}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group cursor-pointer"
-                  >
-                    <Image
-                      src={url}
-                      alt={`Portfolio ${i + 1}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      unoptimized
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <FiExternalLink className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+
+            {portfolioTabs.length > 0 ? (
+              <>
+                {portfolioTabs.length > 1 && (
+                  <div className="flex gap-1 overflow-x-auto border-b border-gray-200 mb-4 pb-px scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
+                    {portfolioTabs.map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActivePortfolioTab(tab)}
+                        className={`px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-colors capitalize cursor-pointer ${
+                          activePortfolioTab === tab
+                            ? "border-rose-500 text-rose-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        {tab}
+                        <span className="ml-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                          {portfolioTotals[tab] ?? (portfolioItems[tab] ?? []).length}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {currentTabItems.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {currentTabItems.map((item, i) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setLightboxItems(currentTabItems);
+                            setLightboxIdx(i);
+                          }}
+                          className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group cursor-pointer"
+                        >
+                          {item.mediaType === "video" ? (
+                            <video
+                              src={item.mediaUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                            />
+                          ) : (
+                            <Image
+                              src={item.mediaUrl}
+                              alt={item.caption ?? `Portfolio ${i + 1}`}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              unoptimized
+                            />
+                          )}
+                          {item.mediaType === "video" && (
+                            <div className="absolute top-2 left-2 bg-black/60 text-white rounded-md px-1.5 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                              <FiFilm className="w-3 h-3" /> Video
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <FiExternalLink className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          {item.caption && (
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-white text-[11px] line-clamp-1">{item.caption}</p>
+                            </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
-              </div>
+                    {currentTabItems.length < (portfolioTotals[activePortfolioTab] ?? 0) && (
+                      <div className="flex justify-center pt-4">
+                        <button
+                          onClick={loadMorePortfolio}
+                          disabled={loadingMorePortfolio}
+                          className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                        >
+                          {loadingMorePortfolio ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : null}
+                          {loadingMorePortfolio ? "Loading..." : "Load more"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    No items in this category yet.
+                  </p>
+                )}
+              </>
             ) : (
-              <p className="text-sm text-gray-400 text-center py-8">
-                No portfolio images yet.
-              </p>
+              <div className="text-center py-8">
+                <FiImage className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">
+                  No portfolio items yet.
+                </p>
+              </div>
             )}
           </div>
 
@@ -357,28 +471,28 @@ export default function VendorDetailPage() {
       </div>
 
       {/* Lightbox */}
-      {lightboxIdx !== null && (
+      {lightboxIdx !== null && lightboxItems.length > 0 && (
         <div
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
           onClick={() => setLightboxIdx(null)}
         >
           <button
             onClick={() => setLightboxIdx(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
           >
             <FiX className="w-5 h-5" />
           </button>
 
-          {portfolio.length > 1 && (
+          {lightboxItems.length > 1 && (
             <>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxIdx((prev) =>
-                    prev! > 0 ? prev! - 1 : portfolio.length - 1,
+                    prev! > 0 ? prev! - 1 : lightboxItems.length - 1,
                   );
                 }}
-                className="absolute left-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="absolute left-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
               >
                 ‹
               </button>
@@ -386,25 +500,41 @@ export default function VendorDetailPage() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxIdx((prev) =>
-                    prev! < portfolio.length - 1 ? prev! + 1 : 0,
+                    prev! < lightboxItems.length - 1 ? prev! + 1 : 0,
                   );
                 }}
-                className="absolute right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="absolute right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
               >
                 ›
               </button>
             </>
           )}
 
-          <img
-            src={portfolio[lightboxIdx]}
-            alt={`Portfolio ${lightboxIdx + 1}`}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {lightboxItems[lightboxIdx].mediaType === "video" ? (
+            <video
+              src={lightboxItems[lightboxIdx].mediaUrl}
+              className="max-w-full max-h-full rounded-lg shadow-2xl"
+              controls
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={lightboxItems[lightboxIdx].mediaUrl}
+              alt={lightboxItems[lightboxIdx].caption ?? `Portfolio ${lightboxIdx + 1}`}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
 
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 text-sm">
-            {lightboxIdx + 1} / {portfolio.length}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
+            {lightboxItems[lightboxIdx].caption && (
+              <p className="text-white/90 text-sm mb-1">{lightboxItems[lightboxIdx].caption}</p>
+            )}
+            <span className="text-white/50 text-xs">
+              {lightboxIdx + 1} / {lightboxItems.length}
+            </span>
           </div>
         </div>
       )}

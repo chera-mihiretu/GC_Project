@@ -11,6 +11,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
+  const emailParam = searchParams.get("email") || "";
   const { data: session, isPending } = useSession();
   const [verificationStatus, setVerificationStatus] = useState<
     "loading" | "success" | "error"
@@ -22,11 +23,19 @@ function VerifyEmailContent() {
       ? verificationStatus
       : "error";
 
-  const redirectToDashboard = useCallback(() => {
+  const redirectParam = searchParams.get("redirect") || "";
+
+  const redirectAfterVerification = useCallback(() => {
+    const dest = redirectParam || (() => { try { return localStorage.getItem("twedar_post_verify_redirect") || ""; } catch { return ""; } })();
+    if (dest) {
+      try { localStorage.removeItem("twedar_post_verify_redirect"); } catch {}
+      router.push(dest);
+      return;
+    }
     const role = (session?.user as Record<string, unknown> | undefined)
       ?.role as string | undefined;
     router.push(getDashboardPath(role));
-  }, [session, router]);
+  }, [session, router, redirectParam]);
 
   useEffect(() => {
     if (isPending) return;
@@ -43,13 +52,13 @@ function VerifyEmailContent() {
     if (status !== "success") return;
 
     if (countdown <= 0) {
-      redirectToDashboard();
+      redirectAfterVerification();
       return;
     }
 
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
-  }, [status, countdown, redirectToDashboard]);
+  }, [status, countdown, redirectAfterVerification]);
 
   if (status === "loading") {
     return (
@@ -82,14 +91,18 @@ function VerifyEmailContent() {
           second{countdown !== 1 ? "s" : ""}...
         </p>
         <button
-          onClick={redirectToDashboard}
+          onClick={redirectAfterVerification}
           className="inline-block px-8 py-3 bg-linear-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5 cursor-pointer"
         >
-          Go to dashboard now
+          {redirectParam ? "Continue" : "Go to dashboard now"}
         </button>
       </div>
     );
   }
+
+  const loginHref = emailParam
+    ? `/login?email=${encodeURIComponent(emailParam)}`
+    : "/login";
 
   return (
     <div className="text-center py-5">
@@ -98,15 +111,23 @@ function VerifyEmailContent() {
         Verification failed
       </h1>
       <p className="text-[15px] text-slate-500 mb-7 leading-relaxed">
-        This link may have expired or is invalid. Please try registering again
-        to receive a new verification email.
+        This link may have expired or is invalid. Please try logging in
+        or registering again to receive a new verification email.
       </p>
-      <a
-        href="/register"
-        className="inline-block px-8 py-3 bg-linear-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
-      >
-        Back to registration
-      </a>
+      <div className="flex flex-col gap-3 items-center">
+        <a
+          href={loginHref}
+          className="inline-block px-8 py-3 bg-linear-to-r from-rose-500 to-rose-600 text-white rounded-[10px] text-sm font-semibold shadow-[0_2px_8px_rgba(244,63,94,0.25)] transition-all hover:from-rose-600 hover:to-rose-700 hover:shadow-[0_4px_16px_rgba(244,63,94,0.35)] hover:-translate-y-0.5"
+        >
+          Go to login
+        </a>
+        <a
+          href="/register"
+          className="text-sm text-slate-500 hover:text-rose-500 transition-colors"
+        >
+          Back to registration
+        </a>
+      </div>
     </div>
   );
 }

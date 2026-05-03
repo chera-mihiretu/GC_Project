@@ -6,6 +6,8 @@ import {
 import { getVendorAvailabilityForMonth } from "../use-cases/manage-availability.js";
 import { findById } from "../infrastructure/vendor-profile.repository.js";
 import { findByVendorProfileIdWithAuthor } from "../../review/infrastructure/review.repository.js";
+import { findByVendorProfileId, findByVendorProfileIdPaginated } from "../infrastructure/portfolio.repository.js";
+import type { PortfolioItem } from "../infrastructure/portfolio.repository.js";
 
 const router = Router();
 
@@ -25,6 +27,48 @@ router.get("/:vendorId/reviews", async (req: Request, res: Response): Promise<vo
     res.status(error.statusCode ?? 500).json({
       error: { code: "SERVER_ERROR", message: error.message },
     });
+  }
+});
+
+router.get("/:vendorId/portfolio", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const vendorProfileId = req.params.vendorId as string;
+    const profile = await findById(vendorProfileId);
+    if (!profile) {
+      res.status(404).json({ error: { message: "Vendor not found" } });
+      return;
+    }
+    const items = await findByVendorProfileId(vendorProfileId);
+    const grouped: Record<string, PortfolioItem[]> = {};
+    for (const item of items) {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    }
+    res.json({ portfolio: grouped });
+  } catch (err) {
+    const error = err as Error & { statusCode?: number };
+    res.status(error.statusCode ?? 500).json({ error: { message: error.message } });
+  }
+});
+
+router.get("/:vendorId/portfolio/:category", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const vendorProfileId = req.params.vendorId as string;
+    const category = req.params.category as string;
+    const limit = Math.min(Number(req.query.limit) || 12, 50);
+    const offset = Number(req.query.offset) || 0;
+
+    const profile = await findById(vendorProfileId);
+    if (!profile) {
+      res.status(404).json({ error: { message: "Vendor not found" } });
+      return;
+    }
+    const result = await findByVendorProfileIdPaginated(vendorProfileId, category, limit, offset);
+    res.json(result);
+  } catch (err) {
+    const error = err as Error & { statusCode?: number };
+    res.status(error.statusCode ?? 500).json({ error: { message: error.message } });
+  }
   }
 });
 

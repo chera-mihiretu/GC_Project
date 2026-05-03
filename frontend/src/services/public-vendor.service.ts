@@ -48,6 +48,39 @@ export async function getVendorDetail(
   return data.vendor;
 }
 
+export interface PublicPortfolioItem {
+  id: string;
+  vendorProfileId: string;
+  category: string;
+  mediaUrl: string;
+  mediaType: "image" | "video";
+  caption: string | null;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export async function getVendorPortfolio(
+  vendorId: string,
+): Promise<Record<string, PublicPortfolioItem[]>> {
+  const res = await apiFetch(`${BASE}/${vendorId}/portfolio`);
+  if (!res.ok) return {};
+  const data = await res.json();
+  return data.portfolio;
+}
+
+export async function getVendorPortfolioByCategory(
+  vendorId: string,
+  category: string,
+  limit = 12,
+  offset = 0,
+): Promise<{ items: PublicPortfolioItem[]; total: number }> {
+  const res = await apiFetch(
+    `${BASE}/${vendorId}/portfolio/${encodeURIComponent(category)}?limit=${limit}&offset=${offset}`,
+  );
+  if (!res.ok) return { items: [], total: 0 };
+  return res.json();
+}
+
 export async function startConversation(
   participantId: string,
 ): Promise<Conversation> {

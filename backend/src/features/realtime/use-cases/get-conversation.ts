@@ -14,8 +14,10 @@ export async function listUserConversations(
 
 export async function listEnrichedUserConversations(
   userId: string,
-): Promise<EnrichedConversation[]> {
-  return getEnrichedConversationsByUser(userId);
+  limit = 20,
+  offset = 0,
+): Promise<{ conversations: EnrichedConversation[]; total: number }> {
+  return getEnrichedConversationsByUser(userId, limit, offset);
 }
 
 export async function getConversation(

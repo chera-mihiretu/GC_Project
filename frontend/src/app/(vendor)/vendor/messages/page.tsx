@@ -8,6 +8,7 @@ import ChatList from "@/components/realtime/chat-list";
 import ChatWindow from "@/components/realtime/chat-window";
 import type { Conversation } from "@/types/realtime";
 import { FiMessageSquare, FiArrowLeft } from "react-icons/fi";
+import { getVendorContext } from "@/services/vendor.service";
 
 function getOtherParticipant(conv: Conversation, currentUserId: string) {
   const isP1 = conv.participantOne === currentUserId;
@@ -28,8 +29,16 @@ export default function VendorMessagesPage() {
 
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [effectiveUserId, setEffectiveUserId] = useState<string>("");
 
-  const currentUserId = session?.user?.id ?? "";
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    getVendorContext()
+      .then((ctx) => setEffectiveUserId(ctx.vendorOwnerId))
+      .catch(() => setEffectiveUserId(session.user.id));
+  }, [session?.user?.id]);
+
+  const currentUserId = effectiveUserId;
 
   useEffect(() => {
     if (!socket) return;

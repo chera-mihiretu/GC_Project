@@ -77,4 +77,22 @@ export async function initVendorTables(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_vendor_profiles_geo
     ON vendor_profiles USING gist (latitude, longitude)
   `);
+
+  // Portfolio items table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS vendor_portfolio_items (
+      id                 TEXT PRIMARY KEY,
+      vendor_profile_id  TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+      category           TEXT NOT NULL,
+      media_url          TEXT NOT NULL,
+      media_type         TEXT NOT NULL,
+      caption            TEXT,
+      sort_order         INTEGER DEFAULT 0,
+      created_at         TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_portfolio_items_vendor_cat
+    ON vendor_portfolio_items(vendor_profile_id, category)
+  `);
 }

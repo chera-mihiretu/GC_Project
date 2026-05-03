@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
+import { useSession, organization } from "@/lib/auth-client";
 import { authClient } from "@/lib/auth-client";
 
 interface AuthGuardProps {
@@ -14,6 +14,8 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const retried = useRef(false);
+  const [orgChecked, setOrgChecked] = useState(false);
+  const [orgAllowed, setOrgAllowed] = useState(false);
 
   const verifyAndRedirect = useCallback(async () => {
     if (retried.current) return;
@@ -37,15 +39,39 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       return;
     }
 
+    const userRole = (session.user as Record<string, unknown>).role as string;
+
     if (allowedRoles && allowedRoles.length > 0) {
-      const userRole = (session.user as Record<string, unknown>).role as string;
-      if (!allowedRoles.includes(userRole)) {
-        router.replace("/login");
+      if (allowedRoles.includes(userRole)) {
+        setOrgChecked(true);
+        setOrgAllowed(true);
+        return;
       }
+
+      if (allowedRoles.includes("vendor")) {
+        organization.list().then((res) => {
+          const orgs = res?.data;
+          if (orgs && orgs.length > 0) {
+            setOrgAllowed(true);
+          } else {
+            router.replace("/login");
+          }
+          setOrgChecked(true);
+        }).catch(() => {
+          router.replace("/login");
+          setOrgChecked(true);
+        });
+        return;
+      }
+
+      router.replace("/login");
+    } else {
+      setOrgChecked(true);
+      setOrgAllowed(true);
     }
   }, [session, isPending, allowedRoles, router, verifyAndRedirect]);
 
-  if (isPending || (!session?.user && !retried.current)) {
+  if (isPending || (!session?.user && !retried.current) || (allowedRoles && !orgChecked)) {
     return (
       <div
         style={{
@@ -61,7 +87,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     );
   }
 
-  if (!session?.user) {
+  if (!session?.user || (allowedRoles && !orgAllowed)) {
     return null;
   }
 

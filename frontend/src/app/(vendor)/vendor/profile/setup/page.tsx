@@ -10,6 +10,8 @@ import {
   createVendorProfile,
   updateVendorProfile,
   submitForVerification,
+  getVendorContext,
+  type VendorContext,
 } from "@/services/vendor.service";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
 import type { VendorProfileFormData } from "@/components/vendor/vendor-profile-form";
@@ -20,11 +22,16 @@ export default function VendorProfileSetup() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [vendorCtx, setVendorCtx] = useState<VendorContext | null>(null);
 
   const fetchProfile = useCallback(async () => {
     try {
-      const data = await getVendorProfile();
+      const [data, ctx] = await Promise.all([
+        getVendorProfile(),
+        getVendorContext().catch(() => null),
+      ]);
       setProfile(data?.vendorProfile ?? null);
+      setVendorCtx(ctx);
     } catch {
       setProfile(null);
     } finally {
@@ -67,13 +74,17 @@ export default function VendorProfileSetup() {
     );
   }
 
+  const staffMember = vendorCtx?.isStaff === true;
+
   const canEdit =
-    !profile ||
-    profile.status === VendorStatus.REGISTERED ||
-    profile.status === VendorStatus.REJECTED ||
-    profile.status === VendorStatus.VERIFIED;
+    !staffMember &&
+    (!profile ||
+      profile.status === VendorStatus.REGISTERED ||
+      profile.status === VendorStatus.REJECTED ||
+      profile.status === VendorStatus.VERIFIED);
 
   const canSubmit =
+    !staffMember &&
     profile &&
     (profile.status === VendorStatus.REGISTERED ||
       profile.status === VendorStatus.REJECTED) &&
@@ -94,10 +105,14 @@ export default function VendorProfileSetup() {
 
       <div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {profile ? "Edit Profile" : "Set Up Your Profile"}
-          </h1>
+          {staffMember
+            ? "Business Profile"
+            : profile ? "Edit Profile" : "Set Up Your Profile"}
+        </h1>
         <p className="text-gray-500 text-sm">
-          Fill in your business information and upload required documents.
+          {staffMember
+            ? "You are viewing the vendor profile as a staff member (read-only)."
+            : "Fill in your business information and upload required documents."}
         </p>
       </div>
 

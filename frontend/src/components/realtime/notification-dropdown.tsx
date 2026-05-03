@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useSocketContext } from "./socket-provider";
-import { FiCheck, FiCheckCircle } from "react-icons/fi";
+import { FiCheck, FiCheckCircle, FiLoader } from "react-icons/fi";
 import type { Notification } from "@/types/realtime";
 
 function timeAgo(dateStr: string): string {
@@ -58,8 +58,11 @@ export default function NotificationDropdown({
   const {
     notifications,
     unreadCount,
+    hasMoreNotifications,
+    loadingMoreNotifications,
     markNotificationRead,
     markAllNotificationsRead,
+    fetchMoreNotifications,
   } = useSocketContext();
 
   function handleClick(n: Notification) {
@@ -94,60 +97,77 @@ export default function NotificationDropdown({
             No notifications yet
           </div>
         ) : (
-          notifications.map((n) => {
-            const href = getNotificationHref(n);
-            return (
-              <div
-                key={n.id}
-                onClick={() => handleClick(n)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") handleClick(n);
-                }}
-                className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0 transition-colors ${
-                  href ? "cursor-pointer" : "cursor-default"
-                } ${
-                  n.read
-                    ? "bg-white hover:bg-gray-50/80"
-                    : "bg-rose-50/40 hover:bg-rose-50/70"
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm leading-snug ${
-                      n.read
-                        ? "text-gray-600"
-                        : "text-gray-900 font-medium"
-                    }`}
-                  >
-                    {n.title}
-                  </p>
-                  {n.body && (
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
-                      {n.body}
+          <>
+            {notifications.map((n) => {
+              const href = getNotificationHref(n);
+              return (
+                <div
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") handleClick(n);
+                  }}
+                  className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 last:border-b-0 transition-colors ${
+                    href ? "cursor-pointer" : "cursor-default"
+                  } ${
+                    n.read
+                      ? "bg-white hover:bg-gray-50/80"
+                      : "bg-rose-50/40 hover:bg-rose-50/70"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-sm leading-snug ${
+                        n.read
+                          ? "text-gray-600"
+                          : "text-gray-900 font-medium"
+                      }`}
+                    >
+                      {n.title}
                     </p>
-                  )}
-                  <p className="text-[11px] text-gray-300 mt-1">
-                    {timeAgo(n.createdAt)}
-                  </p>
-                </div>
+                    {n.body && (
+                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
+                        {n.body}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-gray-300 mt-1">
+                      {timeAgo(n.createdAt)}
+                    </p>
+                  </div>
 
-                {!n.read && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markNotificationRead(n.id);
-                    }}
-                    className="shrink-0 p-1 text-gray-300 hover:text-rose-500 transition-colors"
-                    title="Mark as read"
-                  >
-                    <FiCheck className="w-4 h-4" />
-                  </button>
-                )}
+                  {!n.read && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markNotificationRead(n.id);
+                      }}
+                      className="shrink-0 p-1 text-gray-300 hover:text-rose-500 transition-colors"
+                      title="Mark as read"
+                    >
+                      <FiCheck className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {hasMoreNotifications && (
+              <div className="p-3 flex justify-center border-t border-gray-50">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fetchMoreNotifications();
+                  }}
+                  disabled={loadingMoreNotifications}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  {loadingMoreNotifications ? <FiLoader className="w-3 h-3 animate-spin" /> : null}
+                  {loadingMoreNotifications ? "Loading..." : "Load more"}
+                </button>
               </div>
-            );
-          })
+            )}
+          </>
         )}
       </div>
     </div>

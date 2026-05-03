@@ -13,6 +13,7 @@ import {
   FiFileText,
   FiImage,
   FiMessageSquare,
+  FiSettings,
 } from "react-icons/fi";
 
 const navItems: NavItem[] = [
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { label: "Documents", href: "/vendor/documents", icon: FiFileText },
   { label: "Portfolio", href: "/vendor/portfolio", icon: FiImage },
   { label: "Messages", href: "/vendor/messages", icon: FiMessageSquare },
+  { label: "Settings", href: "/vendor/settings", icon: FiSettings },
 ];
 
 export default function VendorLayout({

@@ -6,6 +6,7 @@ import type { Conversation, ChatMessage } from "@/types/realtime";
 import { useSocketContext } from "./socket-provider";
 import PresenceDot from "./presence-dot";
 import Image from "next/image";
+import { FiLoader } from "react-icons/fi";
 
 interface ChatListProps {
   currentUserId: string;
@@ -50,7 +51,10 @@ export default function ChatList({
   const {
     conversations,
     loading,
+    loadingMore,
+    hasMoreConversations,
     fetchConversations,
+    fetchMoreConversations,
     updateConversationFromMessage,
   } = useConversations();
   const { socket } = useSocketContext();
@@ -177,6 +181,18 @@ export default function ChatList({
           </button>
         );
       })}
+      {hasMoreConversations && (
+        <div className="p-3 flex justify-center">
+          <button
+            onClick={fetchMoreConversations}
+            disabled={loadingMore}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            {loadingMore ? <FiLoader className="w-3 h-3 animate-spin" /> : null}
+            {loadingMore ? "Loading..." : "Load more"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

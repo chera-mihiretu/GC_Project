@@ -88,3 +88,15 @@ export async function submitForVerification(): Promise<{
   }
   return res.json();
 }
+
+export interface VendorContext {
+  vendorOwnerId: string;
+  orgRole: "owner" | "member";
+  isStaff: boolean;
+}
+
+export async function getVendorContext(): Promise<VendorContext> {
+  const res = await apiFetch(BASE + "/context");
+  if (!res.ok) throw new Error("Failed to fetch vendor context");
+  return res.json();
+}

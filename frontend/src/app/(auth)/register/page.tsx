@@ -22,10 +22,14 @@ export default function RegisterPage() {
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isInvitation = searchParams.get("invitation") === "1";
+  const redirectPath = searchParams.get("redirect") || "";
+  const inviteEmail = searchParams.get("email") || "";
+
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<RoleOption>("couple");
+  const [role, setRole] = useState<RoleOption>(isInvitation ? "vendor" : "couple");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -70,79 +74,106 @@ function RegisterForm() {
     }
 
     if (data?.user) {
-      router.push(`/check-email?email=${encodeURIComponent(email)}`);
+      if (isInvitation && redirectPath) {
+        const invIdMatch = redirectPath.match(/\/accept-invitation\/(.+)/);
+        if (invIdMatch) {
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+          fetch(`${apiBase}/api/v1/auth/invitation/${invIdMatch[1]}/accepted`, {
+            method: "POST",
+            credentials: "include",
+          }).catch(() => {});
+        }
+        try { localStorage.setItem("twedar_post_verify_redirect", redirectPath); } catch {}
+        router.push(`/check-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectPath)}`);
+      } else {
+        router.push(`/check-email?email=${encodeURIComponent(email)}`);
+      }
     }
   }
 
   return (
     <>
       <h1 className="text-2xl font-bold text-slate-800 mb-1">
-        Begin your journey
+        {isInvitation ? "Join your team" : "Begin your journey"}
       </h1>
       <p className="text-slate-500 mb-6">
-        Create your account and start planning
+        {isInvitation
+          ? "Create your staff account to accept the invitation"
+          : "Create your account and start planning"}
       </p>
 
+      {isInvitation && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700 mb-2">
+          <PiStorefrontDuotone className="inline w-4 h-4 mr-1.5 -mt-0.5" />
+          You&apos;re being invited as <strong>vendor staff</strong>. Your account will be set up accordingly.
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Role selector */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-700">
-            I am a...
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setRole("couple")}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-all cursor-pointer ${
-                role === "couple"
-                  ? "border-rose-400 bg-rose-50 ring-2 ring-rose-100"
-                  : "border-slate-200 bg-white hover:border-slate-300"
-              }`}
-            >
-              <FiHeart className={`w-5 h-5 ${role === "couple" ? "text-rose-500" : "text-slate-400"}`} />
-              <span className="text-sm font-medium text-slate-700">Couple</span>
-              <span className="text-[10px] text-slate-400">Planning our wedding</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("vendor")}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-all cursor-pointer ${
-                role === "vendor"
-                  ? "border-rose-400 bg-rose-50 ring-2 ring-rose-100"
-                  : "border-slate-200 bg-white hover:border-slate-300"
-              }`}
-            >
-              <PiStorefrontDuotone className={`w-5 h-5 ${role === "vendor" ? "text-rose-500" : "text-slate-400"}`} />
-              <span className="text-sm font-medium text-slate-700">Vendor</span>
-              <span className="text-[10px] text-slate-400">Offering services</span>
-            </button>
+        {!isInvitation && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">
+              I am a...
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setRole("couple")}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-all cursor-pointer ${
+                  role === "couple"
+                    ? "border-rose-400 bg-rose-50 ring-2 ring-rose-100"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <FiHeart className={`w-5 h-5 ${role === "couple" ? "text-rose-500" : "text-slate-400"}`} />
+                <span className="text-sm font-medium text-slate-700">Couple</span>
+                <span className="text-[10px] text-slate-400">Planning our wedding</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("vendor")}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-all cursor-pointer ${
+                  role === "vendor"
+                    ? "border-rose-400 bg-rose-50 ring-2 ring-rose-100"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+              >
+                <PiStorefrontDuotone className={`w-5 h-5 ${role === "vendor" ? "text-rose-500" : "text-slate-400"}`} />
+                <span className="text-sm font-medium text-slate-700">Vendor</span>
+                <span className="text-[10px] text-slate-400">Offering services</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => loginWithGoogle(role)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-          >
-            <FcGoogle className="w-5 h-5" />
-            Continue with Google
-          </button>
-          <button
-            type="button"
-            onClick={() => loginWithApple(role)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-          >
-            <FaApple className="w-5 h-5" />
-            Continue with Apple
-          </button>
-        </div>
+        {!isInvitation && (
+          <>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => loginWithGoogle(role)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+              >
+                <FcGoogle className="w-5 h-5" />
+                Continue with Google
+              </button>
+              <button
+                type="button"
+                onClick={() => loginWithApple(role)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+              >
+                <FaApple className="w-5 h-5" />
+                Continue with Apple
+              </button>
+            </div>
 
-        <div className="flex items-center gap-3 my-1">
-          <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-xs text-slate-400">or with email</span>
-          <div className="flex-1 h-px bg-slate-200" />
-        </div>
+            <div className="flex items-center gap-3 my-1">
+              <div className="flex-1 h-px bg-slate-200" />
+              <span className="text-xs text-slate-400">or with email</span>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+          </>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="name" className="text-sm font-medium text-slate-700">
@@ -169,9 +200,15 @@ function RegisterForm() {
             required
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+            onChange={(e) => { if (!isInvitation || !inviteEmail) setEmail(e.target.value); }}
+            readOnly={isInvitation && !!inviteEmail}
+            className={`w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${
+              isInvitation && inviteEmail ? "bg-slate-50 cursor-not-allowed" : "bg-white"
+            }`}
           />
+          {isInvitation && inviteEmail && (
+            <span className="text-xs text-slate-400">This email is linked to your invitation and cannot be changed.</span>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">

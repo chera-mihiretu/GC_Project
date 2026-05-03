@@ -11,8 +11,11 @@ interface SocketContextValue {
   connected: boolean;
   notifications: Notification[];
   unreadCount: number;
+  hasMoreNotifications: boolean;
+  loadingMoreNotifications: boolean;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  fetchMoreNotifications: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue | null>(null);
@@ -22,7 +25,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const {
     notifications,
     unreadCount,
+    hasMore,
+    loadingMore,
     fetchNotifications,
+    fetchMoreNotifications,
     markRead,
     markAllRead,
   } = useNotifications();
@@ -39,10 +45,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       connected,
       notifications,
       unreadCount,
+      hasMoreNotifications: hasMore,
+      loadingMoreNotifications: loadingMore,
       markNotificationRead: markRead,
       markAllNotificationsRead: markAllRead,
+      fetchMoreNotifications,
     }),
-    [socket, connected, notifications, unreadCount, markRead, markAllRead],
+    [socket, connected, notifications, unreadCount, hasMore, loadingMore, markRead, markAllRead, fetchMoreNotifications],
   );
 
   return (

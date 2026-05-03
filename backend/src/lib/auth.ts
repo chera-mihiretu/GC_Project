@@ -47,7 +47,8 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, token }) => {
-      const verifyUrl = `${env.BETTER_AUTH_URL}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent(`${env.FRONTEND_URL}/verify-email`)}`;
+      const callbackURL = `${env.FRONTEND_URL}/verify-email?email=${encodeURIComponent(user.email)}`;
+      const verifyUrl = `${env.BETTER_AUTH_URL}/api/auth/verify-email?token=${token}&callbackURL=${encodeURIComponent(callbackURL)}`;
       void getSendEmailUseCase().execute({
         to: user.email,
         subject: "Verify your email — Twedar",
@@ -82,6 +83,9 @@ export const auth = betterAuth({
         defaultValue: "couple",
       },
     },
+    deleteUser: {
+      enabled: true,
+    },
   },
   plugins: [
     organization({
@@ -104,7 +108,9 @@ export const auth = betterAuth({
         });
       },
     }),
-    admin(),
+    admin({
+      bannedUserMessage: "Your account has been suspended. Please contact support at support@twedar.com if you believe this is an error.",
+    }),
   ],
   databaseHooks: {
     user: {
@@ -119,14 +125,19 @@ export const auth = betterAuth({
         after: async (user) => {
           if ((user as Record<string, unknown>).role === "vendor") {
             try {
+              const pending = await pool.query(
+                'SELECT 1 FROM "invitation" WHERE email = $1 AND status = $2 LIMIT 1',
+                [user.email, "pending"],
+              );
+              if (pending.rows.length > 0) {
+                return;
+              }
               await auth.api.createOrganization({
                 body: {
                   name: `${user.name}'s Business`,
                   slug: `vendor-${user.id}`,
+                  userId: user.id,
                 },
-                headers: new Headers({
-                  "x-user-id": user.id,
-                }),
               });
             } catch (err) {
               console.error("Failed to auto-create vendor organization:", err);

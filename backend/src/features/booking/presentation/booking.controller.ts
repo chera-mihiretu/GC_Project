@@ -55,8 +55,8 @@ export async function handleListBookings(
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.authContext!.user.id;
-    const role = req.authContext!.user.role;
+    const effectiveRole = req.authContext!.vendorOwnerId ? "vendor" : (req.authContext!.user.role as string);
+    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
     const status = req.query.status as string | undefined;
     const page = req.query.page as string | undefined;
     const limit = req.query.limit as string | undefined;
@@ -68,9 +68,9 @@ export async function handleListBookings(
     };
 
     let result;
-    if (role === "vendor") {
+    if (effectiveRole === "vendor") {
       result = await listBookingsForVendor(userId, filters);
-    } else if (role === "couple") {
+    } else if (effectiveRole === "couple") {
       result = await listBookingsForCouple(userId, filters);
     } else {
       res.status(403).json({
@@ -93,7 +93,7 @@ export async function handleGetBooking(
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.authContext!.user.id;
+    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
     const id = req.params.id as string;
 
     const booking = await getBookingById(id, userId);
@@ -108,8 +108,8 @@ export async function handleUpdateBookingStatus(
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.authContext!.user.id;
-    const role = req.authContext!.user.role as string;
+    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
+    const effectiveRole = req.authContext!.vendorOwnerId ? "vendor" : (req.authContext!.user.role as string);
     const id = req.params.id as string;
     const { status, declineReason } = req.body as {
       status?: string;
@@ -137,7 +137,7 @@ export async function handleUpdateBookingStatus(
     const booking = await updateBookingStatus({
       bookingId: id,
       userId,
-      userRole: role,
+      userRole: effectiveRole,
       newStatus: status as BookingStatus,
       declineReason,
     });

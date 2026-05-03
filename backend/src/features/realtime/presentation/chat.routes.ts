@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { requireAuth } from "../../auth/presentation/auth.middleware.js";
+import { resolveVendorContext } from "../../auth/presentation/vendor-context.middleware.js";
 import {
   listEnrichedUserConversations,
   getConversation,
@@ -9,16 +10,25 @@ import { findOrCreateConversation } from "../infrastructure/conversation.reposit
 
 const router = Router();
 
-router.use(requireAuth());
+router.use(requireAuth(), resolveVendorContext());
+
+function getEffectiveUserId(req: Request): string {
+  if (req.authContext!.user.role === "vendor") {
+    return req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
+  }
+  return req.authContext!.user.id;
+}
 
 router.get("/", async (req: Request, res: Response) => {
-  const userId = req.authContext!.user.id;
-  const conversations = await listEnrichedUserConversations(userId);
-  res.json({ conversations });
+  const userId = getEffectiveUserId(req);
+  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  const offset = Number(req.query.offset) || 0;
+  const result = await listEnrichedUserConversations(userId, limit, offset);
+  res.json({ conversations: result.conversations, total: result.total, limit, offset });
 });
 
 router.get("/:id/messages", async (req: Request<{ id: string }>, res: Response) => {
-  const userId = req.authContext!.user.id;
+  const userId = getEffectiveUserId(req);
   const conversation = await getConversation(req.params.id);
 
   if (!conversation) {
@@ -42,7 +52,7 @@ router.get("/:id/messages", async (req: Request<{ id: string }>, res: Response) 
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  const userId = req.authContext!.user.id;
+  const userId = getEffectiveUserId(req);
   const { participantId } = req.body;
 
   if (!participantId || typeof participantId !== "string") {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
-import { requireAuth } from "../../auth/presentation/auth.middleware.js";
-import { requireRole } from "../../auth/presentation/auth.middleware.js";
+import { requireAuth, requireRole } from "../../auth/presentation/auth.middleware.js";
+import { resolveVendorContext } from "../../auth/presentation/vendor-context.middleware.js";
 import {
   handleCreateProfile,
   handleUpdateProfile,
@@ -31,7 +31,7 @@ const upload = multer({
 
 const router = Router();
 
-router.use(requireAuth(), requireRole("vendor"));
+router.use(requireAuth(), requireRole("vendor"), resolveVendorContext());
 
 router.post("/profile", handleCreateProfile);
 router.patch("/profile", handleUpdateProfile);

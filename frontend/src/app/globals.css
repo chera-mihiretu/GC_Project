@@ -15,3 +15,11 @@
   background: var(--color-rose-200);
   color: var(--color-rose-700);
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

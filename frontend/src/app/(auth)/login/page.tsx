@@ -18,7 +18,8 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const prefillEmail = searchParams.get("email") || "";
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,6 +33,14 @@ function LoginForm() {
     setLoading(false);
 
     if (authError) {
+      const msg = (authError.message ?? "").toLowerCase();
+      const isBanned = msg.includes("banned") || msg.includes("suspended");
+
+      if (isBanned) {
+        setError(authError.message || "Your account has been suspended. Please contact support.");
+        return;
+      }
+
       if (authError.status === 403) {
         router.push(`/check-email?email=${encodeURIComponent(email)}`);
         return;
@@ -41,8 +50,13 @@ function LoginForm() {
     }
 
     if (data?.user) {
-      const role = (data.user as Record<string, unknown>).role as string;
-      router.push(getDashboardPath(role));
+      const redirect = searchParams.get("redirect");
+      if (redirect) {
+        router.push(redirect);
+      } else {
+        const role = (data.user as Record<string, unknown>).role as string;
+        router.push(getDashboardPath(role));
+      }
     }
   }
 

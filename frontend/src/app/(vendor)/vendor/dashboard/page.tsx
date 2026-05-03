@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
-import { getVendorProfile } from "@/services/vendor.service";
+import { getVendorProfile, getVendorContext, type VendorContext } from "@/services/vendor.service";
 import { listBookings } from "@/services/booking.service";
 import VendorStatusBanner from "@/components/vendor/vendor-status-banner";
 import DocumentUpload from "@/components/vendor/document-upload";
@@ -32,6 +32,7 @@ export default function VendorDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<VendorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [vendorCtx, setVendorCtx] = useState<VendorContext | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalBookings: 0,
     pendingBookings: 0,
@@ -40,8 +41,12 @@ export default function VendorDashboard() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const data = await getVendorProfile();
+      const [data, ctx] = await Promise.all([
+        getVendorProfile(),
+        getVendorContext().catch(() => null),
+      ]);
       setProfile(data?.vendorProfile ?? null);
+      setVendorCtx(ctx);
     } catch {
       setProfile(null);
     } finally {
@@ -80,8 +85,9 @@ export default function VendorDashboard() {
 
   const status = profile?.status;
   const noProfile = !profile;
+  const staffMember = vendorCtx?.isStaff === true;
   const needsSetup =
-    noProfile || status === VendorStatus.REGISTERED || status === VendorStatus.REJECTED;
+    !staffMember && (noProfile || status === VendorStatus.REGISTERED || status === VendorStatus.REJECTED);
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
   return (
@@ -105,8 +111,32 @@ export default function VendorDashboard() {
         />
       )}
 
-      {/* No profile — onboarding steps */}
-      {noProfile && (
+      {/* Staff sees owner has no profile yet */}
+      {staffMember && noProfile && (
+        <div className="bg-white rounded-xl border border-gray-200/80 p-8 text-center">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Profile Not Set Up Yet
+          </h2>
+          <p className="text-sm text-gray-500 max-w-md mx-auto">
+            The vendor owner hasn&apos;t completed the business profile yet. You&apos;ll be able to see all data once the profile is set up.
+          </p>
+        </div>
+      )}
+
+      {/* Staff sees owner profile pending/under review */}
+      {staffMember && profile && status !== VendorStatus.VERIFIED && status !== VendorStatus.SUSPENDED && status !== VendorStatus.DEACTIVATED && (
+        <div className="bg-white rounded-xl border border-gray-200/80 p-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {profile.businessName || "Business Profile"}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            The vendor profile is currently <span className="font-medium">{status?.replace(/_/g, " ").toLowerCase()}</span>. Full dashboard features will be available once the profile is verified.
+          </p>
+        </div>
+      )}
+
+      {/* No profile — onboarding steps (owner only) */}
+      {!staffMember && noProfile && (
         <div className="bg-white rounded-xl border border-gray-200/80 p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             Get Started in 3 Steps
@@ -165,8 +195,8 @@ export default function VendorDashboard() {
         </div>
       )}
 
-      {/* Needs setup (has profile but incomplete or rejected) */}
-      {profile && needsSetup && (
+      {/* Needs setup (has profile but incomplete or rejected) — owner only */}
+      {!staffMember && profile && needsSetup && (
         <div className="bg-white rounded-xl border border-gray-200/80 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -272,12 +302,14 @@ export default function VendorDashboard() {
               <h2 className="text-lg font-semibold text-gray-900">
                 {profile.businessName}
               </h2>
-              <button
-                onClick={() => router.push("/vendor/profile/setup")}
-                className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-              >
-                Edit Profile <FiArrowRight className="w-3 h-3" />
-              </button>
+              {!staffMember && (
+                <button
+                  onClick={() => router.push("/vendor/profile/setup")}
+                  className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                >
+                  Edit Profile <FiArrowRight className="w-3 h-3" />
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>

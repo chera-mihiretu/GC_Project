@@ -65,6 +65,9 @@ export function useChat(conversationId: string | null) {
     };
   }, [conversationId]);
 
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+
   const fetchMessages = useCallback(
     async (limit = 50, offset = 0) => {
       if (!conversationId) return;
@@ -74,13 +77,40 @@ export function useChat(conversationId: string | null) {
         );
         if (res.ok) {
           const data = await res.json();
-          setMessages(data.messages.reverse());
+          const msgs = (data.messages as ChatMessage[]).reverse();
+          setMessages(msgs);
+          setHasOlderMessages(msgs.length >= limit);
         }
       } catch {
         // Network error
       }
     },
     [conversationId],
+  );
+
+  const fetchOlderMessages = useCallback(
+    async (limit = 50) => {
+      if (!conversationId || loadingOlder) return;
+      setLoadingOlder(true);
+      try {
+        const res = await apiFetch(
+          `/api/v1/conversations/${conversationId}/messages?limit=${limit}&offset=${messages.length}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const older = (data.messages as ChatMessage[]).reverse();
+          if (older.length > 0) {
+            setMessages((prev) => [...older, ...prev]);
+          }
+          setHasOlderMessages(older.length >= limit);
+        }
+      } catch {
+        // Network error
+      } finally {
+        setLoadingOlder(false);
+      }
+    },
+    [conversationId, messages.length, loadingOlder],
   );
 
   const sendMessage = useCallback(
@@ -110,15 +140,22 @@ export function useChat(conversationId: string | null) {
     messages,
     typingUsers: typingUsersList,
     fetchMessages,
+    fetchOlderMessages,
+    hasOlderMessages,
+    loadingOlder,
     sendMessage,
     sendTyping,
     markRead,
   };
 }
 
+const CONVERSATIONS_PAGE_SIZE = 20;
+
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [total, setTotal] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const hasFetchedRef = useRef(false);
 
   const fetchConversations = useCallback(async () => {
@@ -126,10 +163,13 @@ export function useConversations() {
       setInitialLoading(true);
     }
     try {
-      const res = await apiFetch("/api/v1/conversations");
+      const res = await apiFetch(
+        `/api/v1/conversations?limit=${CONVERSATIONS_PAGE_SIZE}&offset=0`,
+      );
       if (res.ok) {
         const data = await res.json();
         setConversations(data.conversations);
+        setTotal(data.total ?? data.conversations.length);
       }
     } catch {
       // Network error
@@ -138,6 +178,26 @@ export function useConversations() {
       setInitialLoading(false);
     }
   }, []);
+
+  const fetchMoreConversations = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const res = await apiFetch(
+        `/api/v1/conversations?limit=${CONVERSATIONS_PAGE_SIZE}&offset=${conversations.length}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setConversations((prev) => [...prev, ...data.conversations]);
+        setTotal(data.total ?? conversations.length + data.conversations.length);
+      }
+    } catch {
+      // Network error
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [conversations.length]);
+
+  const hasMoreConversations = conversations.length < total;
 
   const updateConversationFromMessage = useCallback(
     (msg: ChatMessage, currentUserId: string) => {
@@ -171,7 +231,10 @@ export function useConversations() {
   return {
     conversations,
     loading: initialLoading,
+    loadingMore,
+    hasMoreConversations,
     fetchConversations,
+    fetchMoreConversations,
     updateConversationFromMessage,
     clearUnread,
   };

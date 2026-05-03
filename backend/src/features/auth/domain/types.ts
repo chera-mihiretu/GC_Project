@@ -22,4 +22,6 @@ export interface AuthSession {
 export interface SessionContext {
   user: AuthUser;
   session: AuthSession;
+  vendorOwnerId?: string;
+  orgRole?: "owner" | "member";
 }

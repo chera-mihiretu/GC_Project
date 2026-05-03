@@ -45,9 +45,22 @@ export default function VendorTeamPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activeOrg, setActiveOrg] = useState<{ id: string; name: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: "remove" | "cancel"; id: string; label: string } | null>(null);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   const fetchTeamData = useCallback(async () => {
     try {
+      const orgsResult = await organization.list();
+      const orgs = orgsResult?.data;
+      if (!orgs || orgs.length === 0) {
+        setError("No organization found. Complete your vendor profile first.");
+        setLoading(false);
+        return;
+      }
+
+      const vendorOrg = orgs[0];
+      await organization.setActive({ organizationId: vendorOrg.id });
+
       const orgData = await organization.getFullOrganization();
       if (orgData?.data) {
         setActiveOrg({ id: orgData.data.id, name: orgData.data.name });
@@ -81,16 +94,43 @@ export default function VendorTeamPage() {
     }
 
     setInviting(true);
+    const emailToInvite = inviteEmail.trim();
     try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const eligibility = await fetch(`${apiBase}/api/v1/auth/check-invite-eligibility`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: emailToInvite }),
+      });
+      const eligibilityData = await eligibility.json();
+      if (!eligibilityData.eligible) {
+        setError(eligibilityData.reason || "This email cannot be invited.");
+        setInviting(false);
+        return;
+      }
+
+      const optimisticInv: OrgInvitation = {
+        id: `optimistic-${Date.now()}`,
+        email: emailToInvite,
+        role: inviteRole,
+        status: "pending",
+        expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+        organizationId: activeOrg.id,
+      };
+      setInvitations((prev) => [...prev, optimisticInv]);
+      setSuccess(`Invitation sent to ${emailToInvite}`);
+      setInviteEmail("");
+
       await organization.inviteMember({
-        email: inviteEmail.trim(),
+        email: emailToInvite,
         role: inviteRole,
         organizationId: activeOrg.id,
       });
-      setSuccess(`Invitation sent to ${inviteEmail}`);
-      setInviteEmail("");
       fetchTeamData();
     } catch (err: unknown) {
+      setInvitations((prev) => prev.filter((i) => !i.id.startsWith("optimistic-")));
+      setSuccess("");
       const message = err instanceof Error ? err.message : "Failed to send invitation";
       setError(message);
     } finally {
@@ -98,23 +138,42 @@ export default function VendorTeamPage() {
     }
   }
 
-  async function handleRemoveMember(memberId: string) {
-    if (!confirm("Are you sure you want to remove this team member?")) return;
-    try {
-      await organization.removeMember({ memberIdOrEmail: memberId });
-      fetchTeamData();
-    } catch {
-      setError("Failed to remove member");
-    }
-  }
+  async function handleConfirmedAction() {
+    if (!confirmAction) return;
+    const { type, id } = confirmAction;
+    setConfirmAction(null);
 
-  async function handleCancelInvitation(invitationId: string) {
-    if (!confirm("Cancel this invitation?")) return;
+    setPendingIds((prev) => new Set(prev).add(id));
+
+    const prevMembers = members;
+    const prevInvitations = invitations;
+
+    if (type === "remove") {
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+    } else {
+      setInvitations((prev) => prev.filter((i) => i.id !== id));
+    }
+
     try {
-      await organization.cancelInvitation({ invitationId });
+      if (type === "remove") {
+        await organization.removeMember({ memberIdOrEmail: id });
+      } else {
+        await organization.cancelInvitation({ invitationId: id });
+      }
       fetchTeamData();
     } catch {
-      setError("Failed to cancel invitation");
+      if (type === "remove") {
+        setMembers(prevMembers);
+      } else {
+        setInvitations(prevInvitations);
+      }
+      setError(type === "remove" ? "Failed to remove member" : "Failed to cancel invitation");
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }
 
@@ -205,50 +264,53 @@ export default function VendorTeamPage() {
           </p>
         ) : (
           <div className="divide-y divide-gray-100">
-            {members.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between py-4 first:pt-0 last:pb-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                    {member.role === "owner" ? (
-                      <FiShield className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <FiUser className="w-4 h-4 text-gray-500" />
+            {members.map((member) => {
+              const isPending = pendingIds.has(member.id);
+              return (
+                <div
+                  key={member.id}
+                  className={`flex items-center justify-between py-4 first:pt-0 last:pb-0 transition-opacity duration-300 ${isPending ? "opacity-40 pointer-events-none" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                      {member.role === "owner" ? (
+                        <FiShield className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <FiUser className="w-4 h-4 text-gray-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {member.user?.name ?? "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {member.user?.email ?? "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        member.role === "owner"
+                          ? "bg-blue-50 text-blue-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {member.role === "owner" ? "Owner" : "Staff"}
+                    </span>
+                    {member.role !== "owner" && (
+                      <button
+                        onClick={() => setConfirmAction({ type: "remove", id: member.id, label: member.user?.name || member.user?.email || "this member" })}
+                        className="cursor-pointer p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                        title="Remove member"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {member.user?.name ?? "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {member.user?.email ?? "—"}
-                    </p>
-                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      member.role === "owner"
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {member.role === "owner" ? "Owner" : "Staff"}
-                  </span>
-                  {member.role !== "owner" && (
-                    <button
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="cursor-pointer p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                      title="Remove member"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -264,54 +326,89 @@ export default function VendorTeamPage() {
             </span>
           </h2>
           <div className="divide-y divide-gray-100">
-            {invitations.map((inv) => (
-              <div
-                key={inv.id}
-                className="flex items-center justify-between py-4 first:pt-0 last:pb-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-                    {inv.status === "accepted" ? (
-                      <FiCheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <FiMail className="w-4 h-4 text-amber-500" />
+            {invitations.map((inv) => {
+              const isPending = pendingIds.has(inv.id);
+              const isOptimistic = inv.id.startsWith("optimistic-");
+              return (
+                <div
+                  key={inv.id}
+                  className={`flex items-center justify-between py-4 first:pt-0 last:pb-0 transition-opacity duration-300 ${isPending ? "opacity-40 pointer-events-none" : ""} ${isOptimistic ? "animate-pulse" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+                      {inv.status === "accepted" ? (
+                        <FiCheckCircle className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <FiMail className="w-4 h-4 text-amber-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {inv.email}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {isOptimistic
+                          ? "Sending invitation..."
+                          : inv.status === "pending"
+                            ? `Expires ${new Date(inv.expiresAt).toLocaleDateString()}`
+                            : inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        inv.status === "pending"
+                          ? "bg-amber-50 text-amber-700"
+                          : inv.status === "accepted"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {isOptimistic ? "Sending..." : inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                    </span>
+                    {inv.status === "pending" && !isOptimistic && (
+                      <button
+                        onClick={() => setConfirmAction({ type: "cancel", id: inv.id, label: inv.email })}
+                        className="cursor-pointer p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                        title="Cancel invitation"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {inv.email}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {inv.status === "pending"
-                        ? `Expires ${new Date(inv.expiresAt).toLocaleDateString()}`
-                        : inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
-                    </p>
-                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      inv.status === "pending"
-                        ? "bg-amber-50 text-amber-700"
-                        : inv.status === "accepted"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
-                  </span>
-                  {inv.status === "pending" && (
-                    <button
-                      onClick={() => handleCancelInvitation(inv.id)}
-                      className="cursor-pointer p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                      title="Cancel invitation"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {confirmAction.type === "remove" ? "Remove member" : "Cancel invitation"}
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              {confirmAction.type === "remove"
+                ? <>Are you sure you want to remove <strong>{confirmAction.label}</strong> from the team?</>
+                : <>Cancel the invitation to <strong>{confirmAction.label}</strong>?</>}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Keep
+              </button>
+              <button
+                onClick={handleConfirmedAction}
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                {confirmAction.type === "remove" ? "Remove" : "Cancel invitation"}
+              </button>
+            </div>
           </div>
         </div>
       )}

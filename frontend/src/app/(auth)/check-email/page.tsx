@@ -9,9 +9,14 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 function CheckEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const redirect = searchParams.get("redirect") || "";
   const [resendStatus, setResendStatus] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
+
+  const verifyCallbackURL = redirect
+    ? `/verify-email?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirect)}`
+    : `/verify-email?email=${encodeURIComponent(email)}`;
 
   async function handleResend() {
     if (!email || resendStatus === "sending") return;
@@ -20,7 +25,7 @@ function CheckEmailContent() {
     try {
       await authClient.sendVerificationEmail({
         email,
-        callbackURL: "/verify-email",
+        callbackURL: verifyCallbackURL,
       });
       setResendStatus("sent");
     } catch {
@@ -81,7 +86,7 @@ function CheckEmailContent() {
       <p className="text-center text-sm text-slate-500 mt-6">
         Already verified?{" "}
         <a
-          href="/login"
+          href={email ? `/login?email=${encodeURIComponent(email)}` : "/login"}
           className="text-rose-500 font-semibold hover:text-rose-600 transition-colors"
         >
           Sign in

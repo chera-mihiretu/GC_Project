@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { requireAuth, requireRole } from "../../auth/presentation/auth.middleware.js";
+import { resolveVendorContext } from "../../auth/presentation/vendor-context.middleware.js";
 import {
   addAvailabilityRange,
   removeAvailabilityRange,
@@ -9,11 +10,11 @@ import { findByUserId } from "../infrastructure/vendor-profile.repository.js";
 
 const router = Router();
 
-router.use(requireAuth(), requireRole("vendor"));
+router.use(requireAuth(), requireRole("vendor"), resolveVendorContext());
 
 router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.authContext!.user.id;
+    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
     const profile = await findByUserId(userId);
     if (!profile) {
       res.status(404).json({ error: { code: "NOT_FOUND", message: "Vendor profile not found" } });
@@ -31,7 +32,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 
 router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.authContext!.user.id;
+    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
     const profile = await findByUserId(userId);
     if (!profile) {
       res.status(404).json({ error: { code: "NOT_FOUND", message: "Vendor profile not found" } });
@@ -59,7 +60,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
 
 router.delete("/:id", async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.authContext!.user.id;
+    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
     const profile = await findByUserId(userId);
     if (!profile) {
       res.status(404).json({ error: { code: "NOT_FOUND", message: "Vendor profile not found" } });

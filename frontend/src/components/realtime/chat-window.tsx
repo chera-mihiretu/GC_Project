@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { useChat } from "@/hooks/use-chat";
-import { FiSend } from "react-icons/fi";
+import { FiSend, FiLoader } from "react-icons/fi";
 import PresenceDot from "./presence-dot";
 import Image from "next/image";
 
@@ -76,6 +76,9 @@ export default function ChatWindow({
     messages,
     typingUsers,
     fetchMessages,
+    fetchOlderMessages,
+    hasOlderMessages,
+    loadingOlder,
     sendMessage,
     sendTyping,
     markRead,
@@ -149,6 +152,18 @@ export default function ChatWindow({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {hasOlderMessages && (
+          <div className="flex justify-center pb-2">
+            <button
+              onClick={() => fetchOlderMessages()}
+              disabled={loadingOlder}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              {loadingOlder ? <FiLoader className="w-3 h-3 animate-spin" /> : null}
+              {loadingOlder ? "Loading..." : "Load older messages"}
+            </button>
+          </div>
+        )}
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full text-sm text-gray-400">
             No messages yet — start the conversation!

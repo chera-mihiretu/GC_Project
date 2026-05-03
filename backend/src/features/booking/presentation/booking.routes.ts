@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { requireAuth } from "../../auth/presentation/auth.middleware.js";
-import { requireRole } from "../../auth/presentation/auth.middleware.js";
+import { requireAuth, requireRole } from "../../auth/presentation/auth.middleware.js";
+import { resolveVendorContext } from "../../auth/presentation/vendor-context.middleware.js";
 import {
   handleCreateBooking,
   handleListBookings,
@@ -10,9 +10,9 @@ import {
 
 const router = Router();
 
-router.get("/", requireAuth(), handleListBookings);
-router.get("/:id", requireAuth(), handleGetBooking);
+router.get("/", requireAuth(), resolveVendorContext(), handleListBookings);
+router.get("/:id", requireAuth(), resolveVendorContext(), handleGetBooking);
 router.post("/", requireAuth(), requireRole("couple"), handleCreateBooking);
-router.patch("/:id/status", requireAuth(), handleUpdateBookingStatus);
+router.patch("/:id/status", requireAuth(), resolveVendorContext(), handleUpdateBookingStatus);
 
 export default router;

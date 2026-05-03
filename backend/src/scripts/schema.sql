@@ -200,6 +200,38 @@ CREATE INDEX IF NOT EXISTS idx_vendor_profiles_status ON vendor_profiles(status)
 CREATE INDEX IF NOT EXISTS idx_vendor_documents_profile_id ON vendor_documents(vendor_profile_id);
 CREATE INDEX IF NOT EXISTS idx_vendor_profiles_geo ON vendor_profiles USING gist (latitude, longitude);
 
+-- Vendor portfolio items
+CREATE TABLE IF NOT EXISTS vendor_portfolio_items (
+    id                 TEXT PRIMARY KEY,
+    vendor_profile_id  TEXT NOT NULL REFERENCES vendor_profiles(id) ON DELETE CASCADE,
+    category           TEXT NOT NULL,
+    media_url          TEXT NOT NULL,
+    media_type         TEXT NOT NULL,
+    caption            TEXT,
+    sort_order         INTEGER DEFAULT 0,
+    created_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_portfolio_items_vendor_cat ON vendor_portfolio_items(vendor_profile_id, category);
+
+-- Couple profile
+CREATE TABLE IF NOT EXISTS couple_profiles (
+    id                TEXT PRIMARY KEY,
+    user_id           TEXT NOT NULL UNIQUE,
+    wedding_date      DATE,
+    budget_currency   TEXT NOT NULL DEFAULT 'ETB',
+    estimated_guests  INTEGER,
+    wedding_theme     TEXT,
+    wedding_location  TEXT,
+    latitude          DECIMAL(10,8),
+    longitude         DECIMAL(11,8),
+    partner_name      TEXT,
+    created_at        TIMESTAMPTZ DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_couple_profiles_user_id ON couple_profiles(user_id);
+
 -- Realtime indexes
 CREATE INDEX IF NOT EXISTS idx_notification_user_id ON notification(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversation_participants ON conversation(participant_one, participant_two);
