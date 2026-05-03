@@ -69,7 +69,6 @@ router.get("/:vendorId/portfolio/:category", async (req: Request, res: Response)
     const error = err as Error & { statusCode?: number };
     res.status(error.statusCode ?? 500).json({ error: { message: error.message } });
   }
-  }
 });
 
 router.get("/:vendorId/availability", async (req: Request, res: Response): Promise<void> => {
