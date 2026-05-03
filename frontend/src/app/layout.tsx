@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   title: "Twedarr — Smart Wedding Planning Platform",
   description:
     "Plan your dream wedding with verified local vendors, AI-powered recommendations, and real-time budgeting — all in one place.",
+  metadataBase: new URL("https://twedarr.com"),
+  applicationName: "Twedarr",
+  other: {
+    "theme-color": "#e11d48",
+    "msapplication-TileColor": "#e11d48",
+  },
 };
 
 export default function RootLayout({
