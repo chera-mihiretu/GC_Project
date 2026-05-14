@@ -23,6 +23,8 @@ export interface Conversation {
   createdAt: string;
 }
 
+export type MessageStatus = "sending" | "sent" | "failed";
+
 export interface ChatMessage {
   id: string;
   conversationId: string;
@@ -30,6 +32,8 @@ export interface ChatMessage {
   content: string;
   read: boolean;
   createdAt: string;
+  status?: MessageStatus;
+  tempId?: string;
 }
 
 export interface TypingPayload {
@@ -55,6 +59,7 @@ export interface ServerToClientEvents {
   "chat:typing": (data: TypingPayload) => void;
   "chat:read": (data: ReadReceiptPayload) => void;
   "presence:update": (data: PresencePayload) => void;
+  "presence:snapshot": (userIds: string[]) => void;
 }
 
 export interface ClientToServerEvents {

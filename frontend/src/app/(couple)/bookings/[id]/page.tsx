@@ -13,6 +13,9 @@ import {
   FiDollarSign,
   FiCheckCircle,
   FiLoader,
+  FiMapPin,
+  FiStar,
+  FiExternalLink,
 } from "react-icons/fi";
 import { getBooking, updateBookingStatus } from "@/services/booking.service";
 import { BookingStatus, type BookingDetail } from "@/types/booking";
@@ -228,20 +231,55 @@ export default function CoupleBookingDetailPage() {
         </div>
       )}
 
-      {/* Booking details card */}
+      {/* Vendor info + booking details card */}
       <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">
-              {booking.businessName}
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">Booking Request</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 text-rose-600 font-bold text-lg">
+              {booking.businessName.charAt(0)}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-gray-900">
+                  {booking.businessName}
+                </h1>
+                <Link
+                  href={`/vendors/${booking.vendorProfileId}`}
+                  className="text-rose-500 hover:text-rose-600"
+                  title="View vendor profile"
+                >
+                  <FiExternalLink className="w-4 h-4" />
+                </Link>
+              </div>
+              {booking.vendorLocation && (
+                <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+                  <FiMapPin className="w-3.5 h-3.5" />
+                  {booking.vendorLocation}
+                </p>
+              )}
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                {booking.vendorRating > 0 && (
+                  <span className="flex items-center gap-1 text-sm text-amber-600">
+                    <FiStar className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    {booking.vendorRating.toFixed(1)}
+                    {booking.vendorReviewCount > 0 && (
+                      <span className="text-gray-400 text-xs">({booking.vendorReviewCount} reviews)</span>
+                    )}
+                  </span>
+                )}
+                {booking.vendorCategory && booking.vendorCategory.length > 0 && (
+                  <span className="text-xs text-gray-500 capitalize">
+                    {booking.vendorCategory.join(", ")}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
           {canCancel && (
             <button
               onClick={handleCancel}
               disabled={actionLoading}
-              className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors shrink-0"
             >
               {actionLoading ? "Cancelling..." : "Cancel Booking"}
             </button>

@@ -4,6 +4,7 @@ import { VendorStatus, type VendorProfile } from "../domain/types.js";
 import { canTransition } from "../domain/status-machine.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
 import { pool } from "../../../config/db.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 export async function submitForVerification(
   userId: string,
@@ -47,6 +48,7 @@ export async function submitForVerification(
   );
 
   notifyAdminsOfSubmission(profile).catch(() => {});
+  void refreshEmbedding(profile.id);
 
   return updated;
 }

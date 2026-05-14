@@ -58,6 +58,7 @@ export interface ServerToClientEvents {
   "chat:typing": (data: TypingPayload) => void;
   "chat:read": (data: ReadReceiptPayload) => void;
   "presence:update": (data: PresencePayload) => void;
+  "presence:snapshot": (userIds: string[]) => void;
 }
 
 export interface ClientToServerEvents {

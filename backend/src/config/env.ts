@@ -73,6 +73,8 @@ export const env = {
   CHAPA_SECRET_KEY: required("CHAPA_SECRET_KEY"),
   CHAPA_WEBHOOK_SECRET: required("CHAPA_WEBHOOK_SECRET"),
 
+  GEMINI_API_KEY: required("GEMINI_API_KEY"),
+
   get isProduction() {
     return this.NODE_ENV === "production";
   },

@@ -70,6 +70,14 @@ export async function deleteById(id: string, vendorProfileId: string): Promise<b
 }
 
 export async function isDateAvailable(vendorProfileId: string, date: string): Promise<boolean> {
+  // If the vendor has no availability ranges configured, assume available
+  const { rows: totalRows } = await pool.query(
+    `SELECT 1 FROM vendor_availability WHERE vendor_profile_id = $1 LIMIT 1`,
+    [vendorProfileId],
+  );
+  if (totalRows.length === 0) return true;
+
+  // Vendor has ranges — check if the requested date falls within one
   const { rows } = await pool.query(
     `SELECT 1 FROM vendor_availability
      WHERE vendor_profile_id = $1

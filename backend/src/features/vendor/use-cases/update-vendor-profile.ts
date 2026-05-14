@@ -5,6 +5,7 @@ import {
   type UpdateVendorProfileDTO,
   type VendorProfile,
 } from "../domain/types.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 function touchesCriticalField(dto: UpdateVendorProfileDTO): boolean {
   return RE_VERIFICATION_FIELDS.some(
@@ -49,6 +50,8 @@ export async function updateVendorProfile(
       VendorStatus.PENDING_VERIFICATION,
     );
   }
+
+  void refreshEmbedding(profile.id);
 
   return updated;
 }

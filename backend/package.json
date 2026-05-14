@@ -13,11 +13,13 @@
     "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --forceExit --detectOpenHandles",
     "seed:admin": "tsx src/scripts/seed-admin.ts",
     "seed:users": "tsx src/scripts/seed-users.ts",
-    "seed:vendors": "tsx src/scripts/seed-vendors.ts"
+    "seed:vendors": "tsx src/scripts/seed-vendors.ts",
+    "seed:embeddings": "tsx src/scripts/seed-embeddings.ts"
   },
   "keywords": [],
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^1.51.0",
     "@supabase/supabase-js": "^2.102.1",
     "better-auth": "^1.5.6",
     "cors": "^2.8.6",

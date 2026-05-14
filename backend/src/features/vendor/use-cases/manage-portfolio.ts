@@ -7,6 +7,7 @@ import {
   extractPortfolioStoragePath,
 } from "../infrastructure/portfolio-storage.js";
 import { findByUserId as findProfileByUserId } from "../infrastructure/vendor-profile.repository.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 export async function getPortfolioItems(
   vendorOwnerId: string,
@@ -89,13 +90,15 @@ export async function addPortfolioItem(
     throw err;
   }
 
-  return repo.create({
+  const item = await repo.create({
     vendorProfileId: profile.id,
     category: dto.category,
     mediaUrl: dto.mediaUrl,
     mediaType: dto.mediaType,
     caption: dto.caption,
   });
+  void refreshEmbedding(profile.id);
+  return item;
 }
 
 export async function updatePortfolioItem(
@@ -118,6 +121,7 @@ export async function updatePortfolioItem(
   }
 
   const updated = await repo.updateItem(itemId, dto);
+  void refreshEmbedding(profile.id);
   return updated!;
 }
 
@@ -145,4 +149,5 @@ export async function deletePortfolioItem(
   }
 
   await repo.deleteItem(itemId);
+  void refreshEmbedding(profile.id);
 }

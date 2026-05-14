@@ -56,6 +56,7 @@ export default function ChatList({
     fetchConversations,
     fetchMoreConversations,
     updateConversationFromMessage,
+    clearUnread,
   } = useConversations();
   const { socket } = useSocketContext();
 
@@ -67,22 +68,39 @@ export default function ChatList({
     (msg: ChatMessage) => {
       const exists = conversations.some((c) => c.id === msg.conversationId);
       if (exists) {
-        updateConversationFromMessage(msg, currentUserId);
+        updateConversationFromMessage(msg, currentUserId, selectedId);
       } else {
         fetchConversations();
       }
     },
-    [conversations, currentUserId, updateConversationFromMessage, fetchConversations],
+    [conversations, currentUserId, selectedId, updateConversationFromMessage, fetchConversations],
   );
+
+  const handleReadReceipt = useCallback(
+    (data: { conversationId: string; readBy: string }) => {
+      if (data.readBy === currentUserId) {
+        clearUnread(data.conversationId);
+      }
+    },
+    [currentUserId, clearUnread],
+  );
+
+  useEffect(() => {
+    if (selectedId) {
+      clearUnread(selectedId);
+    }
+  }, [selectedId, clearUnread]);
 
   useEffect(() => {
     if (!socket) return;
 
     socket.on("chat:message", handleNewMessage);
+    socket.on("chat:read", handleReadReceipt);
     return () => {
       socket.off("chat:message", handleNewMessage);
+      socket.off("chat:read", handleReadReceipt);
     };
-  }, [socket, handleNewMessage]);
+  }, [socket, handleNewMessage, handleReadReceipt]);
 
   if (loading) {
     return (

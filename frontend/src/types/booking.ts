@@ -21,12 +21,20 @@ export interface Booking {
   declineReason: string | null;
   createdAt: string;
   updatedAt: string;
+  businessName?: string;
+  vendorLocation?: string | null;
+  vendorCategory?: string[];
+  vendorRating?: number;
 }
 
 export interface BookingDetail extends Booking {
   businessName: string;
   priceRangeMin: number | null;
   priceRangeMax: number | null;
+  vendorLocation: string | null;
+  vendorCategory: string[];
+  vendorRating: number;
+  vendorReviewCount: number;
 }
 
 export interface CreateBookingRequest {

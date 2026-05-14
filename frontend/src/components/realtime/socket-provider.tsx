@@ -9,11 +9,18 @@
  */
 "use client";
 
-import { createContext, useContext, useEffect, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { useSocket } from "@/hooks/use-socket";
 import { useNotifications } from "@/hooks/use-notifications";
 import type { TypedSocket } from "@/lib/socket-client";
-import type { Notification } from "@/types/realtime";
+import type { Notification, PresencePayload } from "@/types/realtime";
 
 /**
  * Shape of the socket context value.
@@ -24,6 +31,7 @@ interface SocketContextValue {
   socket: TypedSocket | null;
   /** Whether the socket is currently connected to the server */
   connected: boolean;
+  reconnecting: boolean;
   /** Array of user's notifications */
   notifications: Notification[];
   /** Count of unread notifications */
@@ -38,6 +46,8 @@ interface SocketContextValue {
   markAllNotificationsRead: () => void;
   /** Loads the next page of notifications */
   fetchMoreNotifications: () => void;
+  onlineUsers: Set<string>;
+  isUserOnline: (userId: string) => boolean;
 }
 
 /**
@@ -57,7 +67,7 @@ const SocketContext = createContext<SocketContextValue | null>(null);
  * @returns Provider component wrapping children
  */
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const { socket, connected } = useSocket();
+  const { socket, connected, reconnecting } = useSocket();
   const {
     notifications,
     unreadCount,
@@ -68,6 +78,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     markRead,
     markAllRead,
   } = useNotifications();
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (connected) {
@@ -75,10 +86,41 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, [connected, fetchNotifications]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    function onSnapshot(userIds: string[]) {
+      setOnlineUsers(new Set(userIds));
+    }
+
+    function onPresenceUpdate(data: PresencePayload) {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev);
+        if (data.online) next.add(data.userId);
+        else next.delete(data.userId);
+        return next;
+      });
+    }
+
+    socket.on("presence:snapshot", onSnapshot);
+    socket.on("presence:update", onPresenceUpdate);
+
+    return () => {
+      socket.off("presence:snapshot", onSnapshot);
+      socket.off("presence:update", onPresenceUpdate);
+    };
+  }, [socket]);
+
+  const isUserOnline = useCallback(
+    (userId: string) => onlineUsers.has(userId),
+    [onlineUsers],
+  );
+
   const value = useMemo(
     () => ({
       socket,
       connected,
+      reconnecting,
       notifications,
       unreadCount,
       hasMoreNotifications: hasMore,
@@ -86,8 +128,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       markNotificationRead: markRead,
       markAllNotificationsRead: markAllRead,
       fetchMoreNotifications,
+      onlineUsers,
+      isUserOnline,
     }),
-    [socket, connected, notifications, unreadCount, hasMore, loadingMore, markRead, markAllRead, fetchMoreNotifications],
+    [socket, connected, reconnecting, notifications, unreadCount, hasMore, loadingMore, markRead, markAllRead, fetchMoreNotifications, onlineUsers, isUserOnline],
   );
 
   return (

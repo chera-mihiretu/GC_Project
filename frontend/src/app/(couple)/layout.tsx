@@ -14,6 +14,7 @@ import {
   FiCalendar,
   FiMessageSquare,
   FiSettings,
+  FiCpu,
 } from "react-icons/fi";
 
 const navItems: NavItem[] = [
@@ -23,6 +24,7 @@ const navItems: NavItem[] = [
   { label: "Checklist", href: "/checklist", icon: FiCheckSquare },
   { label: "Guest List", href: "/guests", icon: FiUsers },
   { label: "Find Vendors", href: "/vendors", icon: FiSearch },
+  { label: "AI Agent", href: "/advisor", icon: FiCpu },
   { label: "My Bookings", href: "/bookings", icon: FiCalendar },
   { label: "Messages", href: "/messages", icon: FiMessageSquare },
   { label: "Settings", href: "/settings", icon: FiSettings },

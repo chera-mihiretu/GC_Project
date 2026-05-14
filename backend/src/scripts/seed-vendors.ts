@@ -838,7 +838,256 @@ async function seed() {
   console.log(`\n   Login: any vendor email (vendor1@twedar.seed ... vendor${TOTAL}@twedar.seed)`);
   console.log(`   Password: ${VENDOR_PASSWORD}\n`);
 
+  // --- Phase 2: Seed vendor availability ---
+  await seedAvailability();
+
+  // --- Phase 3: Seed sample reviews ---
+  await seedReviews();
+
   await pool.end();
+}
+
+// ---------------------------------------------------------------------------
+// Availability seeding — adds realistic availability ranges for all vendors
+// ---------------------------------------------------------------------------
+const AVAILABILITY_NOTES = [
+  "Available for bookings",
+  "Open for wedding events",
+  "Accepting new clients",
+  "Full-day availability",
+  "Morning and afternoon slots open",
+  "Weekend availability",
+  "Special package rates this period",
+  "Limited slots remaining",
+  "Peak season — book early",
+  "Available with advance booking",
+];
+
+async function seedAvailability() {
+  console.log(`\n📅 Seeding vendor availability...\n`);
+
+  // Get all seed vendor profiles
+  const vendorRows = await pool.query(
+    `SELECT vp.id AS profile_id
+     FROM vendor_profiles vp
+     JOIN "user" u ON vp.user_id = u.id
+     WHERE u.email LIKE '%@twedar.seed' AND vp.status = 'verified'`,
+  );
+
+  if (vendorRows.rows.length === 0) {
+    console.log(`   ⚠  No seed vendors found. Skipping availability.\n`);
+    return;
+  }
+
+  // Check which vendors already have availability
+  const existingResult = await pool.query(
+    `SELECT DISTINCT vendor_profile_id FROM vendor_availability
+     WHERE vendor_profile_id = ANY($1)`,
+    [vendorRows.rows.map((r) => r.profile_id)],
+  );
+  const alreadyHasAvailability = new Set(existingResult.rows.map((r) => r.vendor_profile_id as string));
+
+  const toSeed = vendorRows.rows.filter((r) => !alreadyHasAvailability.has(r.profile_id as string));
+  if (toSeed.length === 0) {
+    console.log(`   ⏭  All ${vendorRows.rows.length} vendors already have availability. Skipping.\n`);
+    return;
+  }
+  console.log(`   ${alreadyHasAvailability.size} vendors already have availability — seeding ${toSeed.length} remaining`);
+
+  let totalRanges = 0;
+
+  for (const vRow of toSeed) {
+    const profileId = vRow.profile_id as string;
+    // Each vendor gets 3-6 availability windows over the next 6 months
+    const numRanges = randInt(3, 6);
+    const today = new Date();
+
+    for (let r = 0; r < numRanges; r++) {
+      // Spread ranges across the next 6 months
+      const startOffset = randInt(r * 25, r * 25 + 30);
+      const duration = randInt(2, 14);
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() + startOffset);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + duration);
+
+      const startStr = startDate.toISOString().split("T")[0];
+      const endStr = endDate.toISOString().split("T")[0];
+      const note = pick(AVAILABILITY_NOTES);
+
+      try {
+        await pool.query(
+          `INSERT INTO vendor_availability (vendor_profile_id, start_date, end_date, note)
+           VALUES ($1, $2, $3, $4)`,
+          [profileId, startStr, endStr, note],
+        );
+        totalRanges++;
+      } catch {
+        // constraint violation — skip
+      }
+    }
+  }
+
+  console.log(`   ✓ Created ${totalRanges} availability ranges across ${toSeed.length} vendors\n`);
+}
+
+// ---------------------------------------------------------------------------
+// Review seeding — creates couple users, completed bookings, and reviews
+// ---------------------------------------------------------------------------
+const REVIEW_COMMENTS = [
+  "Absolutely amazing service! Made our wedding day truly special.",
+  "Very professional and attentive to every detail. Highly recommended!",
+  "They exceeded our expectations in every way. Couldn't be happier.",
+  "Great value for money. Our guests were very impressed.",
+  "The team was friendly, on time, and delivered exactly what they promised.",
+  "Beautiful work! We keep looking at the results over and over again.",
+  "Good service overall, though communication could have been slightly faster.",
+  "Outstanding quality. They truly understand Ethiopian weddings.",
+  "We received so many compliments from our guests. Thank you!",
+  "Professional, reliable, and creative. A perfect choice for our big day.",
+  "They went above and beyond. We felt completely taken care of.",
+  "Wonderful experience from start to finish. Would book again in a heartbeat.",
+  "The attention to detail was incredible. Every little thing was perfect.",
+  "Fair pricing and exceptional quality. Best decision we made for our wedding.",
+  "They made the whole process stress-free. We just enjoyed our day!",
+  "So talented and passionate about their work. It really shows in the results.",
+  "A bit pricey but absolutely worth every birr. Stunning outcome.",
+  "Responsive, creative, and incredibly easy to work with.",
+  "Our families were blown away. This vendor truly delivers.",
+  "Punctual and well-organized. Everything ran smoothly thanks to them.",
+];
+
+const COUPLE_SEEDS = [
+  { name: "Hanna Tadesse",    email: "couple1@twedar.seed" },
+  { name: "Sara Bekele",      email: "couple2@twedar.seed" },
+  { name: "Meron Alemu",      email: "couple3@twedar.seed" },
+  { name: "Ruth Gebre",       email: "couple4@twedar.seed" },
+  { name: "Liya Mekonnen",    email: "couple5@twedar.seed" },
+  { name: "Eyerusalem Haile", email: "couple6@twedar.seed" },
+  { name: "Bethlehem Worku",  email: "couple7@twedar.seed" },
+  { name: "Selam Negash",     email: "couple8@twedar.seed" },
+];
+
+async function ensureCoupleUser(seed: { name: string; email: string }): Promise<string | null> {
+  const existing = await pool.query('SELECT id FROM "user" WHERE email = $1', [seed.email]);
+  if (existing.rows.length > 0) return existing.rows[0].id as string;
+
+  try {
+    const ctx = await auth.api.signUpEmail({
+      body: { name: seed.name, email: seed.email, password: VENDOR_PASSWORD, accountType: "couple" },
+    });
+    if (!ctx?.user?.id) return null;
+    await pool.query('UPDATE "user" SET "emailVerified" = true WHERE id = $1', [ctx.user.id]);
+    return ctx.user.id;
+  } catch {
+    return null;
+  }
+}
+
+async function seedReviews() {
+  console.log(`\n🌟 Seeding sample reviews...\n`);
+
+  // Get vendor profile IDs that already have seed reviews so we skip them
+  const existingReviewedResult = await pool.query(
+    `SELECT DISTINCT r.vendor_profile_id FROM reviews r
+     JOIN "user" u ON r.couple_id = u.id
+     WHERE u.email LIKE '%@twedar.seed'`,
+  );
+  const alreadyReviewed = new Set(existingReviewedResult.rows.map((r) => r.vendor_profile_id as string));
+  if (alreadyReviewed.size > 0) {
+    console.log(`   ⏭  ${alreadyReviewed.size} vendors already have seed reviews — will skip those`);
+  }
+
+  // 1. Create couple users
+  const coupleIds: string[] = [];
+  for (const cs of COUPLE_SEEDS) {
+    const id = await ensureCoupleUser(cs);
+    if (id) coupleIds.push(id);
+  }
+  console.log(`   ✓ ${coupleIds.length} couple accounts ready`);
+
+  if (coupleIds.length === 0) {
+    console.log(`   ⚠  No couple accounts created, skipping reviews.`);
+    return;
+  }
+
+  // 2. Pick ~60 random vendors to receive reviews (some get 1, some get 2-3)
+  const vendorRows = await pool.query(
+    `SELECT vp.id AS profile_id, vp.user_id, vp.business_name,
+            (SELECT category FROM (SELECT unnest(ARRAY(SELECT jsonb_array_elements_text(vp.category))) AS category) sub LIMIT 1) AS first_category
+     FROM vendor_profiles vp
+     JOIN "user" u ON vp.user_id = u.id
+     WHERE u.email LIKE '%@twedar.seed' AND vp.status = 'verified'
+     ORDER BY RANDOM()`,
+  );
+
+  if (vendorRows.rows.length === 0) {
+    console.log(`   ⚠  No seed vendors found, skipping reviews.`);
+    return;
+  }
+
+  let reviewCount = 0;
+  const vendorReviewData: Record<string, { sum: number; count: number }> = {};
+
+  let skippedVendors = 0;
+  for (const vRow of vendorRows.rows) {
+    if (alreadyReviewed.has(vRow.profile_id)) {
+      skippedVendors++;
+      continue;
+    }
+    const numReviews = randInt(1, 3);
+
+    for (let r = 0; r < numReviews; r++) {
+      const coupleId = coupleIds[randInt(0, coupleIds.length - 1)];
+      const rating = randInt(3, 5);
+      const comment = pick(REVIEW_COMMENTS);
+      const eventDate = new Date(
+        2025, randInt(0, 11), randInt(1, 28),
+      ).toISOString().split("T")[0];
+
+      try {
+        // Create a completed booking
+        const bookingResult = await pool.query(
+          `INSERT INTO bookings (couple_id, vendor_id, vendor_profile_id, service_category, event_date, status)
+           VALUES ($1, $2, $3, $4, $5, 'completed')
+           RETURNING id`,
+          [coupleId, vRow.user_id, vRow.profile_id, vRow.first_category ?? "general", eventDate],
+        );
+        const bookingId = bookingResult.rows[0].id;
+
+        // Create the review
+        await pool.query(
+          `INSERT INTO reviews (booking_id, couple_id, vendor_id, vendor_profile_id, rating, comment, is_approved)
+           VALUES ($1, $2, $3, $4, $5, $6, true)`,
+          [bookingId, coupleId, vRow.user_id, vRow.profile_id, rating, comment],
+        );
+
+        if (!vendorReviewData[vRow.profile_id]) {
+          vendorReviewData[vRow.profile_id] = { sum: 0, count: 0 };
+        }
+        vendorReviewData[vRow.profile_id].sum += rating;
+        vendorReviewData[vRow.profile_id].count += 1;
+        reviewCount++;
+      } catch {
+        // Duplicate booking date or other constraint — skip silently
+      }
+    }
+  }
+
+  // 3. Update vendor aggregate ratings
+  for (const [profileId, data] of Object.entries(vendorReviewData)) {
+    const avgRating = (data.sum / data.count).toFixed(2);
+    await pool.query(
+      `UPDATE vendor_profiles
+       SET rating = $1, review_count = COALESCE(review_count, 0) + $2
+       WHERE id = $3`,
+      [avgRating, data.count, profileId],
+    );
+  }
+
+  console.log(`   ✓ Created ${reviewCount} reviews across ${Object.keys(vendorReviewData).length} vendors`);
+  if (skippedVendors > 0) console.log(`   ⏭  Skipped ${skippedVendors} vendors (already had reviews)`);
+  console.log(`   ✓ Updated vendor aggregate ratings\n`);
 }
 
 seed().catch((err) => {

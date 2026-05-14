@@ -39,6 +39,12 @@ export function getSocket(): TypedSocket {
       withCredentials: true,
       transports: ["websocket", "polling"],
       autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 15000,
+      randomizationFactor: 0.5,
+      timeout: 10000,
     });
   }
   return socket;
@@ -53,6 +59,7 @@ export function getSocket(): TypedSocket {
  */
 export function disconnectSocket(): void {
   if (socket) {
+    socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }

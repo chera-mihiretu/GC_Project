@@ -9,7 +9,11 @@ function rowToProfile(row: Record<string, unknown>): CoupleProfile {
   return {
     id: row.id as string,
     userId: row.user_id as string,
-    weddingDate: row.wedding_date ? String(row.wedding_date) : null,
+    weddingDate: row.wedding_date
+      ? (row.wedding_date instanceof Date
+        ? row.wedding_date.toISOString().split("T")[0]
+        : String(row.wedding_date).split("T")[0])
+      : null,
     budgetCurrency: (row.budget_currency as string) ?? "ETB",
     estimatedGuests: row.estimated_guests != null ? Number(row.estimated_guests) : null,
     weddingTheme: (row.wedding_theme as string) ?? null,

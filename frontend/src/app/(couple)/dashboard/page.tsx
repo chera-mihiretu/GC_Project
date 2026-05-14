@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "@/lib/auth-client";
 import { getCoupleProfile, type CoupleProfile } from "@/services/couple.service";
+import { getChecklistProgress, type ChecklistProgress } from "@/services/checklist.service";
+import { listBookings } from "@/services/booking.service";
 import StatCard from "@/components/ui/stat-card";
 import {
   FiDollarSign,
@@ -30,7 +32,7 @@ const quickActions = [
     description: "Manage your wedding to-do list",
     icon: FiCheckSquare,
     href: "/checklist",
-    ready: false,
+    ready: true,
   },
   {
     title: "Guest List",
@@ -53,21 +55,36 @@ export default function CoupleDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
   const [coupleProfile, setCoupleProfile] = useState<CoupleProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [taskProgress, setTaskProgress] = useState<ChecklistProgress>({ total: 0, completed: 0 });
+  const [vendorsBooked, setVendorsBooked] = useState(0);
 
-  const fetchCoupleProfile = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      const data = await getCoupleProfile();
-      setCoupleProfile(data?.coupleProfile ?? null);
+      const [profileData, progressData, bookingsData] = await Promise.allSettled([
+        getCoupleProfile(),
+        getChecklistProgress(),
+        listBookings({ status: "accepted" as const, limit: 1 }),
+      ]);
+
+      if (profileData.status === "fulfilled") {
+        setCoupleProfile(profileData.value?.coupleProfile ?? null);
+      }
+      if (progressData.status === "fulfilled") {
+        setTaskProgress(progressData.value);
+      }
+      if (bookingsData.status === "fulfilled") {
+        setVendorsBooked(bookingsData.value.total);
+      }
     } catch {
-      // Profile doesn't exist yet
+      // Partial failure is fine
     } finally {
       setProfileLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    fetchCoupleProfile();
-  }, [fetchCoupleProfile]);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const daysUntilWedding = coupleProfile?.weddingDate
     ? Math.ceil((new Date(coupleProfile.weddingDate).getTime() - Date.now()) / 86400000)
@@ -97,8 +114,8 @@ export default function CoupleDashboard() {
         <StatCard
           icon={FiCheckSquare}
           label="Tasks"
-          value="0 / 0"
-          subtext="No tasks yet"
+          value={`${taskProgress.completed} / ${taskProgress.total}`}
+          subtext={taskProgress.total > 0 ? `${Math.round((taskProgress.completed / taskProgress.total) * 100)}% done` : "No tasks yet"}
           color="blue"
         />
         <StatCard
@@ -111,8 +128,8 @@ export default function CoupleDashboard() {
         <StatCard
           icon={FiShoppingBag}
           label="Vendors Booked"
-          value="0"
-          subtext="Start browsing"
+          value={String(vendorsBooked)}
+          subtext={vendorsBooked > 0 ? "Confirmed bookings" : "Start browsing"}
           color="rose"
         />
       </div>

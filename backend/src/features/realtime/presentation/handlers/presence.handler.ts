@@ -25,6 +25,8 @@ export function registerPresenceHandlers(
 ): void {
   const { userId } = socket.data;
 
+  socket.emit("presence:snapshot", Array.from(onlineUsers));
+
   onlineUsers.add(userId);
   io.emit("presence:update", { userId, online: true });
 

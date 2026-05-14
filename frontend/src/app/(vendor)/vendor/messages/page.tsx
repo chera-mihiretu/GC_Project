@@ -25,10 +25,9 @@ export default function VendorMessagesPage() {
   const searchParams = useSearchParams();
   const cidParam = searchParams.get("cid");
   const { data: session } = useSession();
-  const { socket } = useSocketContext();
+  const { onlineUsers } = useSocketContext();
 
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [effectiveUserId, setEffectiveUserId] = useState<string>("");
 
   useEffect(() => {
@@ -39,24 +38,6 @@ export default function VendorMessagesPage() {
   }, [session?.user?.id]);
 
   const currentUserId = effectiveUserId;
-
-  useEffect(() => {
-    if (!socket) return;
-
-    function onPresence(data: { userId: string; online: boolean }) {
-      setOnlineUsers((prev) => {
-        const next = new Set(prev);
-        if (data.online) next.add(data.userId);
-        else next.delete(data.userId);
-        return next;
-      });
-    }
-
-    socket.on("presence:update", onPresence);
-    return () => {
-      socket.off("presence:update", onPresence);
-    };
-  }, [socket]);
 
   const handleSelect = useCallback((conv: Conversation) => {
     setSelectedConv(conv);

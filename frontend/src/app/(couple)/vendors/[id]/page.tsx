@@ -13,6 +13,7 @@ import {
 } from "@/services/public-vendor.service";
 import BookingRequestForm from "@/components/booking/booking-request-form";
 import type { VendorProfile } from "@/types/vendor";
+import dynamic from "next/dynamic";
 import {
   FiArrowLeft,
   FiMapPin,
@@ -27,9 +28,19 @@ import {
   FiX,
   FiFilm,
   FiImage,
+  FiNavigation,
 } from "react-icons/fi";
 import { StarRating } from "@/components/review/star-rating";
 import { ReviewList } from "@/components/review/review-list";
+
+const VendorLocationMap = dynamic(() => import("@/components/vendor/vendor-location-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-sm text-gray-400" style={{ height: 220 }}>
+      Loading map...
+    </div>
+  ),
+});
 
 function formatPrice(min: number | null, max: number | null) {
   if (min == null && max == null) return null;
@@ -277,7 +288,7 @@ export default function VendorDetailPage() {
 
             {portfolioTabs.length > 0 ? (
               <>
-                {portfolioTabs.length > 1 && (
+                {portfolioTabs.length > 0 && (
                   <div className="flex gap-1 overflow-x-auto border-b border-gray-200 mb-4 pb-px scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
                     {portfolioTabs.map((tab) => (
                       <button
@@ -436,6 +447,22 @@ export default function VendorDetailPage() {
               </div>
             )}
           </div>
+
+          {vendor.latitude != null && vendor.longitude != null && (
+            <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-3">
+              <h2 className="text-sm font-semibold text-gray-900">Location</h2>
+              <VendorLocationMap latitude={vendor.latitude} longitude={vendor.longitude} />
+              <a
+                href={`https://www.google.com/maps?q=${vendor.latitude},${vendor.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 transition-colors mt-2"
+              >
+                <FiNavigation className="w-3 h-3" />
+                Open in Google Maps
+              </a>
+            </div>
+          )}
 
           {Object.keys(socialMedia).length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-3">

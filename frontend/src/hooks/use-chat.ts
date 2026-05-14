@@ -10,10 +10,13 @@ import type {
   ReadReceiptPayload,
 } from "@/types/realtime";
 
+const ACK_TIMEOUT_MS = 5000;
+
 export function useChat(conversationId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const socketRef = useRef<TypedSocket | null>(null);
+  const confirmedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const socket = getSocket();
@@ -21,15 +24,37 @@ export function useChat(conversationId: string | null) {
 
     if (!conversationId) return;
 
-    socket.emit("chat:join", { conversationId });
+    if (socket.connected) {
+      socket.emit("chat:join", { conversationId });
+    }
+    function onReconnect() {
+      if (conversationId) socket.emit("chat:join", { conversationId });
+    }
+    socket.on("connect", onReconnect);
 
     function onMessage(message: ChatMessage) {
-      if (message.conversationId === conversationId) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
-          return [...prev, message];
-        });
+      if (message.conversationId !== conversationId) return;
+
+      if (confirmedIdsRef.current.has(message.id)) {
+        confirmedIdsRef.current.delete(message.id);
+        return;
       }
+
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === message.id)) return prev;
+        const pendingTemp = prev.find(
+          (m) => m.tempId && m.status === "sending" && m.senderId === message.senderId,
+        );
+        if (pendingTemp) {
+          confirmedIdsRef.current.add(message.id);
+          return prev.map((m) =>
+            m.tempId === pendingTemp.tempId
+              ? { ...message, status: "sent" as const, tempId: pendingTemp.tempId }
+              : m,
+          );
+        }
+        return [...prev, { ...message, status: "sent" as const }];
+      });
     }
 
     function onTyping(data: TypingPayload) {
@@ -58,10 +83,13 @@ export function useChat(conversationId: string | null) {
     socket.on("chat:read", onReadReceipt);
 
     return () => {
+      socket.off("connect", onReconnect);
       socket.off("chat:message", onMessage);
       socket.off("chat:typing", onTyping);
       socket.off("chat:read", onReadReceipt);
-      socket.emit("chat:leave", { conversationId });
+      if (socket.connected) {
+        socket.emit("chat:leave", { conversationId });
+      }
     };
   }, [conversationId]);
 
@@ -77,9 +105,12 @@ export function useChat(conversationId: string | null) {
         );
         if (res.ok) {
           const data = await res.json();
-          const msgs = (data.messages as ChatMessage[]).reverse();
-          setMessages(msgs);
-          setHasOlderMessages(msgs.length >= limit);
+          const fetched = (data.messages as ChatMessage[]).reverse();
+          setMessages((prev) => {
+            const pending = prev.filter((m) => m.status === "sending" || m.status === "failed");
+            return [...fetched, ...pending];
+          });
+          setHasOlderMessages(fetched.length >= limit);
         }
       } catch {
         // Network error
@@ -94,7 +125,7 @@ export function useChat(conversationId: string | null) {
       setLoadingOlder(true);
       try {
         const res = await apiFetch(
-          `/api/v1/conversations/${conversationId}/messages?limit=${limit}&offset=${messages.length}`,
+          `/api/v1/conversations/${conversationId}/messages?limit=${limit}&offset=${messages.filter((m) => !m.tempId).length}`,
         );
         if (res.ok) {
           const data = await res.json();
@@ -110,15 +141,85 @@ export function useChat(conversationId: string | null) {
         setLoadingOlder(false);
       }
     },
-    [conversationId, messages.length, loadingOlder],
+    [conversationId, messages, loadingOlder],
+  );
+
+  const emitWithAck = useCallback(
+    (tempId: string, content: string) => {
+      if (!conversationId) return;
+      const socket = socketRef.current;
+      if (!socket) return;
+
+      const timeout = setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.tempId === tempId ? { ...m, status: "failed" as const } : m,
+          ),
+        );
+      }, ACK_TIMEOUT_MS);
+
+      socket.emit(
+        "chat:send",
+        { conversationId, content },
+        (serverMsg: ChatMessage | null) => {
+          clearTimeout(timeout);
+          if (serverMsg) {
+            confirmedIdsRef.current.add(serverMsg.id);
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.tempId === tempId
+                  ? { ...serverMsg, status: "sent" as const, tempId }
+                  : m,
+              ),
+            );
+          } else {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.tempId === tempId ? { ...m, status: "failed" as const } : m,
+              ),
+            );
+          }
+        },
+      );
+    },
+    [conversationId],
   );
 
   const sendMessage = useCallback(
-    (content: string) => {
+    (content: string, currentUserId: string) => {
       if (!conversationId || !content.trim()) return;
-      socketRef.current?.emit("chat:send", { conversationId, content });
+      const tempId = crypto.randomUUID();
+      const optimistic: ChatMessage = {
+        id: tempId,
+        conversationId,
+        senderId: currentUserId,
+        content: content.trim(),
+        read: false,
+        createdAt: new Date().toISOString(),
+        status: "sending",
+        tempId,
+      };
+      setMessages((prev) => [...prev, optimistic]);
+      emitWithAck(tempId, content.trim());
     },
-    [conversationId],
+    [conversationId, emitWithAck],
+  );
+
+  const retryMessage = useCallback(
+    (tempId: string) => {
+      setMessages((prev) => {
+        const msg = prev.find((m) => m.tempId === tempId);
+        if (!msg || msg.status !== "failed") return prev;
+        return prev.map((m) =>
+          m.tempId === tempId ? { ...m, status: "sending" as const } : m,
+        );
+      });
+      const msg = messages.find((m) => m.tempId === tempId);
+      if (msg) {
+        emitWithAck(tempId, msg.content);
+      }
+    },
+    [messages, emitWithAck],
   );
 
   const sendTyping = useCallback(
@@ -144,6 +245,7 @@ export function useChat(conversationId: string | null) {
     hasOlderMessages,
     loadingOlder,
     sendMessage,
+    retryMessage,
     sendTyping,
     markRead,
   };
@@ -200,7 +302,7 @@ export function useConversations() {
   const hasMoreConversations = conversations.length < total;
 
   const updateConversationFromMessage = useCallback(
-    (msg: ChatMessage, currentUserId: string) => {
+    (msg: ChatMessage, currentUserId: string, activeConversationId?: string | null) => {
       setConversations((prev) => {
         const idx = prev.findIndex((c) => c.id === msg.conversationId);
         if (idx === -1) return prev;
@@ -208,7 +310,7 @@ export function useConversations() {
         const updated = { ...prev[idx] };
         updated.lastMessageContent = msg.content;
         updated.lastMessageAt = msg.createdAt;
-        if (msg.senderId !== currentUserId) {
+        if (msg.senderId !== currentUserId && msg.conversationId !== activeConversationId) {
           updated.unreadCount = (updated.unreadCount ?? 0) + 1;
         }
 

@@ -4,6 +4,7 @@ import { BookingStatus } from "../../booking/domain/types.js";
 import { pool } from "../../../config/db.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
 import type { Review } from "../domain/types.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 export interface CreateReviewInput {
   bookingId: string;
@@ -74,6 +75,8 @@ export async function createReview(input: CreateReviewInput): Promise<Review> {
     body: `You received a ${rating}-star review for your service.`,
     metadata: { reviewId: review.id, bookingId },
   });
+
+  void refreshEmbedding(booking.vendorProfileId);
 
   return review;
 }

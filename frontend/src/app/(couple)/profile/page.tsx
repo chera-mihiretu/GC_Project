@@ -218,6 +218,16 @@ export default function CoupleProfilePage() {
                 onChange={(e) => setWeddingDate(e.target.value)}
                 className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
               />
+              {weddingDate && (
+                <p className="text-xs text-rose-600 font-medium mt-0.5">
+                  {new Date(weddingDate + "T00:00:00").toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">

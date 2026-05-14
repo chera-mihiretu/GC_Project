@@ -25,6 +25,16 @@ function rowToBooking(row: Record<string, unknown>): Booking {
   };
 }
 
+function rowToBookingWithVendor(row: Record<string, unknown>): Booking {
+  return {
+    ...rowToBooking(row),
+    businessName: (row.business_name as string) ?? undefined,
+    vendorLocation: (row.vendor_location as string) ?? null,
+    vendorCategory: (row.vendor_category as string[]) ?? [],
+    vendorRating: row.vendor_rating ? Number(row.vendor_rating) : 0,
+  };
+}
+
 export async function create(dto: CreateBookingDTO): Promise<Booking> {
   const { rows } = await pool.query(
     `INSERT INTO bookings (couple_id, vendor_id, vendor_profile_id, service_category, event_date, message, status)
@@ -56,7 +66,9 @@ export async function findById(id: string): Promise<Booking | null> {
 
 export async function findByIdWithDetails(id: string): Promise<BookingDetail | null> {
   const { rows } = await pool.query(
-    `SELECT b.*, vp.business_name, vp.price_range_min, vp.price_range_max
+    `SELECT b.*, vp.business_name, vp.price_range_min, vp.price_range_max,
+            vp.location AS vendor_location, vp.category AS vendor_category,
+            vp.rating AS vendor_rating, vp.review_count AS vendor_review_count
      FROM bookings b
      JOIN vendor_profiles vp ON vp.id = b.vendor_profile_id
      WHERE b.id = $1`,
@@ -69,6 +81,10 @@ export async function findByIdWithDetails(id: string): Promise<BookingDetail | n
     businessName: row.business_name as string,
     priceRangeMin: row.price_range_min ? parseFloat(row.price_range_min as string) : null,
     priceRangeMax: row.price_range_max ? parseFloat(row.price_range_max as string) : null,
+    vendorLocation: (row.vendor_location as string) ?? null,
+    vendorCategory: (row.vendor_category as string[]) ?? [],
+    vendorRating: row.vendor_rating ? Number(row.vendor_rating) : 0,
+    vendorReviewCount: row.vendor_review_count ? Number(row.vendor_review_count) : 0,
   };
 }
 
@@ -99,13 +115,17 @@ export async function findByCoupleId(
 
   const dataValues = [...values, limit, offset];
   const { rows } = await pool.query(
-    `SELECT b.* FROM bookings b ${where}
+    `SELECT b.*, vp.business_name, vp.location AS vendor_location,
+            vp.category AS vendor_category, vp.rating AS vendor_rating
+     FROM bookings b
+     LEFT JOIN vendor_profiles vp ON vp.id = b.vendor_profile_id
+     ${where}
      ORDER BY b.created_at DESC
      LIMIT $${idx++} OFFSET $${idx}`,
     dataValues,
   );
 
-  return { data: rows.map(rowToBooking), total, page, limit };
+  return { data: rows.map(rowToBookingWithVendor), total, page, limit };
 }
 
 export async function findByVendorId(
@@ -135,13 +155,17 @@ export async function findByVendorId(
 
   const dataValues = [...values, limit, offset];
   const { rows } = await pool.query(
-    `SELECT b.* FROM bookings b ${where}
+    `SELECT b.*, vp.business_name, vp.location AS vendor_location,
+            vp.category AS vendor_category, vp.rating AS vendor_rating
+     FROM bookings b
+     LEFT JOIN vendor_profiles vp ON vp.id = b.vendor_profile_id
+     ${where}
      ORDER BY b.created_at DESC
      LIMIT $${idx++} OFFSET $${idx}`,
     dataValues,
   );
 
-  return { data: rows.map(rowToBooking), total, page, limit };
+  return { data: rows.map(rowToBookingWithVendor), total, page, limit };
 }
 
 export async function updateStatus(

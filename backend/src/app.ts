@@ -30,6 +30,10 @@ import coupleRoutes from "./features/couple/presentation/couple.routes.js";
 import { initCoupleTables } from "./features/couple/infrastructure/init-tables.js";
 import paymentRoutes from "./features/payment/presentation/payment.routes.js";
 import { initPaymentTables } from "./features/payment/infrastructure/init-tables.js";
+import aiRoutes from "./features/ai/presentation/ai-advisor.routes.js";
+import { initAITables } from "./features/ai/infrastructure/init-tables.js";
+import checklistRoutes from "./features/checklist/presentation/checklist.routes.js";
+import { initChecklistTables } from "./features/checklist/infrastructure/init-tables.js";
 
 const app = express();
 
@@ -324,6 +328,8 @@ app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/admin/reviews", adminReviewRoutes);
 app.use("/api/v1/couple", coupleRoutes);
 app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/ai", aiRoutes);
+app.use("/api/v1/checklist", checklistRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
@@ -360,6 +366,14 @@ initBookingTables()
   .catch((err) => {
     console.error("Failed to initialize payment tables:", err);
   });
+
+initAITables().catch((err) => {
+  console.error("Failed to initialize AI tables:", err);
+});
+
+initChecklistTables().catch((err) => {
+  console.error("Failed to initialize checklist tables:", err);
+});
 
 ensureBucketExists().catch((err) => {
   console.error("Failed to ensure Supabase storage bucket:", err);

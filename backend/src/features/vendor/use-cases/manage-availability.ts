@@ -1,5 +1,6 @@
 import type { AvailabilityRange } from "../domain/availability-types.js";
 import * as availabilityRepo from "../infrastructure/availability.repository.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 export interface AddAvailabilityInput {
   vendorProfileId: string;
@@ -44,7 +45,9 @@ export async function addAvailabilityRange(input: AddAvailabilityInput): Promise
     );
   }
 
-  return availabilityRepo.create({ vendorProfileId, startDate, endDate, note });
+  const range = await availabilityRepo.create({ vendorProfileId, startDate, endDate, note });
+  void refreshEmbedding(vendorProfileId);
+  return range;
 }
 
 export async function removeAvailabilityRange(
@@ -58,6 +61,7 @@ export async function removeAvailabilityRange(
       { statusCode: 404 },
     );
   }
+  void refreshEmbedding(vendorProfileId);
 }
 
 export async function getVendorAvailability(

@@ -55,8 +55,9 @@ export async function handleListBookings(
   res: Response,
 ): Promise<void> {
   try {
-    const effectiveRole = req.authContext!.vendorOwnerId ? "vendor" : (req.authContext!.user.role as string);
-    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
+    const userRole = req.authContext!.user.role as string;
+    const effectiveRole = userRole === "couple" ? "couple" : (req.authContext!.vendorOwnerId ? "vendor" : userRole);
+    const userId = effectiveRole === "couple" ? req.authContext!.user.id : (req.authContext!.vendorOwnerId ?? req.authContext!.user.id);
     const status = req.query.status as string | undefined;
     const page = req.query.page as string | undefined;
     const limit = req.query.limit as string | undefined;
@@ -93,7 +94,8 @@ export async function handleGetBooking(
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
+    const userRole = req.authContext!.user.role as string;
+    const userId = userRole === "couple" ? req.authContext!.user.id : (req.authContext!.vendorOwnerId ?? req.authContext!.user.id);
     const id = req.params.id as string;
 
     const booking = await getBookingById(id, userId);
@@ -108,8 +110,9 @@ export async function handleUpdateBookingStatus(
   res: Response,
 ): Promise<void> {
   try {
-    const userId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
-    const effectiveRole = req.authContext!.vendorOwnerId ? "vendor" : (req.authContext!.user.role as string);
+    const userRole = req.authContext!.user.role as string;
+    const effectiveRole = userRole === "couple" ? "couple" : (req.authContext!.vendorOwnerId ? "vendor" : userRole);
+    const userId = effectiveRole === "couple" ? req.authContext!.user.id : (req.authContext!.vendorOwnerId ?? req.authContext!.user.id);
     const id = req.params.id as string;
     const { status, declineReason } = req.body as {
       status?: string;

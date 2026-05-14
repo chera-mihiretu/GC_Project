@@ -3,6 +3,7 @@ import { getVendorProfileById } from "./get-vendor-profile.js";
 import { VendorStatus, type VendorProfile, type VendorListFilters, type PaginatedResult } from "../domain/types.js";
 import type { VendorProfileWithDocuments } from "./get-vendor-profile.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 export async function listVendorsAdmin(
   filters: VendorListFilters,
@@ -32,6 +33,8 @@ export async function approveVendor(
     body: "Your business has been verified. You can now receive bookings!",
     metadata: { vendorProfileId: vendorId },
   }).catch(() => {});
+
+  void refreshEmbedding(vendorId);
 
   return updated;
 }
@@ -74,7 +77,9 @@ export async function suspendVendor(
 export async function reinstateVendor(
   vendorId: string,
 ): Promise<VendorProfile> {
-  return profileRepo.updateStatus(vendorId, VendorStatus.VERIFIED);
+  const updated = await profileRepo.updateStatus(vendorId, VendorStatus.VERIFIED);
+  void refreshEmbedding(vendorId);
+  return updated;
 }
 
 export async function deactivateVendor(

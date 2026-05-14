@@ -3,6 +3,7 @@ import * as bookingRepo from "../infrastructure/booking.repository.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
 import { getUserEmailById } from "../infrastructure/user-lookup.js";
 import { getSendEmailUseCase } from "../../email/index.js";
+import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
 
 export interface UpdateBookingStatusInput {
   bookingId: string;
@@ -126,6 +127,8 @@ export async function updateBookingStatus(input: UpdateBookingStatusInput): Prom
   if (newStatus === BookingStatus.ACCEPTED || newStatus === BookingStatus.DECLINED) {
     sendBookingEmail(notifyUserId, title, body).catch(() => {});
   }
+
+  void refreshEmbedding(booking.vendorProfileId);
 
   return updated;
 }
