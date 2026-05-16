@@ -19,7 +19,7 @@ import {
   FiUploadCloud,
   FiFilm,
   FiAlertCircle,
-  FiLoader,
+  FiArrowRight,
 } from "react-icons/fi";
 import Link from "next/link";
 
@@ -53,6 +53,7 @@ export default function PortfolioPage() {
 
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
+  const [dragOver, setDragOver] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -135,6 +136,7 @@ export default function PortfolioPage() {
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
+    setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file) handleFileSelect(file);
   }
@@ -205,34 +207,57 @@ export default function PortfolioPage() {
     }
   }
 
+  /* ── Loading state ── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-400">
-        <div className="animate-pulse text-sm">Loading portfolio...</div>
+      <div className="space-y-10">
+        <div>
+          <div className="h-3 w-20 bg-warm-100 rounded animate-pulse mb-3" />
+          <div className="h-9 w-48 bg-warm-100 rounded-lg animate-pulse" />
+        </div>
+        <div className="flex gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-10 w-28 bg-warm-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="aspect-square bg-warm-100 rounded-2xl animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
+  /* ── No profile ── */
   if (noProfile) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900 font-display flex items-center gap-2">
-          <FiImage className="w-7 h-7 text-rose-500" />
-          Portfolio
-        </h1>
-        <div className="bg-white rounded-xl border border-gray-200/80 border-dashed p-12 text-center">
-          <FiAlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-sm font-semibold text-gray-700 mb-1">
+      <div className="space-y-10">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+            Showcase
+          </p>
+          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+            Portfolio
+          </h1>
+        </div>
+        <div className="rounded-2xl border border-dashed border-warm-200 bg-white p-16 text-center max-w-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-6">
+            <FiAlertCircle className="w-6 h-6 text-slate-300" />
+          </div>
+          <h3 className="font-display text-lg font-semibold text-slate-900 mb-2">
             Complete your profile first
           </h3>
-          <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
-            Set up your vendor profile with at least one service category to start building your portfolio.
+          <p className="text-[14px] text-slate-400 font-light leading-relaxed max-w-sm mx-auto mb-8">
+            Set up your vendor profile with at least one service category to start
+            building your portfolio.
           </p>
           <Link
             href="/vendor/profile/setup"
-            className="inline-block px-5 py-2.5 bg-rose-500 text-white text-sm font-semibold rounded-lg hover:bg-rose-600 transition-colors"
+            className="cursor-pointer group inline-flex items-center gap-2 px-7 py-3.5 bg-slate-900 text-white rounded-full text-[13px] font-semibold shadow-[0_2px_20px_rgba(15,23,42,0.12)] hover:bg-slate-800 hover:shadow-[0_4px_30px_rgba(15,23,42,0.2)] transition-all duration-500"
           >
             Go to Profile Setup
+            <FiArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-0.5" aria-hidden />
           </Link>
         </div>
       </div>
@@ -242,21 +267,24 @@ export default function PortfolioPage() {
   const currentItems = portfolio[activeTab] ?? [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-10">
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between flex-wrap gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 font-display flex items-center gap-2">
-            <FiImage className="w-7 h-7 text-rose-500" />
+          <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+            Showcase
+          </p>
+          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
             Portfolio
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Showcase your work across each service you offer.
+          <p className="text-[14px] text-slate-400 font-light mt-2">
+            Showcase your finest work across each service you offer.
           </p>
         </div>
         {!isStaff && (
           <button
             onClick={openUploadDialog}
-            className="flex items-center gap-2 px-5 py-2.5 bg-rose-500 text-white text-sm font-semibold rounded-lg hover:bg-rose-600 transition-colors cursor-pointer"
+            className="cursor-pointer group flex items-center gap-2.5 px-6 py-3 bg-slate-900 text-white rounded-full text-[13px] font-semibold shadow-[0_2px_20px_rgba(15,23,42,0.12)] hover:bg-slate-800 hover:shadow-[0_4px_30px_rgba(15,23,42,0.2)] transition-all duration-500"
           >
             <FiPlus className="w-4 h-4" />
             Add Media
@@ -264,23 +292,33 @@ export default function PortfolioPage() {
         )}
       </div>
 
-      {/* Category tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b border-gray-200 pb-px scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
+      {/* ── Category tabs ── */}
+      <div
+        className="flex gap-2 overflow-x-auto pb-px scrollbar-hide"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         {categories.map((cat) => {
           const count = totals[cat] ?? (portfolio[cat] ?? []).length;
+          const active = activeTab === cat;
           return (
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors cursor-pointer ${
-                activeTab === cat
-                  ? "border-rose-500 text-rose-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+              className={`cursor-pointer px-5 py-2.5 rounded-full text-[13px] font-semibold whitespace-nowrap border transition-all duration-500 ${
+                active
+                  ? "bg-slate-900 text-white border-slate-900 shadow-[0_2px_12px_rgba(15,23,42,0.12)]"
+                  : "bg-white text-slate-500 border-warm-200/50 hover:border-warm-200 hover:text-slate-700"
               }`}
             >
               {CATEGORY_LABELS[cat] ?? cat}
               {count > 0 && (
-                <span className="ml-1.5 text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                <span
+                  className={`ml-2 text-[11px] px-2 py-0.5 rounded-full transition-colors duration-500 ${
+                    active
+                      ? "bg-white/15 text-white/70"
+                      : "bg-warm-100 text-slate-400"
+                  }`}
+                >
                   {count}
                 </span>
               )}
@@ -289,37 +327,41 @@ export default function PortfolioPage() {
         })}
       </div>
 
-      {/* Media grid */}
+      {/* ── Media grid ── */}
       {loadingCategory && currentItems.length === 0 ? (
-        <div className="flex justify-center py-12">
-          <FiLoader className="w-5 h-5 text-gray-400 animate-spin" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="aspect-[4/5] bg-warm-100 rounded-2xl animate-pulse" />
+          ))}
         </div>
       ) : currentItems.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200/80 border-dashed p-12 text-center">
-          <FiImage className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-sm font-semibold text-gray-700 mb-1">
+        <div className="rounded-2xl border border-dashed border-warm-200 bg-white p-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-6">
+            <FiImage className="w-6 h-6 text-slate-300" />
+          </div>
+          <h3 className="font-display text-lg font-semibold text-slate-900 mb-2">
             No {CATEGORY_LABELS[activeTab] ?? activeTab} items yet
           </h3>
-          <p className="text-xs text-gray-400">
+          <p className="text-[14px] text-slate-400 font-light max-w-xs mx-auto">
             {isStaff
               ? "The vendor owner hasn't added any items to this category yet."
-              : "Upload photos or videos to showcase your work."}
+              : "Upload photos or videos to showcase your work in this category."}
           </p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {currentItems.map((item) => (
               <div
                 key={item.id}
-                className={`group relative rounded-xl overflow-hidden border border-gray-200/80 bg-gray-50 aspect-square ${
-                  deleting.has(item.id) ? "opacity-40 pointer-events-none" : ""
+                className={`group relative rounded-2xl overflow-hidden border border-warm-200/40 bg-warm-50 aspect-[4/5] hover:shadow-[0_8px_40px_rgba(15,23,42,0.06)] hover:border-warm-200 transition-all duration-700 ${
+                  deleting.has(item.id) ? "opacity-30 pointer-events-none scale-95" : ""
                 }`}
               >
                 {item.mediaType === "video" ? (
                   <video
                     src={item.mediaUrl}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                     muted
                     preload="metadata"
                     onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
@@ -334,27 +376,31 @@ export default function PortfolioPage() {
                   <img
                     src={item.mediaUrl}
                     alt={item.caption ?? "Portfolio item"}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                   />
                 )}
 
+                {/* Video badge */}
                 {item.mediaType === "video" && (
-                  <div className="absolute top-2 left-2 bg-black/60 text-white rounded-md px-1.5 py-0.5 text-[10px] font-medium flex items-center gap-1">
+                  <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white rounded-lg px-2.5 py-1 text-[10px] font-semibold uppercase tracking-luxury flex items-center gap-1.5">
                     <FiFilm className="w-3 h-3" /> Video
                   </div>
                 )}
 
-                {/* Caption + delete overlay */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Bottom overlay — caption */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-5 pt-14 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                   {item.caption && (
-                    <p className="text-white text-xs line-clamp-2">{item.caption}</p>
+                    <p className="text-white text-[13px] font-light line-clamp-2 leading-relaxed">
+                      {item.caption}
+                    </p>
                   )}
                 </div>
 
+                {/* Delete button */}
                 {!isStaff && (
                   <button
                     onClick={() => setDeleteConfirm(item.id)}
-                    className="absolute top-2 right-2 bg-white/90 text-red-500 rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 cursor-pointer"
+                    className="cursor-pointer absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm text-slate-400 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all duration-500"
                   >
                     <FiTrash2 className="w-3.5 h-3.5" />
                   </button>
@@ -363,39 +409,51 @@ export default function PortfolioPage() {
             ))}
           </div>
 
+          {/* Load more */}
           {currentItems.length < (totals[activeTab] ?? 0) && (
             <div className="flex justify-center pt-4">
               <button
                 onClick={() => fetchCategoryItems(activeTab, true)}
                 disabled={loadingMore}
-                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+                className="cursor-pointer flex items-center gap-2.5 px-7 py-3 text-[13px] font-semibold text-slate-600 bg-white border border-warm-200/50 rounded-full hover:border-warm-200 hover:shadow-[0_4px_16px_rgba(15,23,42,0.04)] disabled:opacity-50 transition-all duration-500"
               >
-                {loadingMore ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
-                {loadingMore ? "Loading..." : `Load more (${currentItems.length} of ${totals[activeTab]})`}
+                {loadingMore && (
+                  <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                )}
+                {loadingMore
+                  ? "Loading..."
+                  : `Load more (${currentItems.length} of ${totals[activeTab]})`}
               </button>
             </div>
           )}
         </>
       )}
 
-      {/* Delete confirmation modal */}
+      {/* ── Delete confirmation modal ── */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Delete this item?</h3>
-            <p className="text-sm text-gray-500 mb-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div
+            className="bg-white rounded-2xl p-8 sm:p-10 max-w-sm w-full mx-4 shadow-[0_20px_60px_rgba(15,23,42,0.15)] animate-scale-reveal"
+          >
+            <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-6">
+              <FiTrash2 className="w-5 h-5 text-red-400" />
+            </div>
+            <h3 className="font-display text-lg font-semibold text-slate-900 text-center mb-2">
+              Delete this item?
+            </h3>
+            <p className="text-[13px] text-slate-400 font-light text-center leading-relaxed mb-8">
               This will permanently remove the media file from your portfolio.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 hover:border-warm-200 transition-all duration-500"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-[0_2px_12px_rgba(220,38,38,0.15)] hover:shadow-[0_4px_20px_rgba(220,38,38,0.25)] transition-all duration-500"
               >
                 Delete
               </button>
@@ -404,36 +462,49 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* Upload dialog */}
+      {/* ── Upload dialog ── */}
       {showUpload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-gray-900">
-                Upload to {CATEGORY_LABELS[activeTab] ?? activeTab}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 sm:p-10 max-w-md w-full mx-4 shadow-[0_20px_60px_rgba(15,23,42,0.15)] animate-scale-reveal">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="font-display text-lg font-semibold text-slate-900">
+                  Upload Media
+                </h3>
+                <p className="text-[12px] text-slate-400 font-light mt-0.5">
+                  Adding to {CATEGORY_LABELS[activeTab] ?? activeTab}
+                </p>
+              </div>
               <button
                 onClick={() => setShowUpload(false)}
                 disabled={uploading}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="cursor-pointer w-8 h-8 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:border-warm-200 transition-all duration-500 disabled:opacity-50"
               >
-                <FiX className="w-5 h-5" />
+                <FiX className="w-4 h-4" />
               </button>
             </div>
 
             {!uploadFile ? (
               <div
                 ref={dropRef}
-                onDragOver={(e) => e.preventDefault()}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-rose-400 transition-colors"
+                className={`cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-500 ${
+                  dragOver
+                    ? "border-gold-400 bg-gold-50/30"
+                    : "border-warm-200 bg-warm-50/30 hover:border-warm-200/80 hover:bg-warm-50/60"
+                }`}
               >
-                <FiUploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm font-medium text-gray-600">
-                  Drag & drop or click to browse
+                <div className="w-14 h-14 rounded-2xl bg-white border border-warm-200/40 flex items-center justify-center mx-auto mb-5">
+                  <FiUploadCloud className={`w-6 h-6 transition-colors duration-500 ${dragOver ? "text-gold-500" : "text-slate-300"}`} />
+                </div>
+                <p className="text-[14px] font-medium text-slate-600 mb-1">
+                  Drag &amp; drop or click to browse
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-[12px] text-slate-400 font-light">
                   JPEG, PNG, WebP, MP4, MOV — max 10 MB
                 </p>
                 <input
@@ -448,9 +519,9 @@ export default function PortfolioPage() {
                 />
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* Preview */}
-                <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-video flex items-center justify-center">
+                <div className="rounded-2xl overflow-hidden border border-warm-200/40 bg-warm-50 aspect-video flex items-center justify-center">
                   {uploadFile.type.startsWith("video/") ? (
                     <video
                       src={uploadPreview ?? undefined}
@@ -470,9 +541,14 @@ export default function PortfolioPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span className="truncate max-w-[200px]">{uploadFile.name}</span>
-                  <span>{(uploadFile.size / (1024 * 1024)).toFixed(1)} MB</span>
+                {/* File info */}
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[12px] text-slate-500 truncate max-w-[220px]">
+                    {uploadFile.name}
+                  </span>
+                  <span className="text-[12px] text-slate-400 font-light">
+                    {(uploadFile.size / (1024 * 1024)).toFixed(1)} MB
+                  </span>
                 </div>
 
                 {/* Caption */}
@@ -481,44 +557,51 @@ export default function PortfolioPage() {
                   value={uploadCaption}
                   onChange={(e) => setUploadCaption(e.target.value)}
                   placeholder="Add a caption (optional)"
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                  className="w-full px-4 py-3.5 border border-warm-200/60 rounded-2xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
                 />
 
                 {/* Progress bar */}
                 {uploadProgress !== null && (
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-warm-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-rose-500 h-full rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-gold-400 to-gold-500 h-full rounded-full transition-all duration-500"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
                 )}
 
+                {/* Error */}
                 {uploadError && (
-                  <p className="text-xs text-red-500">{uploadError}</p>
+                  <div className="rounded-xl border border-red-100 bg-red-50/50 px-4 py-3 text-[13px] text-red-600">
+                    {uploadError}
+                  </div>
                 )}
 
-                <div className="flex gap-3">
+                {/* Actions */}
+                <div className="flex gap-3 pt-1">
                   <button
                     onClick={() => {
                       setUploadFile(null);
                       setUploadPreview(null);
                     }}
                     disabled={uploading}
-                    className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                    className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 hover:border-warm-200 transition-all duration-500 disabled:opacity-50"
                   >
                     Change File
                   </button>
                   <button
                     onClick={handleUpload}
                     disabled={uploading}
-                    className="flex-1 py-2.5 text-sm font-semibold text-white bg-rose-500 rounded-lg hover:bg-rose-600 transition-colors cursor-pointer disabled:opacity-60"
+                    className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 shadow-[0_2px_12px_rgba(15,23,42,0.12)] hover:shadow-[0_4px_20px_rgba(15,23,42,0.2)] transition-all duration-500 disabled:opacity-50"
                   >
-                    {uploading
-                      ? uploadProgress !== null
-                        ? `Uploading ${uploadProgress}%`
-                        : "Uploading..."
-                      : "Upload"}
+                    {uploading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        {uploadProgress !== null ? `${uploadProgress}%` : "Uploading..."}
+                      </span>
+                    ) : (
+                      "Upload"
+                    )}
                   </button>
                 </div>
               </div>
