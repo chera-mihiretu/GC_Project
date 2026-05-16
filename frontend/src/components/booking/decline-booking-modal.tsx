@@ -31,38 +31,38 @@ export default function DeclineBookingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+      <div className="absolute inset-0" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.15)] w-full max-w-md p-8 sm:p-10 space-y-6 animate-scale-reveal">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
-              <FiAlertTriangle className="w-4 h-4 text-red-500" />
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
+              <FiAlertTriangle className="w-4.5 h-4.5 text-red-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Decline Booking
-            </h2>
+            <div>
+              <h2 className="font-display text-lg font-semibold text-slate-900">
+                Decline Booking
+              </h2>
+              <p className="text-[11px] text-slate-400 font-light mt-0.5">
+                The couple will be notified
+              </p>
+            </div>
           </div>
           <button
             onClick={onCancel}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-slate-500 hover:bg-warm-50 transition-all duration-500"
           >
-            <FiX className="w-5 h-5" />
+            <FiX className="w-4.5 h-4.5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-500">
-          Please provide a reason for declining this booking. The couple will be
-          notified with your response.
-        </p>
-
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
               htmlFor="decline-reason"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
+              className="block text-[12px] font-medium text-slate-500 mb-2"
             >
               Reason for declining
             </label>
@@ -72,29 +72,36 @@ export default function DeclineBookingModal({
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g., Fully booked on that date, unavailable for this service type..."
               rows={4}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-200 focus:border-red-400 focus:outline-none resize-none"
+              className="w-full px-4 py-3.5 border border-warm-200/60 rounded-xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 resize-none focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(220,38,38,0.1)]"
               disabled={loading}
             />
             {error && (
-              <p className="text-xs text-red-500 mt-1">{error}</p>
+              <p className="text-[12px] text-red-500 font-light mt-2">{error}</p>
             )}
           </div>
 
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="cursor-pointer flex-1 py-3 rounded-xl text-[13px] font-semibold text-slate-600 border border-warm-200/60 hover:bg-warm-50 hover:border-warm-200 disabled:opacity-40 transition-all duration-500"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+              className="cursor-pointer flex-1 py-3 rounded-xl text-[13px] font-semibold text-white bg-red-600 shadow-[0_2px_12px_rgba(220,38,38,0.15)] hover:bg-red-700 hover:shadow-[0_4px_20px_rgba(220,38,38,0.25)] disabled:opacity-40 transition-all duration-500"
             >
-              {loading ? "Declining..." : "Decline Booking"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Declining...
+                </span>
+              ) : (
+                "Decline Booking"
+              )}
             </button>
           </div>
         </form>

@@ -12,6 +12,7 @@ interface BookingStatusTimelineProps {
 const HAPPY_PATH = [
   { key: BookingStatus.PENDING, label: "Pending" },
   { key: BookingStatus.ACCEPTED, label: "Accepted" },
+  { key: BookingStatus.PAYMENT_REQUESTED, label: "Payment Requested" },
   { key: BookingStatus.DEPOSIT_PAID, label: "Deposit Paid" },
   { key: BookingStatus.COMPLETED, label: "Completed" },
 ];
@@ -19,8 +20,9 @@ const HAPPY_PATH = [
 const STATUS_ORDER: Record<string, number> = {
   pending: 0,
   accepted: 1,
-  deposit_paid: 2,
-  completed: 3,
+  payment_requested: 2,
+  deposit_paid: 3,
+  completed: 4,
 };
 
 function formatDate(iso: string) {
@@ -43,9 +45,9 @@ export default function BookingStatusTimeline({
   const currentIndex = STATUS_ORDER[currentStatus] ?? -1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Main timeline */}
-      <div className="flex items-center gap-0 overflow-x-auto py-2">
+      <div className="flex items-start gap-0 overflow-x-auto py-2">
         {HAPPY_PATH.map((step, i) => {
           const stepIndex = STATUS_ORDER[step.key];
           let state: "done" | "current" | "upcoming" = "upcoming";
@@ -64,16 +66,15 @@ export default function BookingStatusTimeline({
           }
 
           return (
-            <div key={step.key} className="flex items-center">
-              {/* Step */}
-              <div className="flex flex-col items-center min-w-[80px]">
+            <div key={step.key} className="flex items-start">
+              <div className="flex flex-col items-center min-w-[90px]">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-[12px] font-semibold border transition-all duration-500 ${
                     state === "done"
-                      ? "bg-green-100 text-green-600"
+                      ? "bg-emerald-50 text-emerald-600 border-emerald-200/40"
                       : state === "current"
-                        ? "bg-blue-100 text-blue-600 ring-2 ring-blue-300 ring-offset-2"
-                        : "bg-gray-100 text-gray-400"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-[0_2px_12px_rgba(15,23,42,0.15)]"
+                        : "bg-warm-50 text-slate-400 border-warm-200/30"
                   }`}
                 >
                   {state === "done" ? (
@@ -83,12 +84,12 @@ export default function BookingStatusTimeline({
                   )}
                 </div>
                 <span
-                  className={`text-xs mt-1.5 text-center whitespace-nowrap ${
+                  className={`text-[11px] mt-2.5 text-center whitespace-nowrap font-medium ${
                     state === "done"
-                      ? "text-green-600 font-medium"
+                      ? "text-emerald-600"
                       : state === "current"
-                        ? "text-blue-600 font-medium"
-                        : "text-gray-400"
+                        ? "text-slate-800"
+                        : "text-slate-400"
                   }`}
                 >
                   {step.label}
@@ -98,8 +99,8 @@ export default function BookingStatusTimeline({
               {/* Connector */}
               {i < HAPPY_PATH.length - 1 && (
                 <div
-                  className={`h-0.5 w-8 sm:w-12 ${
-                    state === "done" ? "bg-green-300" : "bg-gray-200"
+                  className={`h-[2px] w-8 sm:w-14 mt-[18px] rounded-full transition-colors duration-500 ${
+                    state === "done" ? "bg-emerald-200" : "bg-warm-200/40"
                   }`}
                 />
               )}
@@ -110,24 +111,24 @@ export default function BookingStatusTimeline({
 
       {/* Terminal negative state */}
       {isTerminalNegative && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100">
-          <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+        <div className="flex items-center gap-3 px-5 py-4 rounded-xl bg-red-50/50 border border-red-100">
+          <div className="w-8 h-8 rounded-lg bg-red-100 border border-red-200/40 flex items-center justify-center shrink-0">
             <FiX className="w-3.5 h-3.5 text-red-500" />
           </div>
-          <span className="text-sm font-medium text-red-600 capitalize">
+          <span className="text-[13px] font-semibold text-red-600">
             {currentStatus === BookingStatus.DECLINED ? "Declined" : "Cancelled"}
           </span>
-          <span className="text-xs text-red-400 ml-auto">
+          <span className="text-[12px] text-red-400 font-light ml-auto">
             {formatDate(updatedAt)}
           </span>
         </div>
       )}
 
       {/* Timestamps */}
-      <div className="flex gap-4 text-xs text-gray-400">
-        <span>Created: {formatDate(createdAt)}</span>
+      <div className="flex gap-6 text-[11px] text-slate-400 font-light pt-2 border-t border-warm-200/30">
+        <span>Created: <span className="text-slate-500 font-medium">{formatDate(createdAt)}</span></span>
         {createdAt !== updatedAt && (
-          <span>Last updated: {formatDate(updatedAt)}</span>
+          <span>Last updated: <span className="text-slate-500 font-medium">{formatDate(updatedAt)}</span></span>
         )}
       </div>
     </div>
