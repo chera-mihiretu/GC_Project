@@ -34,6 +34,9 @@ import aiRoutes from "./features/ai/presentation/ai-advisor.routes.js";
 import { initAITables } from "./features/ai/infrastructure/init-tables.js";
 import checklistRoutes from "./features/checklist/presentation/checklist.routes.js";
 import { initChecklistTables } from "./features/checklist/infrastructure/init-tables.js";
+import budgetRoutes from "./features/budget/presentation/budget.routes.js";
+import { initBudgetTables } from "./features/budget/infrastructure/init-tables.js";
+import earningsRoutes from "./features/payment/presentation/earnings.routes.js";
 
 const app = express();
 
@@ -330,6 +333,8 @@ app.use("/api/v1/couple", coupleRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/ai", aiRoutes);
 app.use("/api/v1/checklist", checklistRoutes);
+app.use("/api/v1/budget", budgetRoutes);
+app.use("/api/v1/earnings", earningsRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);
@@ -373,6 +378,10 @@ initAITables().catch((err) => {
 
 initChecklistTables().catch((err) => {
   console.error("Failed to initialize checklist tables:", err);
+});
+
+initBudgetTables().catch((err) => {
+  console.error("Failed to initialize budget tables:", err);
 });
 
 ensureBucketExists().catch((err) => {

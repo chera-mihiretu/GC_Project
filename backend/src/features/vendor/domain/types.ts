@@ -79,14 +79,6 @@ export interface UpdateVendorProfileDTO {
   socialMedia?: Record<string, string>;
 }
 
-// Fields that trigger re-verification when changed on a verified profile
-export const RE_VERIFICATION_FIELDS: (keyof UpdateVendorProfileDTO)[] = [
-  "category",
-  "latitude",
-  "longitude",
-  "priceRangeMin",
-  "priceRangeMax",
-];
 
 export interface VendorListFilters {
   status?: VendorStatus;

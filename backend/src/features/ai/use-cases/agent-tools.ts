@@ -2,6 +2,7 @@ import { pool } from "../../../config/db.js";
 import { searchVendorsByVector, type SearchFilters } from "../infrastructure/embedding.repository.js";
 import type { VendorCard } from "../domain/types.js";
 import { findOrCreateConversation, createMessage, getMessagesByConversation } from "../../realtime/infrastructure/conversation.repository.js";
+import { getIO } from "../../realtime/infrastructure/socket-server.js";
 import { createBooking, type CreateBookingInput } from "../../booking/use-cases/create-booking.js";
 
 export interface SearchVendorsParams {
@@ -251,11 +252,20 @@ export async function executeSendMessageToVendors(
 
       const conversation = await findOrCreateConversation(coupleUserId, vendorUserId);
 
-      await createMessage({
+      const savedMessage = await createMessage({
         conversationId: conversation.id,
         senderId: coupleUserId,
         content: message,
       });
+
+      // Broadcast via Socket.IO so the vendor sees it in real-time
+      try {
+        const io = getIO();
+        io.to(`conversation:${conversation.id}`).emit("chat:message", savedMessage);
+        io.to(`user:${vendorUserId}`).emit("chat:message", savedMessage);
+      } catch {
+        // Socket.IO not initialized (e.g. in tests) — message is still persisted
+      }
 
       results.push({ vendorProfileId: vpId, businessName, conversationId: conversation.id, sent: true });
     } catch (err) {

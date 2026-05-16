@@ -16,8 +16,7 @@ export async function uploadDocument(
 
   if (
     profile.status === VendorStatus.SUSPENDED ||
-    profile.status === VendorStatus.DEACTIVATED ||
-    profile.status === VendorStatus.PENDING_VERIFICATION
+    profile.status === VendorStatus.DEACTIVATED
   ) {
     throw Object.assign(
       new Error("Cannot upload documents in current status"),
@@ -25,5 +24,14 @@ export async function uploadDocument(
     );
   }
 
-  return documentRepo.create(profile.id, documentType, fileUrl);
+  const doc = await documentRepo.create(profile.id, documentType, fileUrl);
+
+  if (profile.status === VendorStatus.VERIFIED) {
+    await profileRepo.updateStatus(
+      profile.id,
+      VendorStatus.PENDING_VERIFICATION,
+    );
+  }
+
+  return doc;
 }

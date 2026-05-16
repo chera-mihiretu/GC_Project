@@ -1,5 +1,6 @@
 import * as profileRepo from "../infrastructure/vendor-profile.repository.js";
 import * as documentRepo from "../infrastructure/vendor-document.repository.js";
+import { VendorStatus } from "../domain/types.js";
 import { deleteFile, extractStoragePath } from "../infrastructure/supabase-storage.js";
 
 export async function deleteDocument(
@@ -26,4 +27,11 @@ export async function deleteDocument(
   }
 
   await documentRepo.remove(documentId);
+
+  if (profile.status === VendorStatus.VERIFIED) {
+    await profileRepo.updateStatus(
+      profile.id,
+      VendorStatus.PENDING_VERIFICATION,
+    );
+  }
 }

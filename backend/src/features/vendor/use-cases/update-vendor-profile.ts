@@ -1,17 +1,10 @@
 import * as profileRepo from "../infrastructure/vendor-profile.repository.js";
 import {
   VendorStatus,
-  RE_VERIFICATION_FIELDS,
   type UpdateVendorProfileDTO,
   type VendorProfile,
 } from "../domain/types.js";
 import { refreshEmbedding } from "../../ai/infrastructure/embedding.service.js";
-
-function touchesCriticalField(dto: UpdateVendorProfileDTO): boolean {
-  return RE_VERIFICATION_FIELDS.some(
-    (key) => dto[key] !== undefined,
-  );
-}
 
 export async function updateVendorProfile(
   userId: string,
@@ -39,16 +32,6 @@ export async function updateVendorProfile(
     throw Object.assign(new Error("Failed to update profile"), {
       statusCode: 500,
     });
-  }
-
-  if (
-    profile.status === VendorStatus.VERIFIED &&
-    touchesCriticalField(dto)
-  ) {
-    return profileRepo.updateStatus(
-      profile.id,
-      VendorStatus.PENDING_VERIFICATION,
-    );
   }
 
   void refreshEmbedding(profile.id);
