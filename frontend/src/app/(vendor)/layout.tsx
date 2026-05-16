@@ -13,6 +13,7 @@ import {
   FiFileText,
   FiImage,
   FiMessageSquare,
+  FiDollarSign,
   FiSettings,
 } from "react-icons/fi";
 
@@ -21,6 +22,7 @@ const navItems: NavItem[] = [
   { label: "Profile", href: "/vendor/profile/setup", icon: FiUser },
   { label: "Team", href: "/vendor/team", icon: FiUsers },
   { label: "Bookings", href: "/vendor/bookings", icon: FiCalendar },
+  { label: "Earnings", href: "/vendor/earnings", icon: FiDollarSign },
   { label: "Availability", href: "/vendor/availability", icon: FiClock },
   { label: "Documents", href: "/vendor/documents", icon: FiFileText },
   { label: "Portfolio", href: "/vendor/portfolio", icon: FiImage },
