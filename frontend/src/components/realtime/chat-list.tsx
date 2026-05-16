@@ -104,13 +104,13 @@ export default function ChatList({
 
   if (loading) {
     return (
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-gray-100" />
+          <div key={i} className="flex items-center gap-3.5 animate-pulse">
+            <div className="w-10 h-10 rounded-xl bg-warm-100 shrink-0" />
             <div className="flex-1 space-y-2">
-              <div className="h-3.5 bg-gray-100 rounded w-24" />
-              <div className="h-3 bg-gray-100 rounded w-36" />
+              <div className="h-3.5 bg-warm-100 rounded w-24" />
+              <div className="h-3 bg-warm-100 rounded w-36" />
             </div>
           </div>
         ))}
@@ -121,8 +121,8 @@ export default function ChatList({
   if (conversations.length === 0) {
     return (
       <div className="p-8 text-center">
-        <p className="text-sm text-gray-400">No conversations yet</p>
-        <p className="text-xs text-gray-300 mt-1">
+        <p className="text-[13px] text-slate-400 font-light">No conversations yet</p>
+        <p className="text-[11px] text-slate-300 font-light mt-1">
           Start a chat from a vendor&apos;s profile
         </p>
       </div>
@@ -130,7 +130,7 @@ export default function ChatList({
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-warm-200/15">
       {conversations.map((conv) => {
         const other = getOtherParticipant(conv, currentUserId);
         const isSelected = conv.id === selectedId;
@@ -141,8 +141,10 @@ export default function ChatList({
           <button
             key={conv.id}
             onClick={() => onSelect(conv)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-              isSelected ? "bg-rose-50/60" : "hover:bg-gray-50"
+            className={`w-full flex items-center gap-3.5 px-5 py-3.5 text-left transition-all duration-300 cursor-pointer ${
+              isSelected
+                ? "bg-warm-50/60"
+                : "hover:bg-warm-50/30"
             }`}
           >
             <div className="relative shrink-0">
@@ -152,11 +154,11 @@ export default function ChatList({
                   alt={other.name}
                   width={40}
                   height={40}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-10 h-10 rounded-xl object-cover"
                   unoptimized
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-semibold text-slate-600">
+                <div className="w-10 h-10 rounded-xl bg-warm-100 border border-warm-200/30 flex items-center justify-center text-[13px] font-semibold text-slate-400">
                   {other.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -168,29 +170,19 @@ export default function ChatList({
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <p
-                  className={`text-sm truncate ${
-                    unread > 0
-                      ? "font-semibold text-gray-900"
-                      : "font-medium text-gray-700"
-                  }`}
-                >
+                <p className={`text-[13px] truncate ${unread > 0 ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>
                   {other.name}
                 </p>
-                <span className="text-[10px] text-gray-400 shrink-0">
+                <span className="text-[10px] text-slate-300 font-light shrink-0">
                   {formatTime(conv.lastMessageAt)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2 mt-0.5">
-                <p
-                  className={`text-xs truncate ${
-                    unread > 0 ? "text-gray-600" : "text-gray-400"
-                  }`}
-                >
+                <p className={`text-[11px] truncate ${unread > 0 ? "text-slate-500" : "text-slate-400 font-light"}`}>
                   {conv.lastMessageContent ?? "No messages yet"}
                 </p>
                 {unread > 0 && (
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="shrink-0 w-5 h-5 rounded-lg bg-gold-400 text-white text-[10px] font-bold flex items-center justify-center">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 )}
@@ -200,11 +192,11 @@ export default function ChatList({
         );
       })}
       {hasMoreConversations && (
-        <div className="p-3 flex justify-center">
+        <div className="p-4 flex justify-center">
           <button
             onClick={fetchMoreConversations}
             disabled={loadingMore}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-medium text-slate-400 bg-warm-50 border border-warm-200/30 rounded-xl hover:bg-warm-100/60 disabled:opacity-50 transition-all duration-500 cursor-pointer"
           >
             {loadingMore ? <FiLoader className="w-3 h-3 animate-spin" /> : null}
             {loadingMore ? "Loading..." : "Load more"}

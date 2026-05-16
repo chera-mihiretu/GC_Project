@@ -37,47 +37,32 @@ const MessageBubble = memo(function MessageBubble({
   return (
     <div
       className={`flex ${isMine ? "justify-end" : "justify-start"} ${
-        isNew
-          ? isMine
-            ? "animate-slide-in-right"
-            : "animate-slide-in-left"
-          : ""
+        isNew ? (isMine ? "animate-slide-in-right" : "animate-slide-in-left") : ""
       }`}
     >
       <div
-        className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-sm ${
+        className={`max-w-[75%] px-4 py-2.5 text-[13px] leading-relaxed ${
           isMine
             ? isFailed
-              ? "bg-rose-400/80 text-white rounded-br-md"
-              : "bg-rose-500 text-white rounded-br-md"
-            : "bg-gray-100 text-gray-800 rounded-bl-md"
+              ? "bg-red-400/90 text-white rounded-2xl rounded-br-md"
+              : "bg-slate-900 text-white rounded-2xl rounded-br-md"
+            : "bg-warm-50 border border-warm-200/30 text-slate-800 rounded-2xl rounded-bl-md"
         }`}
       >
         <p className="whitespace-pre-wrap wrap-break-word">{content}</p>
-        <div
-          className={`flex items-center gap-1.5 mt-1 ${
-            isMine ? "justify-end" : ""
-          }`}
-        >
-          <p
-            className={`text-[10px] ${
-              isMine ? "text-rose-200" : "text-gray-400"
-            }`}
-          >
-            {new Date(createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+        <div className={`flex items-center gap-1.5 mt-1 ${isMine ? "justify-end" : ""}`}>
+          <p className={`text-[10px] ${isMine ? "text-white/40" : "text-slate-300"}`}>
+            {new Date(createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </p>
           {isMine && (
             <span className="text-[10px] flex items-center gap-0.5">
               {status === "sending" && (
-                <FiClock className="w-2.5 h-2.5 text-rose-200/70" />
+                <FiClock className="w-2.5 h-2.5 text-white/30" />
               )}
               {status === "failed" && (
                 <button
                   onClick={onRetry}
-                  className="flex items-center gap-0.5 text-white/90 hover:text-white cursor-pointer"
+                  className="flex items-center gap-0.5 text-white/80 hover:text-white cursor-pointer"
                   title="Tap to retry"
                 >
                   <FiAlertCircle className="w-2.5 h-2.5" />
@@ -85,8 +70,8 @@ const MessageBubble = memo(function MessageBubble({
                 </button>
               )}
               {(status === "sent" || !status) && (
-                <span className={read ? "text-rose-200" : "text-rose-300/50"}>
-                  {read ? "✓✓" : "✓"}
+                <span className={read ? "text-white/50" : "text-white/20"}>
+                  {read ? "\u2713\u2713" : "\u2713"}
                 </span>
               )}
             </span>
@@ -169,8 +154,9 @@ export default function ChatWindow({
 
   return (
     <div className="flex flex-col h-full">
+      {/* Contact header */}
       {contactName && (
-        <div className="px-4 py-3 border-b border-gray-200/80 flex items-center gap-3 bg-white shrink-0">
+        <div className="px-5 py-3.5 border-b border-warm-200/20 flex items-center gap-3.5 bg-white shrink-0">
           <div className="relative shrink-0">
             {contactImage ? (
               <Image
@@ -178,37 +164,33 @@ export default function ChatWindow({
                 alt={contactName}
                 width={36}
                 height={36}
-                className="w-9 h-9 rounded-full object-cover"
+                className="w-9 h-9 rounded-xl object-cover"
                 unoptimized
               />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-linear-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-semibold text-slate-600">
+              <div className="w-9 h-9 rounded-xl bg-warm-100 border border-warm-200/30 flex items-center justify-center text-[12px] font-semibold text-slate-400">
                 {contactName.charAt(0).toUpperCase()}
               </div>
             )}
-            <PresenceDot
-              online={contactOnline}
-              className="absolute -bottom-0.5 -right-0.5"
-            />
+            <PresenceDot online={contactOnline} className="absolute -bottom-0.5 -right-0.5" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">
-              {contactName}
-            </p>
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[13px] font-semibold text-slate-900">{contactName}</p>
+            <p className="text-[10px] text-slate-300 font-light">
               {contactOnline ? "Online" : "Offline"}
             </p>
           </div>
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-warm-50/20">
         {hasOlderMessages && (
           <div className="flex justify-center pb-2">
             <button
               onClick={() => fetchOlderMessages()}
               disabled={loadingOlder}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 disabled:opacity-50 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-medium text-slate-400 bg-white border border-warm-200/30 rounded-xl hover:bg-warm-50 disabled:opacity-50 transition-all duration-500 cursor-pointer"
             >
               {loadingOlder ? <FiLoader className="w-3 h-3 animate-spin" /> : null}
               {loadingOlder ? "Loading..." : "Load older messages"}
@@ -216,13 +198,14 @@ export default function ChatWindow({
           </div>
         )}
         {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full text-sm text-gray-400">
-            No messages yet — start the conversation!
+          <div className="flex items-center justify-center h-full">
+            <p className="text-[13px] text-slate-300 font-light">
+              No messages yet — start the conversation!
+            </p>
           </div>
         )}
         {messages.map((msg) => {
-          const isNew =
-            initialLoadDoneRef.current && !knownIdsRef.current.has(msg.id);
+          const isNew = initialLoadDoneRef.current && !knownIdsRef.current.has(msg.id);
           return (
             <MessageBubble
               key={msg.tempId ?? msg.id}
@@ -232,22 +215,22 @@ export default function ChatWindow({
               read={msg.read}
               status={msg.status}
               isNew={isNew}
-              onRetry={
-                msg.tempId ? () => retryMessage(msg.tempId!) : undefined
-              }
+              onRetry={msg.tempId ? () => retryMessage(msg.tempId!) : undefined}
             />
           );
         })}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Typing indicator */}
       {typingUsers.length > 0 && (
-        <div className="px-4 py-1.5 text-xs text-gray-400 italic shrink-0 animate-fade-in">
-          {contactName ?? "Someone"} is typing…
+        <div className="px-5 py-1.5 text-[11px] text-slate-300 italic font-light shrink-0 animate-fade-in">
+          {contactName ?? "Someone"} is typing\u2026
         </div>
       )}
 
-      <div className="border-t border-gray-200 p-3 flex gap-2 shrink-0">
+      {/* Input bar */}
+      <div className="border-t border-warm-200/20 p-3.5 flex gap-2.5 shrink-0 bg-white">
         <input
           type="text"
           value={input}
@@ -259,12 +242,12 @@ export default function ChatWindow({
             }
           }}
           placeholder="Type a message..."
-          className="flex-1 px-4 py-2.5 bg-gray-50 rounded-full text-sm outline-none focus:ring-2 focus:ring-rose-500/30 transition-shadow"
+          className="flex-1 px-4 py-2.5 rounded-xl bg-warm-50/60 border border-warm-200/40 text-[13px] text-slate-800 placeholder:text-slate-300 outline-none transition-all duration-500 focus:border-gold-400/50 focus:ring-2 focus:ring-gold-400/10"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim()}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-500 cursor-pointer"
         >
           <FiSend className="w-4 h-4" />
         </button>
