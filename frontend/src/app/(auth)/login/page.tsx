@@ -36,6 +36,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null);
 
   useEffect(() => {
     if (!isPending && session?.user) {
@@ -106,18 +107,28 @@ function LoginForm() {
       {/* Social login */}
       <div className="flex flex-col gap-3 mb-8">
         <button
-          onClick={() => loginWithGoogle()}
-          className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-white border border-warm-200/60 rounded-2xl text-[14px] font-medium text-slate-700 transition-all duration-500 hover:border-warm-200 hover:shadow-[0_4px_20px_rgba(15,23,42,0.04)]"
+          onClick={() => { setSocialLoading("google"); loginWithGoogle(); }}
+          disabled={socialLoading !== null}
+          className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-white border border-warm-200/60 rounded-2xl text-[14px] font-medium text-slate-700 transition-all duration-500 hover:border-warm-200 hover:shadow-[0_4px_20px_rgba(15,23,42,0.04)] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <FcGoogle className="w-5 h-5" />
-          Continue with Google
+          {socialLoading === "google" ? (
+            <span className="w-5 h-5 border-2 border-slate-200 border-t-slate-500 rounded-full animate-spin" />
+          ) : (
+            <FcGoogle className="w-5 h-5" />
+          )}
+          {socialLoading === "google" ? "Connecting..." : "Continue with Google"}
         </button>
         <button
-          onClick={() => loginWithApple()}
-          className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-slate-900 rounded-2xl text-[14px] font-medium text-white transition-all duration-500 hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.15)]"
+          onClick={() => { setSocialLoading("apple"); loginWithApple(); }}
+          disabled={socialLoading !== null}
+          className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-slate-900 rounded-2xl text-[14px] font-medium text-white transition-all duration-500 hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.15)] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <FaApple className="w-5 h-5" />
-          Continue with Apple
+          {socialLoading === "apple" ? (
+            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <FaApple className="w-5 h-5" />
+          )}
+          {socialLoading === "apple" ? "Connecting..." : "Continue with Apple"}
         </button>
       </div>
 
