@@ -10,7 +10,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, organization } from "@/lib/auth-client";
 import { authClient } from "@/lib/auth-client";
 
@@ -40,10 +40,13 @@ interface AuthGuardProps {
  */
 export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, isPending } = useSession();
   const retried = useRef(false);
   const [orgChecked, setOrgChecked] = useState(false);
   const [orgAllowed, setOrgAllowed] = useState(false);
+
+  const loginUrl = "/login?redirect=" + encodeURIComponent(pathname);
 
   const verifyAndRedirect = useCallback(async () => {
     if (retried.current) return;
@@ -52,12 +55,12 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     try {
       const { data } = await authClient.getSession();
       if (!data?.user) {
-        router.replace("/login");
+        router.replace(loginUrl);
       }
     } catch {
-      router.replace("/login");
+      router.replace(loginUrl);
     }
-  }, [router]);
+  }, [router, loginUrl]);
 
   useEffect(() => {
     if (isPending) return;
@@ -82,35 +85,33 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
           if (orgs && orgs.length > 0) {
             setOrgAllowed(true);
           } else {
-            router.replace("/login");
+            router.replace(loginUrl);
           }
           setOrgChecked(true);
         }).catch(() => {
-          router.replace("/login");
+          router.replace(loginUrl);
           setOrgChecked(true);
         });
         return;
       }
 
-      router.replace("/login");
+      router.replace(loginUrl);
     } else {
       setOrgChecked(true);
       setOrgAllowed(true);
     }
-  }, [session, isPending, allowedRoles, router, verifyAndRedirect]);
+  }, [session, isPending, allowedRoles, router, verifyAndRedirect, loginUrl]);
 
   if (isPending || (!session?.user && !retried.current) || (allowedRoles && !orgChecked)) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          color: "#666",
-        }}
-      >
-        Loading...
+      <div className="flex items-center justify-center min-h-screen bg-warm-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-xl border-2 border-warm-200/40" />
+            <div className="absolute inset-0 rounded-xl border-2 border-transparent border-t-gold-400 animate-spin" />
+          </div>
+          <p className="text-[13px] text-slate-400 font-light tracking-wide">Loading...</p>
+        </div>
       </div>
     );
   }

@@ -1,15 +1,27 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { getDashboardPath, loginWithGoogle, loginWithApple } from "@/services/auth.service";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { FiArrowRight } from "react-icons/fi";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="animate-pulse h-96" />}>
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <div className="h-8 w-48 bg-warm-100 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-warm-100 rounded animate-pulse" />
+          <div className="space-y-4 mt-8">
+            <div className="h-12 bg-warm-100 rounded-xl animate-pulse" />
+            <div className="h-12 bg-warm-100 rounded-xl animate-pulse" />
+          </div>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
@@ -18,11 +30,19 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, isPending } = useSession();
   const prefillEmail = searchParams.get("email") || "";
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      const role = (session.user as Record<string, unknown>).role as string;
+      router.replace(getDashboardPath(role));
+    }
+  }, [session, isPending, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,36 +81,40 @@ function LoginForm() {
   }
 
   return (
-    <>
-      <h1 className="text-2xl font-bold text-slate-800 mb-1">
-        Welcome back
-      </h1>
-      <p className="text-slate-500 mb-6">
-        Sign in to continue planning your special day
-      </p>
+    <div className="animate-reveal-up">
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline mb-2">
+          Welcome back
+        </h1>
+        <p className="text-[15px] text-slate-400 font-light">
+          Sign in to continue planning your special day
+        </p>
+      </div>
 
+      {/* No-account warning */}
       {searchParams.get("error") === "no_account" && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mb-8 rounded-2xl border border-gold-200/60 bg-gold-50/50 px-5 py-4 text-sm text-slate-600">
           No account found with this email.{" "}
-          <a href="/register" className="font-semibold text-rose-500 hover:text-rose-600 underline">
+          <a href="/register" className="font-semibold text-slate-900 hover:text-gold-600 transition-colors duration-300 underline underline-offset-2">
             Create an account
           </a>{" "}
           first, then sign in.
         </div>
       )}
 
-      {/* Social buttons first for better UX */}
-      <div className="flex flex-col gap-2.5 mb-6">
+      {/* Social login */}
+      <div className="flex flex-col gap-3 mb-8">
         <button
           onClick={() => loginWithGoogle()}
-          className="flex items-center justify-center gap-2.5 w-full py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm cursor-pointer"
+          className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-white border border-warm-200/60 rounded-2xl text-[14px] font-medium text-slate-700 transition-all duration-500 hover:border-warm-200 hover:shadow-[0_4px_20px_rgba(15,23,42,0.04)]"
         >
           <FcGoogle className="w-5 h-5" />
           Continue with Google
         </button>
         <button
           onClick={() => loginWithApple()}
-          className="flex items-center justify-center gap-2.5 w-full py-2.5 bg-slate-900 border border-slate-900 rounded-lg text-sm font-medium text-white transition-all hover:bg-slate-800 cursor-pointer"
+          className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-slate-900 rounded-2xl text-[14px] font-medium text-white transition-all duration-500 hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.15)]"
         >
           <FaApple className="w-5 h-5" />
           Continue with Apple
@@ -98,16 +122,19 @@ function LoginForm() {
       </div>
 
       {/* Divider */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-px bg-slate-200" />
-        <span className="text-xs text-slate-400 font-medium">or continue with email</span>
-        <div className="flex-1 h-px bg-slate-200" />
+      <div className="flex items-center gap-4 mb-8">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-warm-200 to-transparent" />
+        <span className="text-[11px] uppercase tracking-editorial text-slate-300 font-medium">
+          or
+        </span>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-warm-200 to-transparent" />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-slate-700">
-            Email
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="email" className="text-[13px] font-medium text-slate-600">
+            Email address
           </label>
           <input
             id="email"
@@ -116,18 +143,18 @@ function LoginForm() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+            className="w-full px-4 py-3.5 border border-warm-200/60 rounded-2xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-medium text-slate-700">
+            <label htmlFor="password" className="text-[13px] font-medium text-slate-600">
               Password
             </label>
             <a
               href="/forget-password"
-              className="text-xs font-medium text-rose-500 hover:text-rose-600 transition-colors"
+              className="text-[12px] font-medium text-slate-400 hover:text-slate-900 transition-colors duration-300"
             >
               Forgot password?
             </a>
@@ -139,31 +166,45 @@ function LoginForm() {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+            className="w-full px-4 py-3.5 border border-warm-200/60 rounded-2xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
           />
         </div>
 
         {error && (
-          <p className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50/50 px-4 py-3.5 text-[13px] text-rose-600 leading-relaxed">
             {error}
-          </p>
+          </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 mt-1 bg-rose-500 text-white rounded-lg text-sm font-semibold transition-all hover:bg-rose-600 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="cursor-pointer group w-full flex items-center justify-center gap-2 py-3.5 mt-1 bg-slate-900 text-white rounded-2xl text-[14px] font-semibold transition-all duration-500 hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.15)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Signing in...
+            </span>
+          ) : (
+            <>
+              Sign in
+              <FiArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-0.5" aria-hidden />
+            </>
+          )}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-500 mt-6">
+      {/* Footer link */}
+      <p className="text-center text-[14px] text-slate-400 mt-10 font-light">
         Don&apos;t have an account?{" "}
-        <a href="/register" className="text-rose-500 font-semibold hover:text-rose-600 transition-colors">
+        <a
+          href="/register"
+          className="font-semibold text-slate-900 hover:text-gold-600 transition-colors duration-300"
+        >
           Create one
         </a>
       </p>
-    </>
+    </div>
   );
 }

@@ -2,9 +2,9 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signUp } from "@/lib/auth-client";
-import { loginWithGoogle, loginWithApple } from "@/services/auth.service";
-import { FiHeart } from "react-icons/fi";
+import { signUp, useSession } from "@/lib/auth-client";
+import { getDashboardPath, loginWithGoogle, loginWithApple } from "@/services/auth.service";
+import { FiHeart, FiArrowRight } from "react-icons/fi";
 import { PiStorefrontDuotone } from "react-icons/pi";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
@@ -13,7 +13,19 @@ type RoleOption = "couple" | "vendor";
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="animate-pulse h-96" />}>
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <div className="h-8 w-52 bg-warm-100 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-warm-100 rounded animate-pulse" />
+          <div className="space-y-4 mt-8">
+            <div className="h-14 bg-warm-100 rounded-2xl animate-pulse" />
+            <div className="h-14 bg-warm-100 rounded-2xl animate-pulse" />
+            <div className="h-14 bg-warm-100 rounded-2xl animate-pulse" />
+          </div>
+        </div>
+      }
+    >
       <RegisterForm />
     </Suspense>
   );
@@ -22,6 +34,7 @@ export default function RegisterPage() {
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, isPending } = useSession();
   const isInvitation = searchParams.get("invitation") === "1";
   const redirectPath = searchParams.get("redirect") || "";
   const inviteEmail = searchParams.get("email") || "";
@@ -32,6 +45,13 @@ function RegisterForm() {
   const [role, setRole] = useState<RoleOption>(isInvitation ? "vendor" : "couple");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      const userRole = (session.user as Record<string, unknown>).role as string;
+      router.replace(getDashboardPath(userRole));
+    }
+  }, [session, isPending, router]);
 
   useEffect(() => {
     const r = searchParams.get("role");
@@ -91,68 +111,110 @@ function RegisterForm() {
     }
   }
 
-  return (
-    <>
-      <h1 className="text-2xl font-bold text-slate-800 mb-1">
-        {isInvitation ? "Join your team" : "Begin your journey"}
-      </h1>
-      <p className="text-slate-500 mb-6">
-        {isInvitation
-          ? "Create your staff account to accept the invitation"
-          : "Create your account and start planning"}
-      </p>
+  const inputClasses =
+    "w-full px-4 py-3.5 border border-warm-200/60 rounded-2xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]";
 
+  return (
+    <div className="animate-reveal-up">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline mb-2">
+          {isInvitation ? "Join your team" : "Begin your journey"}
+        </h1>
+        <p className="text-[15px] text-slate-400 font-light">
+          {isInvitation
+            ? "Create your staff account to accept the invitation"
+            : "Create your account and start planning your dream wedding"}
+        </p>
+      </div>
+
+      {/* Invitation banner */}
       {isInvitation && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700 mb-2">
-          <PiStorefrontDuotone className="inline w-4 h-4 mr-1.5 -mt-0.5" />
-          You&apos;re being invited as <strong>vendor staff</strong>. Your account will be set up accordingly.
+        <div className="mb-8 rounded-2xl border border-slate-200/60 bg-champagne-50/50 px-5 py-4 text-[13px] text-slate-600 leading-relaxed">
+          <PiStorefrontDuotone className="inline w-4 h-4 mr-1.5 -mt-0.5 text-gold-500" />
+          You&apos;re being invited as <strong className="font-semibold text-slate-800">vendor staff</strong>. Your account will be set up accordingly.
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {/* Role selector */}
         {!isInvitation && (
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-slate-700">
+          <div className="flex flex-col gap-2.5">
+            <label className="text-[13px] font-medium text-slate-600">
               I am a...
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setRole("couple")}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-all cursor-pointer ${
+                className={`cursor-pointer flex-1 flex flex-col items-center gap-2 py-5 px-3 border rounded-2xl transition-all duration-500 ${
                   role === "couple"
-                    ? "border-rose-400 bg-rose-50 ring-2 ring-rose-100"
-                    : "border-slate-200 bg-white hover:border-slate-300"
+                    ? "border-slate-900 bg-slate-900 shadow-[0_4px_20px_rgba(15,23,42,0.15)]"
+                    : "border-warm-200/60 bg-white hover:border-warm-200"
                 }`}
               >
-                <FiHeart className={`w-5 h-5 ${role === "couple" ? "text-rose-500" : "text-slate-400"}`} />
-                <span className="text-sm font-medium text-slate-700">Couple</span>
-                <span className="text-[10px] text-slate-400">Planning our wedding</span>
+                <FiHeart
+                  className={`w-5 h-5 transition-colors duration-500 ${
+                    role === "couple" ? "text-rose-300" : "text-slate-300"
+                  }`}
+                  strokeWidth={1.5}
+                />
+                <span
+                  className={`text-[13px] font-semibold transition-colors duration-500 ${
+                    role === "couple" ? "text-white" : "text-slate-700"
+                  }`}
+                >
+                  Couple
+                </span>
+                <span
+                  className={`text-[10px] transition-colors duration-500 ${
+                    role === "couple" ? "text-white/50" : "text-slate-400"
+                  }`}
+                >
+                  Planning our wedding
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setRole("vendor")}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-all cursor-pointer ${
+                className={`cursor-pointer flex-1 flex flex-col items-center gap-2 py-5 px-3 border rounded-2xl transition-all duration-500 ${
                   role === "vendor"
-                    ? "border-rose-400 bg-rose-50 ring-2 ring-rose-100"
-                    : "border-slate-200 bg-white hover:border-slate-300"
+                    ? "border-slate-900 bg-slate-900 shadow-[0_4px_20px_rgba(15,23,42,0.15)]"
+                    : "border-warm-200/60 bg-white hover:border-warm-200"
                 }`}
               >
-                <PiStorefrontDuotone className={`w-5 h-5 ${role === "vendor" ? "text-rose-500" : "text-slate-400"}`} />
-                <span className="text-sm font-medium text-slate-700">Vendor</span>
-                <span className="text-[10px] text-slate-400">Offering services</span>
+                <PiStorefrontDuotone
+                  className={`w-5 h-5 transition-colors duration-500 ${
+                    role === "vendor" ? "text-gold-400" : "text-slate-300"
+                  }`}
+                />
+                <span
+                  className={`text-[13px] font-semibold transition-colors duration-500 ${
+                    role === "vendor" ? "text-white" : "text-slate-700"
+                  }`}
+                >
+                  Vendor
+                </span>
+                <span
+                  className={`text-[10px] transition-colors duration-500 ${
+                    role === "vendor" ? "text-white/50" : "text-slate-400"
+                  }`}
+                >
+                  Offering services
+                </span>
               </button>
             </div>
           </div>
         )}
 
+        {/* Social login */}
         {!isInvitation && (
           <>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => loginWithGoogle(role)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+                className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-white border border-warm-200/60 rounded-2xl text-[14px] font-medium text-slate-700 transition-all duration-500 hover:border-warm-200 hover:shadow-[0_4px_20px_rgba(15,23,42,0.04)]"
               >
                 <FcGoogle className="w-5 h-5" />
                 Continue with Google
@@ -160,23 +222,27 @@ function RegisterForm() {
               <button
                 type="button"
                 onClick={() => loginWithApple(role)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+                className="cursor-pointer group flex items-center justify-center gap-3 w-full py-3.5 bg-slate-900 rounded-2xl text-[14px] font-medium text-white transition-all duration-500 hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.15)]"
               >
                 <FaApple className="w-5 h-5" />
                 Continue with Apple
               </button>
             </div>
 
-            <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px bg-slate-200" />
-              <span className="text-xs text-slate-400">or with email</span>
-              <div className="flex-1 h-px bg-slate-200" />
+            {/* Divider */}
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-warm-200 to-transparent" />
+              <span className="text-[11px] uppercase tracking-editorial text-slate-300 font-medium">
+                or
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-warm-200 to-transparent" />
             </div>
           </>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="name" className="text-sm font-medium text-slate-700">
+        {/* Full name */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="name" className="text-[13px] font-medium text-slate-600">
             Full name
           </label>
           <input
@@ -186,13 +252,14 @@ function RegisterForm() {
             placeholder="Your full name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+            className={inputClasses}
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-slate-700">
-            Email
+        {/* Email */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="email" className="text-[13px] font-medium text-slate-600">
+            Email address
           </label>
           <input
             id="email"
@@ -202,17 +269,20 @@ function RegisterForm() {
             value={email}
             onChange={(e) => { if (!isInvitation || !inviteEmail) setEmail(e.target.value); }}
             readOnly={isInvitation && !!inviteEmail}
-            className={`w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${
-              isInvitation && inviteEmail ? "bg-slate-50 cursor-not-allowed" : "bg-white"
+            className={`${inputClasses} ${
+              isInvitation && inviteEmail ? "!bg-warm-50 cursor-not-allowed opacity-70" : ""
             }`}
           />
           {isInvitation && inviteEmail && (
-            <span className="text-xs text-slate-400">This email is linked to your invitation and cannot be changed.</span>
+            <span className="text-[11px] text-slate-400 font-light">
+              This email is linked to your invitation and cannot be changed.
+            </span>
           )}
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-slate-700">
+        {/* Password */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="password" className="text-[13px] font-medium text-slate-600">
             Password
           </label>
           <input
@@ -223,32 +293,50 @@ function RegisterForm() {
             placeholder="Create a strong password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white outline-none transition-all placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+            className={inputClasses}
           />
-          <span className="text-xs text-slate-400">At least 8 characters</span>
+          <span className="text-[11px] text-slate-300 font-light">
+            At least 8 characters
+          </span>
         </div>
 
+        {/* Error */}
         {error && (
-          <p className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50/50 px-4 py-3.5 text-[13px] text-rose-600 leading-relaxed">
             {error}
-          </p>
+          </div>
         )}
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 mt-1 bg-rose-500 text-white rounded-lg text-sm font-semibold transition-all hover:bg-rose-600 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="cursor-pointer group w-full flex items-center justify-center gap-2 py-3.5 mt-1 bg-slate-900 text-white rounded-2xl text-[14px] font-semibold transition-all duration-500 hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.15)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
         >
-          {loading ? "Creating account..." : "Create account"}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Creating account...
+            </span>
+          ) : (
+            <>
+              Create account
+              <FiArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-0.5" aria-hidden />
+            </>
+          )}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-500 mt-6">
+      {/* Footer */}
+      <p className="text-center text-[14px] text-slate-400 mt-10 font-light">
         Already have an account?{" "}
-        <a href="/login" className="text-rose-500 font-semibold hover:text-rose-600 transition-colors">
+        <a
+          href="/login"
+          className="font-semibold text-slate-900 hover:text-gold-600 transition-colors duration-300"
+        >
           Sign in
         </a>
       </p>
-    </>
+    </div>
   );
 }
