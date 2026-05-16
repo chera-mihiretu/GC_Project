@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import ImpersonationBanner from "@/components/impersonation-banner";
 import "./globals.css";
 
@@ -35,6 +36,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${playfair.variable}`}>
       <body suppressHydrationWarning className="min-h-screen bg-warm-50 text-slate-800 font-body antialiased">
+        <NextTopLoader
+          color="#c9a84c"
+          height={2}
+          shadow="0 0 10px rgba(201,168,76,0.35),0 0 5px rgba(201,168,76,0.2)"
+          showSpinner={false}
+          crawlSpeed={250}
+          easing="cubic-bezier(0.16, 1, 0.3, 1)"
+        />
         <ImpersonationBanner />
         {children}
       </body>

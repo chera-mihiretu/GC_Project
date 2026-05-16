@@ -8,13 +8,29 @@
   --color-rose-25: #fff5f6;
   --color-champagne-50: #fdfaf6;
   --color-champagne-100: #faf3ea;
+  --color-champagne-200: #f3e6d4;
   --color-warm-50: #faf8f5;
   --color-warm-100: #f5f0ea;
+  --color-warm-200: #ede4d8;
+  --color-ivory: #fefdfb;
+  --color-gold-50: #fdf9ef;
+  --color-gold-100: #f9f0d9;
+  --color-gold-200: #f0dfa8;
+  --color-gold-400: #c9a84c;
+  --color-gold-500: #b8942e;
+  --color-gold-600: #9a7a1f;
+
+  --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 ::selection {
   background: var(--color-rose-200);
-  color: var(--color-rose-700);
+  color: var(--color-rose-800);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .scrollbar-hide {
@@ -25,35 +41,61 @@
   display: none;
 }
 
+/* ─── Choreographed motion library ─── */
+
 @keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes revealDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleReveal {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes softFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes shimmerGold {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @utility animate-slide-in-right {
@@ -66,4 +108,89 @@
 
 @utility animate-fade-in {
   animation: fadeIn 0.3s ease-out both;
+}
+
+@utility animate-reveal-up {
+  animation: revealUp 0.9s var(--ease-luxury) both;
+}
+
+@utility animate-reveal-down {
+  animation: revealDown 0.7s var(--ease-luxury) both;
+}
+
+@utility animate-scale-reveal {
+  animation: scaleReveal 0.8s var(--ease-luxury) both;
+}
+
+@utility animate-float {
+  animation: softFloat 6s ease-in-out infinite;
+}
+
+@utility animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmerGold 3s linear infinite;
+}
+
+@utility animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@utility animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* ─── Luxury gradient overlays ─── */
+
+@utility gradient-luxury-radial {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    rgba(251, 113, 133, 0.08),
+    rgba(253, 250, 246, 0.6) 50%,
+    transparent
+  );
+}
+
+@utility gradient-editorial-dark {
+  background: linear-gradient(
+    180deg,
+    #0f0d0a 0%,
+    #1a1714 40%,
+    #231f1a 100%
+  );
+}
+
+@utility gradient-gold-text {
+  background: linear-gradient(135deg, #c9a84c 0%, #e8d5a0 40%, #c9a84c 80%, #9a7a1f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Luxury dividers ─── */
+
+.divider-ornament {
+  position: relative;
+}
+
+.divider-ornament::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-400), transparent);
+  margin: 1.5rem auto 0;
+}
+
+/* ─── Letter-spacing scale for editorial typography ─── */
+
+@utility tracking-editorial {
+  letter-spacing: 0.2em;
+}
+
+@utility tracking-luxury {
+  letter-spacing: 0.15em;
+}
+
+@utility tracking-headline {
+  letter-spacing: -0.025em;
 }
