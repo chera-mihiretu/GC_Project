@@ -57,6 +57,7 @@ export class NodemailerTransporter implements EmailTransporter {
   }
 
   async send(message: EmailMessage): Promise<EmailSendResult> {
+    const start = Date.now();
     try {
       const info = await this.transporter.sendMail({
         from: this.from,
@@ -66,11 +67,18 @@ export class NodemailerTransporter implements EmailTransporter {
         html: message.html,
       });
 
+      const elapsed = Date.now() - start;
+      console.log(
+        `[EMAIL_SENT] to=${message.to} subject="${message.subject}" messageId=${info.messageId} elapsed=${elapsed}ms`,
+      );
       return { success: true, messageId: info.messageId };
     } catch (err) {
+      const elapsed = Date.now() - start;
       const errorMessage =
         err instanceof Error ? err.message : "Unknown email send error";
-      console.error("Email send failed:", errorMessage);
+      console.error(
+        `[EMAIL_FAILED] to=${message.to} subject="${message.subject}" error="${errorMessage}" elapsed=${elapsed}ms`,
+      );
       return { success: false, error: errorMessage };
     }
   }
@@ -78,8 +86,11 @@ export class NodemailerTransporter implements EmailTransporter {
   async verify(): Promise<boolean> {
     try {
       await this.transporter.verify();
+      console.log("[EMAIL_VERIFY] SMTP connection verified successfully");
       return true;
-    } catch {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error(`[EMAIL_VERIFY] SMTP verification failed: ${errorMessage}`);
       return false;
     }
   }
