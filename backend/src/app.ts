@@ -371,6 +371,99 @@ app.get("/api/v1/admin/analytics", requireAuth(), async (req: Request, res: Resp
   }
 });
 
+app.get("/api/v1/vendor/analytics", requireAuth(), async (req: Request, res: Response) => {
+  const userId = req.authContext!.user.id;
+
+  try {
+    const memberResult = await pool.query(
+      `SELECT m."organizationId", m.role FROM "member" m WHERE m."userId" = $1 LIMIT 1`,
+      [userId],
+    );
+    let vendorId = userId;
+    if (memberResult.rows.length > 0) {
+      const { organizationId, role: orgRole } = memberResult.rows[0];
+      if (orgRole !== "owner") {
+        const ownerResult = await pool.query(
+          `SELECT m."userId" FROM "member" m WHERE m."organizationId" = $1 AND m.role = 'owner' LIMIT 1`,
+          [organizationId],
+        );
+        vendorId = ownerResult.rows[0]?.userId ?? userId;
+      }
+    }
+
+    const [
+      statusBreakdown,
+      dailyBookings,
+      earningsSummary,
+      recentPayments,
+    ] = await Promise.all([
+      pool.query(
+        `SELECT status, COUNT(*)::int AS count FROM bookings WHERE vendor_id = $1 GROUP BY status`,
+        [vendorId],
+      ),
+      pool.query(
+        `SELECT
+           d.day::date AS day,
+           COALESCE(b.count, 0)::int AS count
+         FROM generate_series(
+           (CURRENT_DATE - INTERVAL '6 days'),
+           CURRENT_DATE,
+           '1 day'
+         ) AS d(day)
+         LEFT JOIN (
+           SELECT DATE(created_at) AS day, COUNT(*)::int AS count
+           FROM bookings
+           WHERE vendor_id = $1 AND created_at >= (CURRENT_DATE - INTERVAL '6 days')
+           GROUP BY DATE(created_at)
+         ) b ON d.day::date = b.day
+         ORDER BY d.day`,
+        [vendorId],
+      ),
+      pool.query(
+        `SELECT
+           COALESCE(SUM(amount - COALESCE(charge_amount, 0)), 0)::numeric AS "totalEarned",
+           COUNT(*)::int AS "paymentCount"
+         FROM payments
+         WHERE vendor_id = $1 AND status = 'success'`,
+        [vendorId],
+      ),
+      pool.query(
+        `SELECT
+           d.day::date AS day,
+           COALESCE(SUM(p.amount - COALESCE(p.charge_amount, 0)), 0)::numeric AS total
+         FROM generate_series(
+           (CURRENT_DATE - INTERVAL '6 days'),
+           CURRENT_DATE,
+           '1 day'
+         ) AS d(day)
+         LEFT JOIN payments p
+           ON DATE(p.created_at) = d.day::date
+           AND p.vendor_id = $1
+           AND p.status = 'success'
+         GROUP BY d.day
+         ORDER BY d.day`,
+        [vendorId],
+      ),
+    ]);
+
+    const statusMap: Record<string, number> = {};
+    for (const row of statusBreakdown.rows) {
+      statusMap[row.status] = row.count;
+    }
+
+    res.json({
+      bookingsByStatus: statusMap,
+      dailyBookings: dailyBookings.rows.map((r) => ({ day: r.day, count: r.count })),
+      totalEarned: parseFloat(earningsSummary.rows[0]?.totalEarned ?? "0"),
+      paymentCount: earningsSummary.rows[0]?.paymentCount ?? 0,
+      dailyEarnings: recentPayments.rows.map((r) => ({ day: r.day, total: parseFloat(r.total) })),
+    });
+  } catch (err) {
+    console.error("Failed to fetch vendor analytics:", err);
+    res.status(500).json({ error: { code: "SERVER_ERROR", message: "Failed to fetch analytics" } });
+  }
+});
+
 app.get("/api/v1/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
