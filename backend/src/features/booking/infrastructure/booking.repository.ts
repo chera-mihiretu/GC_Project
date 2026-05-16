@@ -20,6 +20,8 @@ function rowToBooking(row: Record<string, unknown>): Booking {
     message: row.message as string | null,
     status: row.status as BookingStatus,
     declineReason: row.decline_reason as string | null,
+    requestedAmount: row.requested_amount ? parseFloat(row.requested_amount as string) : null,
+    requestedCurrency: (row.requested_currency as string) || null,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
   };
@@ -205,6 +207,42 @@ export async function updateStatus(
         { statusCode: 409 },
       );
     }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+export async function setRequestedPayment(
+  id: string,
+  amount: number,
+  currency: string,
+): Promise<Booking> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const { rows: [existing] } = await client.query(
+      "SELECT * FROM bookings WHERE id = $1 FOR UPDATE",
+      [id],
+    );
+    if (!existing) {
+      throw Object.assign(new Error("Booking not found"), { statusCode: 404 });
+    }
+
+    transition(rowToBooking(existing).status, BookingStatus.PAYMENT_REQUESTED);
+
+    const { rows } = await client.query(
+      `UPDATE bookings
+       SET status = $1, requested_amount = $2, requested_currency = $3, updated_at = NOW()
+       WHERE id = $4 RETURNING *`,
+      [BookingStatus.PAYMENT_REQUESTED, amount, currency, id],
+    );
+
+    await client.query("COMMIT");
+    return rowToBooking(rows[0]);
+  } catch (err) {
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();

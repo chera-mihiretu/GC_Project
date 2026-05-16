@@ -6,6 +6,7 @@ import {
   handleListBookings,
   handleGetBooking,
   handleUpdateBookingStatus,
+  handleRequestPayment,
 } from "./booking.controller.js";
 
 const router = Router();
@@ -14,5 +15,6 @@ router.get("/", requireAuth(), resolveVendorContext(), handleListBookings);
 router.get("/:id", requireAuth(), resolveVendorContext(), handleGetBooking);
 router.post("/", requireAuth(), requireRole("couple"), handleCreateBooking);
 router.patch("/:id/status", requireAuth(), resolveVendorContext(), handleUpdateBookingStatus);
+router.post("/:id/request-payment", requireAuth(), resolveVendorContext(), handleRequestPayment);
 
 export default router;

@@ -55,6 +55,13 @@ export async function updateBookingStatus(input: UpdateBookingStatusInput): Prom
     );
   }
 
+  if (newStatus === BookingStatus.PAYMENT_REQUESTED) {
+    throw Object.assign(
+      new Error("Payment requests must be made through the request-payment endpoint"),
+      { statusCode: 422 },
+    );
+  }
+
   if (newStatus === BookingStatus.DECLINED && !declineReason) {
     throw Object.assign(
       new Error("A reason is required when declining a booking"),

@@ -7,6 +7,9 @@ import {
 } from "../use-cases/list-bookings.js";
 import { updateBookingStatus } from "../use-cases/update-booking-status.js";
 import { BookingStatus } from "../domain/types.js";
+import * as bookingRepo from "../infrastructure/booking.repository.js";
+import { findById as findVendorProfile } from "../../vendor/infrastructure/vendor-profile.repository.js";
+import { sendNotification } from "../../realtime/use-cases/send-notification.js";
 
 const STATUS_CODE_MAP: Record<number, string> = {
   400: "BAD_REQUEST",
@@ -146,6 +149,87 @@ export async function handleUpdateBookingStatus(
     });
 
     res.json({ booking });
+  } catch (err) {
+    handleError(res, err);
+  }
+}
+
+export async function handleRequestPayment(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const vendorUserId = req.authContext!.vendorOwnerId ?? req.authContext!.user.id;
+    const bookingId = req.params.id as string;
+    const { amount, currency } = req.body as { amount?: number; currency?: string };
+
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "amount must be a positive number" },
+      });
+      return;
+    }
+
+    const booking = await bookingRepo.findById(bookingId);
+    if (!booking) {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Booking not found" } });
+      return;
+    }
+
+    if (booking.vendorId !== vendorUserId) {
+      res.status(403).json({ error: { code: "FORBIDDEN", message: "Access denied" } });
+      return;
+    }
+
+    if (booking.status !== BookingStatus.ACCEPTED) {
+      res.status(422).json({
+        error: { code: "UNPROCESSABLE_ENTITY", message: "Payment can only be requested for accepted bookings" },
+      });
+      return;
+    }
+
+    const vendorProfile = await findVendorProfile(booking.vendorProfileId);
+    if (!vendorProfile) {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Vendor profile not found" } });
+      return;
+    }
+
+    if (vendorProfile.priceRangeMax !== null && amount > vendorProfile.priceRangeMax) {
+      res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: `Amount cannot exceed your maximum price (${vendorProfile.priceRangeMax})`,
+        },
+      });
+      return;
+    }
+
+    const updated = await bookingRepo.setRequestedPayment(
+      bookingId,
+      amount,
+      currency ?? "ETB",
+    );
+
+    const dateLabel = new Date(booking.eventDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    await sendNotification({
+      userId: booking.coupleId,
+      type: "payment_requested",
+      title: "Payment Requested",
+      body: `Your vendor has requested a payment of ${amount.toLocaleString()} ${currency ?? "ETB"} for ${booking.serviceCategory} on ${dateLabel}.`,
+      metadata: {
+        bookingId: booking.id,
+        vendorProfileId: booking.vendorProfileId,
+        amount,
+        currency: currency ?? "ETB",
+      },
+    }).catch(() => {});
+
+    res.json({ booking: updated });
   } catch (err) {
     handleError(res, err);
   }

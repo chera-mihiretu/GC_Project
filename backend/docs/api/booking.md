@@ -377,21 +377,86 @@ curl -X PATCH http://localhost:5000/api/v1/bookings/bk-789-uuid/status \
 
 ---
 
+## POST /api/v1/bookings/:id/request-payment
+
+Vendor requests payment from the couple for an accepted booking. The amount must not exceed the vendor's `priceRangeMax`. Transitions status to `payment_requested`.
+
+**Auth:** Required (vendor owner/staff)
+
+**URL Params:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | string (UUID) | Booking ID |
+
+**Request Body:**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| amount | number | Yes | — | Amount to charge (must be > 0 and <= vendor priceRangeMax) |
+| currency | string | No | "ETB" | Currency code |
+
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:5000/api/v1/bookings/bk-789-uuid/request-payment \
+  -H "Content-Type: application/json" \
+  -b "session=<session-cookie>" \
+  -d '{"amount": 25000}'
+```
+
+**Response (200):**
+
+```json
+{
+  "booking": {
+    "id": "bk-789-uuid",
+    "status": "payment_requested",
+    "requestedAmount": 25000,
+    "requestedCurrency": "ETB",
+    ...
+  }
+}
+```
+
+**Errors:**
+
+- **400** — Amount missing, not positive, or exceeds vendor's priceRangeMax
+- **403** — Not the vendor for this booking
+- **404** — Booking not found
+- **422** — Booking status is not `accepted`
+
+---
+
 ## Booking Status Flow
 
 ```
-pending → accepted → deposit_paid → completed
-   ↓         ↓            ↓
-cancelled  cancelled   cancelled
+pending → accepted → payment_requested → deposit_paid → completed
+   ↓         ↓              ↓                 ↓
+cancelled  cancelled     cancelled          cancelled
    
 pending → declined (terminal)
 ```
+
+### Statuses
+
+| Status | Description |
+|--------|-------------|
+| pending | Couple requested, awaiting vendor response |
+| accepted | Vendor accepted the booking |
+| payment_requested | Vendor has requested payment with a specific amount |
+| deposit_paid | Couple paid the deposit via Chapa |
+| completed | Vendor marked service as delivered (only from deposit_paid) |
+| declined | Vendor declined the request (terminal) |
+| cancelled | Couple cancelled the booking (terminal) |
 
 ### Notes
 
 - The `vendorId` field is auto-populated from the vendor profile's `userId`.
 - A notification of type `booking_request` is sent to the vendor on creation.
 - A notification of type `booking_status_update` is sent to the other party on status change.
+- A notification of type `payment_requested` is sent to the couple when the vendor requests payment.
+- **Vendors cannot mark a booking complete without payment.** The flow is: accept → request payment → couple pays → mark complete.
 - Duplicate detection: a couple cannot have two active bookings (pending or accepted) with the same vendor for the same event date.
-- Date conflict detection (BK-07): a vendor cannot have two confirmed bookings (accepted or deposit_paid) on the same date. Checked at both creation time (blocks new requests) and acceptance time (prevents race conditions). Enforced by a partial unique index at the database level.
+- Date conflict detection (BK-07): a vendor cannot have two confirmed bookings (accepted, payment_requested, or deposit_paid) on the same date. Checked at both creation time (blocks new requests) and acceptance time (prevents race conditions). Enforced by a partial unique index at the database level.
 - Pagination: `limit` is capped at 100 items. Values above 100 are silently reduced.

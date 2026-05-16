@@ -2,6 +2,7 @@ export const BookingStatus = {
   PENDING: "pending",
   ACCEPTED: "accepted",
   DECLINED: "declined",
+  PAYMENT_REQUESTED: "payment_requested",
   DEPOSIT_PAID: "deposit_paid",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
@@ -19,6 +20,8 @@ export interface Booking {
   message: string | null;
   status: BookingStatus;
   declineReason: string | null;
+  requestedAmount: number | null;
+  requestedCurrency: string | null;
   createdAt: Date;
   updatedAt: Date;
   businessName?: string;
@@ -35,6 +38,8 @@ export interface BookingDetail extends Booking {
   vendorCategory: string[];
   vendorRating: number;
   vendorReviewCount: number;
+  requestedAmount: number | null;
+  requestedCurrency: string | null;
 }
 
 export interface CreateBookingDTO {
