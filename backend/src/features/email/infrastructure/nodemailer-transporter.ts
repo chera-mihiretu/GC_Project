@@ -45,6 +45,9 @@ export class NodemailerTransporter implements EmailTransporter {
 
   constructor(config: SmtpConfig) {
     this.from = config.from;
+    console.log(
+      `[EMAIL_INIT] host=${config.host} port=${config.port} secure=${config.secure} user=${config.user} from=${config.from}`,
+    );
     this.transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
@@ -52,6 +55,13 @@ export class NodemailerTransporter implements EmailTransporter {
       auth: {
         user: config.user,
         pass: config.pass,
+      },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+      logger: false,
+      tls: {
+        rejectUnauthorized: false,
       },
     });
   }
