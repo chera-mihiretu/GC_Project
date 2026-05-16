@@ -43,7 +43,6 @@ export default function CoupleBookingDetailPage() {
   const [existingReview, setExistingReview] = useState<Review | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  const [depositAmount, setDepositAmount] = useState("");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<Payment | null>(null);
@@ -126,18 +125,12 @@ export default function CoupleBookingDetailPage() {
 
   async function handlePayDeposit() {
     if (!booking) return;
-    const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) {
-      setError("Please enter a valid deposit amount");
-      return;
-    }
 
     setPaymentLoading(true);
     setError("");
     try {
       const result = await initializePayment({
         bookingId: booking.id,
-        amount,
       });
       window.location.href = result.checkoutUrl;
     } catch (err) {
@@ -197,9 +190,11 @@ export default function CoupleBookingDetailPage() {
   const canCancel =
     booking.status === BookingStatus.PENDING ||
     booking.status === BookingStatus.ACCEPTED ||
+    booking.status === BookingStatus.PAYMENT_REQUESTED ||
     booking.status === BookingStatus.DEPOSIT_PAID;
 
-  const showPayDeposit = booking.status === BookingStatus.ACCEPTED;
+  const showWaitingForPaymentRequest = booking.status === BookingStatus.ACCEPTED;
+  const showPayDeposit = booking.status === BookingStatus.PAYMENT_REQUESTED;
 
   const eventDate = new Date(booking.eventDate).toLocaleDateString("en-US", {
     weekday: "long",
@@ -312,46 +307,42 @@ export default function CoupleBookingDetailPage() {
         )}
       </div>
 
-      {/* Pay deposit section */}
+      {/* Waiting for vendor to request payment */}
+      {showWaitingForPaymentRequest && (
+        <div className="bg-amber-50 rounded-xl border border-amber-200 p-6 space-y-2">
+          <div className="flex items-center gap-2">
+            <FiDollarSign className="w-5 h-5 text-amber-600" />
+            <h2 className="text-sm font-semibold text-amber-800">Booking Accepted</h2>
+          </div>
+          <p className="text-sm text-amber-700">
+            Your booking has been accepted! The vendor will send you a payment request shortly.
+          </p>
+        </div>
+      )}
+
+      {/* Pay deposit section — vendor has requested payment */}
       {showPayDeposit && (
         <div className="bg-white rounded-xl border border-green-200 p-6 space-y-4">
           <div className="flex items-center gap-2">
             <FiDollarSign className="w-5 h-5 text-green-600" />
-            <h2 className="text-sm font-semibold text-gray-900">Pay Deposit</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Payment Requested</h2>
           </div>
           <p className="text-sm text-gray-500">
-            Your booking has been accepted. Pay the deposit to confirm your reservation.
+            The vendor has requested payment to confirm your reservation.
           </p>
-          {(booking.priceRangeMin || booking.priceRangeMax) && (
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Vendor price range:</span>{" "}
-              {booking.priceRangeMin?.toLocaleString() ?? "—"} – {booking.priceRangeMax?.toLocaleString() ?? "—"} ETB
+          <div className="bg-green-50 border border-green-100 rounded-lg px-4 py-3">
+            <p className="text-xs text-green-600 mb-0.5">Amount to pay</p>
+            <p className="text-2xl font-bold text-green-900">
+              {booking.requestedAmount?.toLocaleString()} {booking.requestedCurrency ?? "ETB"}
             </p>
-          )}
-          <div className="flex items-end gap-3 max-w-sm">
-            <div className="flex-1">
-              <label htmlFor="deposit-amount" className="block text-xs font-medium text-gray-600 mb-1">
-                Amount (ETB)
-              </label>
-              <input
-                id="deposit-amount"
-                type="number"
-                min="1"
-                step="0.01"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="e.g. 5000"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <button
-              onClick={handlePayDeposit}
-              disabled={paymentLoading || !depositAmount}
-              className="cursor-pointer px-5 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {paymentLoading ? "Redirecting..." : "Pay with Chapa"}
-            </button>
           </div>
+          <button
+            onClick={handlePayDeposit}
+            disabled={paymentLoading}
+            className="cursor-pointer px-5 py-2.5 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {paymentLoading ? "Redirecting to Chapa..." : `Pay ${booking.requestedAmount?.toLocaleString()} ${booking.requestedCurrency ?? "ETB"} with Chapa`}
+          </button>
         </div>
       )}
 

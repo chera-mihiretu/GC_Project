@@ -15,12 +15,14 @@ import {
   FiMapPin,
   FiStar,
   FiExternalLink,
+  FiDollarSign,
 } from "react-icons/fi";
 import Link from "next/link";
 import { listBookings, getBooking, updateBookingStatus } from "@/services/booking.service";
 import { BookingStatus, type Booking, type BookingDetail } from "@/types/booking";
 import type { BookingListResponse } from "@/services/booking.service";
 import BookingStatusTimeline from "@/components/booking/booking-status-timeline";
+import { initializePayment } from "@/services/payment.service";
 import { getReviewByBooking } from "@/services/review.service";
 import { ReviewForm } from "@/components/review/review-form";
 import { StarRating } from "@/components/review/star-rating";
@@ -30,6 +32,7 @@ const STATUS_TABS = [
   { label: "All", value: undefined },
   { label: "Pending", value: BookingStatus.PENDING },
   { label: "Accepted", value: BookingStatus.ACCEPTED },
+  { label: "Payment Req.", value: BookingStatus.PAYMENT_REQUESTED },
   { label: "Declined", value: BookingStatus.DECLINED },
   { label: "Completed", value: BookingStatus.COMPLETED },
   { label: "Cancelled", value: BookingStatus.CANCELLED },
@@ -38,6 +41,7 @@ const STATUS_TABS = [
 const STATUS_BADGE: Record<string, string> = {
   pending: "bg-amber-50 text-amber-600",
   accepted: "bg-green-50 text-green-600",
+  payment_requested: "bg-purple-50 text-purple-600",
   declined: "bg-red-50 text-red-600",
   deposit_paid: "bg-blue-50 text-blue-600",
   completed: "bg-gray-100 text-gray-600",
@@ -282,6 +286,7 @@ function BookingDetailPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [existingReview, setExistingReview] = useState<Review | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
 
@@ -340,6 +345,20 @@ function BookingDetailPanel({
     }
   }
 
+  async function handlePayDeposit() {
+    if (!booking) return;
+    setPaymentLoading(true);
+    setError("");
+    try {
+      const result = await initializePayment({ bookingId: booking.id });
+      window.location.href = result.checkoutUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start payment");
+    } finally {
+      setPaymentLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200/80 p-5 h-full animate-pulse space-y-4">
@@ -365,7 +384,11 @@ function BookingDetailPanel({
   const canCancel =
     booking.status === BookingStatus.PENDING ||
     booking.status === BookingStatus.ACCEPTED ||
+    booking.status === BookingStatus.PAYMENT_REQUESTED ||
     booking.status === BookingStatus.DEPOSIT_PAID;
+
+  const showWaitingForPaymentRequest = booking.status === BookingStatus.ACCEPTED;
+  const showPayDeposit = booking.status === BookingStatus.PAYMENT_REQUESTED;
 
   const eventDate = new Date(booking.eventDate).toLocaleDateString("en-US", {
     weekday: "long",
@@ -470,6 +493,40 @@ function BookingDetailPanel({
           <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
             <p className="text-xs font-medium text-red-700 mb-0.5">Decline Reason</p>
             <p className="text-xs text-red-600">{booking.declineReason}</p>
+          </div>
+        )}
+
+        {/* Waiting for vendor to request payment */}
+        {showWaitingForPaymentRequest && (
+          <div className="bg-amber-50 rounded-lg border border-amber-200 p-3 space-y-1">
+            <div className="flex items-center gap-1.5">
+              <FiDollarSign className="w-4 h-4 text-amber-600" />
+              <p className="text-xs font-semibold text-amber-800">Booking Accepted</p>
+            </div>
+            <p className="text-xs text-amber-700">The vendor will send you a payment request shortly.</p>
+          </div>
+        )}
+
+        {/* Pay deposit — vendor has requested payment */}
+        {showPayDeposit && (
+          <div className="bg-green-50 rounded-lg border border-green-200 p-3 space-y-3">
+            <div className="flex items-center gap-1.5">
+              <FiDollarSign className="w-4 h-4 text-green-600" />
+              <p className="text-xs font-semibold text-gray-900">Payment Requested</p>
+            </div>
+            <div className="bg-white border border-green-100 rounded-md px-3 py-2">
+              <p className="text-[10px] text-green-600 mb-0.5">Amount to pay</p>
+              <p className="text-lg font-bold text-green-900">
+                {booking.requestedAmount?.toLocaleString()} {booking.requestedCurrency ?? "ETB"}
+              </p>
+            </div>
+            <button
+              onClick={handlePayDeposit}
+              disabled={paymentLoading}
+              className="w-full py-2 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {paymentLoading ? "Redirecting to Chapa..." : `Pay ${booking.requestedAmount?.toLocaleString()} ${booking.requestedCurrency ?? "ETB"} with Chapa`}
+            </button>
           </div>
         )}
 

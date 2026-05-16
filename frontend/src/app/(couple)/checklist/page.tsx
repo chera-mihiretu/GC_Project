@@ -50,6 +50,7 @@ export default function ChecklistPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
+  const [seeding, setSeeding] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -140,11 +141,14 @@ export default function ChecklistPage() {
   };
 
   const handleSeed = async () => {
+    setSeeding(true);
     try {
       const result = await seedChecklist();
-      if (result.seeded) loadData();
+      if (result.seeded) await loadData();
     } catch (err) {
       console.error("Failed to seed checklist:", err);
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -249,20 +253,32 @@ export default function ChecklistPage() {
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty state / seeding state */}
       {!loading && items.length === 0 && (
         <div className="text-center py-16">
-          <FiClipboard className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-700 mb-2">No tasks yet</h3>
-          <p className="text-sm text-gray-500 mb-6">
-            Get started by adding your first task or populate with suggested wedding tasks.
-          </p>
-          <button
-            onClick={handleSeed}
-            className="px-5 py-2.5 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors"
-          >
-            Populate Suggested Tasks
-          </button>
+          {seeding ? (
+            <>
+              <div className="w-12 h-12 mx-auto mb-4 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">Populating your checklist...</h3>
+              <p className="text-sm text-gray-500">
+                Adding suggested wedding tasks. This will only take a moment.
+              </p>
+            </>
+          ) : (
+            <>
+              <FiClipboard className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No tasks yet</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Get started by adding your first task or populate with suggested wedding tasks.
+              </p>
+              <button
+                onClick={handleSeed}
+                className="px-5 py-2.5 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors"
+              >
+                Populate Suggested Tasks
+              </button>
+            </>
+          )}
         </div>
       )}
 

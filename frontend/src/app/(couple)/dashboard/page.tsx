@@ -5,6 +5,7 @@ import { useSession } from "@/lib/auth-client";
 import { getCoupleProfile, type CoupleProfile } from "@/services/couple.service";
 import { getChecklistProgress, type ChecklistProgress } from "@/services/checklist.service";
 import { listBookings } from "@/services/booking.service";
+import { getBudget, type Budget } from "@/services/budget.service";
 import StatCard from "@/components/ui/stat-card";
 import {
   FiDollarSign,
@@ -25,7 +26,7 @@ const quickActions = [
     description: "Track spending and stay on target",
     icon: FiDollarSign,
     href: "/budget",
-    ready: false,
+    ready: true,
   },
   {
     title: "Checklist",
@@ -57,13 +58,15 @@ export default function CoupleDashboard() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [taskProgress, setTaskProgress] = useState<ChecklistProgress>({ total: 0, completed: 0 });
   const [vendorsBooked, setVendorsBooked] = useState(0);
+  const [budgetData, setBudgetData] = useState<Budget | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [profileData, progressData, bookingsData] = await Promise.allSettled([
+      const [profileData, progressData, bookingsData, budgetResult] = await Promise.allSettled([
         getCoupleProfile(),
         getChecklistProgress(),
         listBookings({ status: "accepted" as const, limit: 1 }),
+        getBudget(),
       ]);
 
       if (profileData.status === "fulfilled") {
@@ -74,6 +77,9 @@ export default function CoupleDashboard() {
       }
       if (bookingsData.status === "fulfilled") {
         setVendorsBooked(bookingsData.value.total);
+      }
+      if (budgetResult.status === "fulfilled") {
+        setBudgetData(budgetResult.value);
       }
     } catch {
       // Partial failure is fine
@@ -107,8 +113,8 @@ export default function CoupleDashboard() {
         <StatCard
           icon={FiDollarSign}
           label="Total Budget"
-          value="$0"
-          subtext="Not set yet"
+          value={budgetData ? `${budgetData.totalAmount.toLocaleString()} ${budgetData.currency}` : "Not set"}
+          subtext={budgetData ? budgetData.name : "Set your budget"}
           color="green"
         />
         <StatCard
