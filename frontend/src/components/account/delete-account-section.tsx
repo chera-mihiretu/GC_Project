@@ -31,31 +31,38 @@ export default function DeleteAccountSection() {
 
   if (step === "idle") {
     return (
-      <div className="bg-white rounded-xl border border-red-200/60 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Delete Account</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          Permanently delete your account and all associated data. This action cannot be undone.
-        </p>
-        <button
-          onClick={() => setStep("confirm")}
-          className="cursor-pointer px-4 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-        >
-          Delete my account
-        </button>
+      <div className="rounded-2xl border border-red-200/40 bg-white p-8 sm:p-10">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+            <FiAlertTriangle className="w-4.5 h-4.5 text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-semibold text-slate-900 mb-1">Delete Account</h3>
+            <p className="text-[13px] text-slate-400 font-light leading-relaxed mb-6">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <button
+              onClick={() => setStep("confirm")}
+              className="cursor-pointer px-5 py-2.5 text-[13px] font-semibold text-red-600 border border-red-200/60 rounded-xl hover:bg-red-50 hover:border-red-200 transition-all duration-500"
+            >
+              Delete my account
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (step === "confirm") {
     return (
-      <div className="bg-white rounded-xl border border-red-200 p-6">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-            <FiAlertTriangle className="w-5 h-5 text-red-500" />
+      <div className="rounded-2xl border border-red-200/50 bg-white p-8 sm:p-10">
+        <div className="flex items-start gap-4 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+            <FiAlertTriangle className="w-4.5 h-4.5 text-red-500" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Are you sure?</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-[15px] font-semibold text-slate-900 mb-1">Are you sure?</h3>
+            <p className="text-[13px] text-slate-400 font-light leading-relaxed">
               This will permanently delete your account. All your data, bookings, and conversations will be lost.
             </p>
           </div>
@@ -63,13 +70,13 @@ export default function DeleteAccountSection() {
         <div className="flex gap-3">
           <button
             onClick={() => setStep("idle")}
-            className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="cursor-pointer px-5 py-2.5 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 hover:border-warm-200 transition-all duration-500"
           >
             Cancel
           </button>
           <button
             onClick={() => setStep("password")}
-            className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            className="cursor-pointer px-5 py-2.5 text-[13px] font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-[0_2px_12px_rgba(220,38,38,0.15)] hover:shadow-[0_4px_20px_rgba(220,38,38,0.25)] transition-all duration-500"
           >
             Continue
           </button>
@@ -79,21 +86,21 @@ export default function DeleteAccountSection() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-red-200 p-6">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-          <FiAlertTriangle className="w-5 h-5 text-red-500" />
+    <div className="rounded-2xl border border-red-200/50 bg-white p-8 sm:p-10">
+      <div className="flex items-start gap-4 mb-8">
+        <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+          <FiAlertTriangle className="w-4.5 h-4.5 text-red-500" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Confirm deletion</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <h3 className="text-[15px] font-semibold text-slate-900 mb-1">Confirm deletion</h3>
+          <p className="text-[13px] text-slate-400 font-light leading-relaxed">
             Enter your password to permanently delete your account.
           </p>
         </div>
       </div>
 
-      <div className="mb-4">
-        <label htmlFor="delete-password" className="text-sm font-medium text-gray-700 block mb-1.5">
+      <div className="mb-6">
+        <label htmlFor="delete-password" className="text-[13px] font-medium text-slate-600 block mb-2">
           Password
         </label>
         <input
@@ -102,31 +109,38 @@ export default function DeleteAccountSection() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter your password"
-          className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 bg-white outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+          className="w-full px-4 py-3.5 border border-warm-200/60 rounded-2xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-red-300 focus:shadow-[0_0_0_3px_rgba(254,242,242,1),0_0_0_5px_rgba(220,38,38,0.1)]"
           disabled={loading}
         />
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">
+        <div className="rounded-2xl border border-red-100 bg-red-50/50 px-4 py-3.5 text-[13px] text-red-600 leading-relaxed mb-6">
           {error}
-        </p>
+        </div>
       )}
 
       <div className="flex gap-3">
         <button
           onClick={() => { setStep("idle"); setPassword(""); setError(""); }}
           disabled={loading}
-          className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="cursor-pointer px-5 py-2.5 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 hover:border-warm-200 transition-all duration-500 disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           onClick={handleDelete}
           disabled={loading || !password}
-          className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cursor-pointer px-5 py-2.5 text-[13px] font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-[0_2px_12px_rgba(220,38,38,0.15)] hover:shadow-[0_4px_20px_rgba(220,38,38,0.25)] transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
         >
-          {loading ? "Deleting..." : "Delete my account forever"}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Deleting...
+            </span>
+          ) : (
+            "Delete my account forever"
+          )}
         </button>
       </div>
     </div>

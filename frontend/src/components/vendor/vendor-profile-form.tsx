@@ -3,11 +3,12 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { VENDOR_CATEGORIES, type VendorProfile } from "@/types/vendor";
+import { FiChevronDown, FiCheck } from "react-icons/fi";
 
 const LocationMapPicker = dynamic(() => import("./location-map-picker"), {
   ssr: false,
   loading: () => (
-    <div className="h-[300px] rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-center text-sm text-gray-400">
+    <div className="h-[320px] rounded-2xl border border-warm-200/40 bg-warm-50/30 flex items-center justify-center text-[13px] text-slate-400 font-light">
       Loading map...
     </div>
   ),
@@ -34,8 +35,9 @@ interface Props {
 
 const ADDIS_ABABA_LAT = 9.005401;
 const ADDIS_ABABA_LNG = 38.764142;
+
 const INPUT_CLS =
-  "w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-300 focus:border-rose-400 outline-none";
+  "w-full px-4 py-3.5 border border-warm-200/60 rounded-xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)] disabled:bg-warm-50/50 disabled:cursor-not-allowed disabled:opacity-70";
 
 export default function VendorProfileForm({
   initialData,
@@ -117,75 +119,90 @@ export default function VendorProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Business Name */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
-        <input
-          type="text"
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-          required
-          disabled={disabled}
-          className={INPUT_CLS}
-          placeholder="e.g. Addis Catering"
-        />
+      {/* Row 1: Business Name + Categories */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-[12px] font-medium text-slate-500 mb-2">
+            Business Name <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            required
+            disabled={disabled}
+            className={INPUT_CLS}
+            placeholder="e.g. Addis Catering"
+          />
+        </div>
+
+        <div className="relative" ref={catRef}>
+          <label className="block text-[12px] font-medium text-slate-500 mb-2">
+            Categories <span className="text-red-400">*</span>
+          </label>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setCatDropdownOpen((o) => !o)}
+            className={`${INPUT_CLS} bg-white text-left flex items-center justify-between cursor-pointer`}
+          >
+            <span className={`truncate ${categories.length > 0 ? "text-slate-800" : "text-slate-300"}`}>
+              {categories.length > 0
+                ? categories.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ")
+                : "Select categories"}
+            </span>
+            <FiChevronDown className={`w-4 h-4 text-slate-400 shrink-0 ml-2 transition-transform duration-300 ${catDropdownOpen ? "rotate-180" : ""}`} />
+          </button>
+          {catDropdownOpen && !disabled && (
+            <div className="absolute z-20 mt-2 w-full bg-white border border-warm-200/60 rounded-xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] max-h-60 overflow-y-auto scrollbar-hide">
+              {VENDOR_CATEGORIES.map((cat) => {
+                const checked = categories.includes(cat);
+                return (
+                  <label
+                    key={cat}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-warm-50/50 cursor-pointer text-[13px] text-slate-700 transition-colors duration-300"
+                  >
+                    <span className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      checked
+                        ? "bg-slate-900 border-slate-900"
+                        : "border-warm-200 bg-white"
+                    }`}>
+                      {checked && <FiCheck className="w-3 h-3 text-white" strokeWidth={3} />}
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleCategory(cat)}
+                      className="hidden"
+                    />
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Categories (multi-select dropdown) */}
-      <div className="relative" ref={catRef}>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Categories *</label>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => setCatDropdownOpen((o) => !o)}
-          className={`${INPUT_CLS} bg-white text-left flex items-center justify-between`}
-        >
-          <span className={categories.length > 0 ? "text-gray-800" : "text-gray-400"}>
-            {categories.length > 0
-              ? categories.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ")
-              : "Select categories"}
-          </span>
-          <svg className="w-4 h-4 text-gray-400 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        {catDropdownOpen && !disabled && (
-          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {VENDOR_CATEGORIES.map((cat) => (
-              <label
-                key={cat}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
-              >
-                <input
-                  type="checkbox"
-                  checked={categories.includes(cat)}
-                  onChange={() => toggleCategory(cat)}
-                  className="rounded border-gray-300 text-rose-500 focus:ring-rose-400"
-                />
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Description */}
+      {/* Row 2: Description (full width) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label className="block text-[12px] font-medium text-slate-500 mb-2">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={disabled}
-          rows={4}
+          rows={3}
           className={`${INPUT_CLS} resize-none`}
-          placeholder="Tell couples about your business..."
+          placeholder="Tell couples about your business, style, and what makes you unique..."
         />
       </div>
 
-      {/* Phone + Location text */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Row 3: Phone + Location + Years of Experience */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+          <label className="block text-[12px] font-medium text-slate-500 mb-2">
+            Phone Number <span className="text-red-400">*</span>
+          </label>
           <input
             type="tel"
             value={phoneNumber}
@@ -197,7 +214,9 @@ export default function VendorProfileForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+          <label className="block text-[12px] font-medium text-slate-500 mb-2">
+            Location <span className="text-red-400">*</span>
+          </label>
           <input
             type="text"
             value={location}
@@ -208,87 +227,99 @@ export default function VendorProfileForm({
             placeholder="e.g. Bole, Addis Ababa"
           />
         </div>
+        <div>
+          <label className="block text-[12px] font-medium text-slate-500 mb-2">Years of Experience</label>
+          <input
+            type="number"
+            min={0}
+            value={yearsExp}
+            onChange={(e) => setYearsExp(e.target.value)}
+            disabled={disabled}
+            className={INPUT_CLS}
+            placeholder="e.g. 5"
+          />
+        </div>
       </div>
 
-      {/* Map Picker */}
+      {/* Row 4: Social Media */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Pin Your Location on Map *
+        <label className="block text-[12px] font-medium text-slate-500 mb-2">Social Media</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[12px] text-slate-400">
+              instagram.com/
+            </span>
+            <input
+              type="text"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              disabled={disabled}
+              className={`${INPUT_CLS} !pl-[120px]`}
+              placeholder="username"
+            />
+          </div>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[12px] text-slate-400">
+              t.me/
+            </span>
+            <input
+              type="text"
+              value={telegram}
+              onChange={(e) => setTelegram(e.target.value)}
+              disabled={disabled}
+              className={`${INPUT_CLS} !pl-[60px]`}
+              placeholder="username"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Row 5: Map Picker (full width) */}
+      <div>
+        <label className="block text-[12px] font-medium text-slate-500 mb-1.5">
+          Pin Your Location on Map <span className="text-red-400">*</span>
         </label>
-        <p className="text-xs text-gray-500 mb-2">Click on the map to set your exact location.</p>
-        <LocationMapPicker
-          latitude={latitude}
-          longitude={longitude}
-          onChange={handleMapChange}
-          disabled={disabled}
-        />
-        <div className="grid grid-cols-2 gap-4 mt-2">
+        <p className="text-[11px] text-slate-400 font-light mb-3">
+          Click on the map to set your exact business location.
+        </p>
+        <div className="rounded-2xl overflow-hidden border border-warm-200/40">
+          <LocationMapPicker
+            latitude={latitude}
+            longitude={longitude}
+            onChange={handleMapChange}
+            disabled={disabled}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-0.5">Latitude</label>
+            <label className="block text-[11px] text-slate-400 font-light mb-1">Latitude</label>
             <input
               type="number"
               step="0.00000001"
               value={latitude}
               onChange={(e) => setLatitude(Number(e.target.value))}
               disabled={disabled}
-              className={`${INPUT_CLS} text-xs`}
+              className={`${INPUT_CLS} !py-2.5 !text-[12px]`}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-0.5">Longitude</label>
+            <label className="block text-[11px] text-slate-400 font-light mb-1">Longitude</label>
             <input
               type="number"
               step="0.00000001"
               value={longitude}
               onChange={(e) => setLongitude(Number(e.target.value))}
               disabled={disabled}
-              className={`${INPUT_CLS} text-xs`}
+              className={`${INPUT_CLS} !py-2.5 !text-[12px]`}
             />
           </div>
         </div>
       </div>
 
-      {/* Years of Experience */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
-        <input
-          type="number"
-          min={0}
-          value={yearsExp}
-          onChange={(e) => setYearsExp(e.target.value)}
-          disabled={disabled}
-          className={INPUT_CLS}
-          placeholder="e.g. 5"
-        />
-      </div>
-
-      {/* Social Media */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Social Media</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input
-            type="url"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            disabled={disabled}
-            className={INPUT_CLS}
-            placeholder="Instagram URL"
-          />
-          <input
-            type="url"
-            value={telegram}
-            onChange={(e) => setTelegram(e.target.value)}
-            disabled={disabled}
-            className={INPUT_CLS}
-            placeholder="Telegram URL"
-          />
-        </div>
-      </div>
-
-      {/* Portfolio (read-only display) */}
+      {/* Portfolio links (read-only) */}
       {portfolio.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio</label>
+          <label className="block text-[12px] font-medium text-slate-500 mb-2">Portfolio</label>
           <div className="flex flex-wrap gap-2">
             {portfolio.map((url, i) => (
               <a
@@ -296,7 +327,7 @@ export default function VendorProfileForm({
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-rose-600 underline truncate max-w-[200px]"
+                className="text-[12px] text-slate-500 hover:text-slate-900 underline underline-offset-2 truncate max-w-[200px] transition-colors duration-300"
               >
                 {url.split("/").pop()}
               </a>
@@ -305,15 +336,28 @@ export default function VendorProfileForm({
         </div>
       )}
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {/* Error */}
+      {error && (
+        <div className="rounded-xl border border-red-100 bg-red-50/50 px-4 py-3.5 text-[13px] text-red-600 leading-relaxed">
+          {error}
+        </div>
+      )}
 
+      {/* Submit */}
       {!disabled && (
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+          className="cursor-pointer w-full flex items-center justify-center gap-2 py-3.5 bg-slate-900 text-white rounded-xl text-[13px] font-semibold shadow-[0_2px_12px_rgba(15,23,42,0.1)] hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.18)] transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Saving..." : submitLabel}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            submitLabel
+          )}
         </button>
       )}
     </form>

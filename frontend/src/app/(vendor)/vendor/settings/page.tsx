@@ -2,38 +2,78 @@
 
 import { useSession } from "@/lib/auth-client";
 import DeleteAccountSection from "@/components/account/delete-account-section";
-import { FiUser, FiMail } from "react-icons/fi";
+import { FiUser, FiMail, FiShield } from "react-icons/fi";
 
 export default function VendorSettingsPage() {
   const { data: session } = useSession();
+  const user = session?.user;
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-10">
+      {/* Page header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-display">Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your account</p>
+        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+          Account
+        </p>
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+          Settings
+        </h1>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Info</h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-sm">
-            <FiUser className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-500">Name:</span>
-            <span className="text-gray-900 font-medium">{session?.user?.name ?? "—"}</span>
+      {/* Account information */}
+      <section className="rounded-2xl border border-warm-200/50 bg-white p-8 sm:p-10 max-w-2xl">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+            <FiShield className="w-4.5 h-4.5 text-slate-400" />
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <FiMail className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-500">Email:</span>
-            <span className="text-gray-900 font-medium">{session?.user?.email ?? "—"}</span>
+          <div>
+            <h2 className="text-[15px] font-semibold text-slate-900">Account Information</h2>
+            <p className="text-[12px] text-slate-400 font-light mt-0.5">Your personal details</p>
           </div>
         </div>
-      </div>
 
-      <div className="pt-4 border-t border-gray-200">
-        <h2 className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-4">Danger Zone</h2>
+        <div className="space-y-5">
+          <div className="flex items-center gap-4 rounded-xl bg-warm-50/50 border border-warm-200/30 px-5 py-4">
+            <div className="w-9 h-9 rounded-lg bg-white border border-warm-200/40 flex items-center justify-center shrink-0">
+              <FiUser className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-editorial text-slate-400 mb-0.5">
+                Full Name
+              </p>
+              <p className="text-[14px] font-medium text-slate-800 truncate">
+                {user?.name ?? "—"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 rounded-xl bg-warm-50/50 border border-warm-200/30 px-5 py-4">
+            <div className="w-9 h-9 rounded-lg bg-white border border-warm-200/40 flex items-center justify-center shrink-0">
+              <FiMail className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-editorial text-slate-400 mb-0.5">
+                Email Address
+              </p>
+              <p className="text-[14px] font-medium text-slate-800 truncate">
+                {user?.email ?? "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Danger zone */}
+      <section className="max-w-2xl">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-red-200/40 to-transparent" />
+          <span className="text-[11px] font-semibold uppercase tracking-editorial text-red-400">
+            Danger Zone
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-l from-red-200/40 to-transparent" />
+        </div>
         <DeleteAccountSection />
-      </div>
+      </section>
     </div>
   );
 }
