@@ -338,7 +338,7 @@ function BookingDetailPanel({ bookingId, onClose, onStatusChange }: { bookingId:
     );
   }
 
-  const canCancel = [BookingStatus.PENDING, BookingStatus.ACCEPTED, BookingStatus.PAYMENT_REQUESTED, BookingStatus.DEPOSIT_PAID].includes(booking.status);
+  const canCancel = ([BookingStatus.PENDING, BookingStatus.ACCEPTED, BookingStatus.PAYMENT_REQUESTED, BookingStatus.DEPOSIT_PAID] as BookingStatus[]).includes(booking.status);
   const showWaitingForPaymentRequest = booking.status === BookingStatus.ACCEPTED;
   const showPayDeposit = booking.status === BookingStatus.PAYMENT_REQUESTED;
 
