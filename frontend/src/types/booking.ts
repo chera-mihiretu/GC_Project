@@ -2,6 +2,7 @@ export const BookingStatus = {
   PENDING: "pending",
   ACCEPTED: "accepted",
   DECLINED: "declined",
+  PAYMENT_REQUESTED: "payment_requested",
   DEPOSIT_PAID: "deposit_paid",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
@@ -19,6 +20,8 @@ export interface Booking {
   message: string | null;
   status: BookingStatus;
   declineReason: string | null;
+  requestedAmount: number | null;
+  requestedCurrency: string | null;
   createdAt: string;
   updatedAt: string;
   businessName?: string;

@@ -84,3 +84,23 @@ export async function updateBookingStatus(
   const json = await res.json();
   return json.booking;
 }
+
+export async function requestPayment(
+  bookingId: string,
+  amount: number,
+  currency?: string,
+): Promise<Booking> {
+  const res = await apiFetch(`${BASE}/${bookingId}/request-payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount, currency }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message ?? "Failed to request payment");
+  }
+
+  const json = await res.json();
+  return json.booking;
+}

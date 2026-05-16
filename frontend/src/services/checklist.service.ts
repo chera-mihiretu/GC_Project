@@ -76,7 +76,10 @@ export async function toggleChecklistItem(id: string): Promise<ChecklistItem> {
 
 export async function deleteChecklistItem(id: string): Promise<void> {
   const res = await apiFetch(`${BASE}/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete item");
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error?.message || `Failed to delete item (${res.status})`);
+  }
 }
 
 export async function seedChecklist(): Promise<{ seeded: boolean; count?: number }> {

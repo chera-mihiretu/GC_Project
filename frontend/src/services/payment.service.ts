@@ -6,8 +6,6 @@ const BASE = "/api/v1/payments";
 
 export interface InitializePaymentRequest {
   bookingId: string;
-  amount: number;
-  currency?: string;
 }
 
 export interface InitializePaymentResponse {
