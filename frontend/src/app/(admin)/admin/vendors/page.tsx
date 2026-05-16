@@ -156,59 +156,54 @@ export default function AdminVendorsPage() {
             </p>
           </div>
         ) : (
-          <>
-            {/* Header row */}
-            <div className="hidden sm:grid grid-cols-[1fr,120px,100px,80px] gap-4 px-6 sm:px-8 py-3.5 border-b border-warm-200/30 bg-warm-50/40">
-              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Business</span>
-              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Category</span>
-              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Status</span>
-              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 text-right">Date</span>
-            </div>
-
-            {/* Rows */}
-            <div className="divide-y divide-warm-200/20">
-              {vendors.map((vendor) => (
+          <div className="divide-y divide-warm-200/30">
+            {vendors.map((vendor) => {
+              const categories = Array.isArray(vendor.category) ? vendor.category : vendor.category ? [vendor.category] : [];
+              return (
                 <button
                   key={vendor.id}
                   onClick={() => router.push(`/admin/vendors/${vendor.id}`)}
-                  className="cursor-pointer w-full grid grid-cols-1 sm:grid-cols-[1fr,120px,100px,80px] gap-2 sm:gap-4 items-center px-6 sm:px-8 py-4 sm:py-5 text-left hover:bg-warm-50/30 transition-all duration-300 group"
+                  className="cursor-pointer w-full text-left px-6 sm:px-8 py-5 sm:py-6 hover:bg-warm-50/30 transition-all duration-500 group"
                 >
-                  {/* Business */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center shrink-0">
-                      <span className="text-[12px] font-bold text-slate-400">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center shrink-0">
+                      <span className="text-[13px] font-bold text-slate-400">
                         {(vendor.businessName ?? "?").charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[14px] font-medium text-slate-800 truncate">
-                        {vendor.businessName || "Unnamed"}
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-light sm:hidden capitalize">
-                        {vendor.category || "—"}
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <p className="text-[14px] font-medium text-slate-800">
+                          {vendor.businessName || "Unnamed"}
+                        </p>
+                        <VendorStatusBadge status={vendor.status} />
+                      </div>
+
+                      {categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                          {categories.map((cat) => (
+                            <span
+                              key={cat}
+                              className="px-2.5 py-0.5 rounded-lg bg-warm-50 border border-warm-200/30 text-[11px] font-medium text-slate-500 capitalize"
+                            >
+                              {cat.replace(/_/g, " ")}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="text-[11px] text-slate-400 font-light mt-2">
+                        Registered {new Date(vendor.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
-                    <FiArrowRight className="w-3.5 h-3.5 text-slate-200 ml-auto sm:hidden opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-0.5" />
+
+                    <FiArrowRight className="w-4 h-4 text-slate-200 shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-0.5" />
                   </div>
-
-                  {/* Category */}
-                  <p className="hidden sm:block text-[13px] text-slate-500 capitalize truncate">
-                    {vendor.category || "—"}
-                  </p>
-
-                  {/* Status */}
-                  <div className="hidden sm:block">
-                    <VendorStatusBadge status={vendor.status} />
-                  </div>
-
-                  {/* Date */}
-                  <p className="hidden sm:block text-[12px] text-slate-400 font-light text-right">
-                    {new Date(vendor.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </p>
                 </button>
-              ))}
-            </div>
-          </>
+              );
+            })}
+          </div>
         )}
       </div>
 
