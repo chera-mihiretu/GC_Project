@@ -7,7 +7,7 @@ import { useSocketContext } from "@/components/realtime/socket-provider";
 import ChatList from "@/components/realtime/chat-list";
 import ChatWindow from "@/components/realtime/chat-window";
 import type { Conversation } from "@/types/realtime";
-import { FiMessageSquare, FiArrowLeft } from "react-icons/fi";
+import { FiMessageSquare, FiArrowLeft, FiSend } from "react-icons/fi";
 
 function getOtherParticipant(conv: Conversation, currentUserId: string) {
   const isP1 = conv.participantOne === currentUserId;
@@ -60,45 +60,53 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)]">
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
       {/* ── Header ── */}
-      <div className="mb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-1">
-          Communication
-        </p>
-        <h1 className="font-display text-2xl font-bold text-slate-900 tracking-headline">
-          Messages
-        </h1>
+      <div className="flex items-end justify-between gap-4 mb-5">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">Communication</p>
+          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">Messages</h1>
+          <p className="text-[13px] text-slate-400 font-light mt-1.5">Chat with your wedding vendors</p>
+        </div>
+        <div className="flex items-center gap-1.5 pb-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] text-slate-400 font-light">{onlineUsers.size} online</span>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-warm-200/50 bg-white overflow-hidden flex h-[calc(100%-4.5rem)]">
-        {/* Conversation list sidebar */}
-        <div
-          className={`w-full sm:w-[320px] sm:border-r border-warm-200/30 shrink-0 overflow-y-auto ${
-            selectedConv ? "hidden sm:block" : "block"
-          }`}
-        >
-          <div className="px-5 py-4 border-b border-warm-200/20">
-            <h2 className="text-[13px] font-semibold text-slate-700">Conversations</h2>
+      {/* ── Chat Container ── */}
+      <div className="rounded-2xl border border-warm-200/40 bg-white overflow-hidden flex flex-1 min-h-0 shadow-[0_4px_24px_rgba(15,23,42,0.03)]">
+        {/* ── Conversation Sidebar ── */}
+        <div className={`w-full sm:w-[320px] sm:border-r border-warm-200/20 shrink-0 flex flex-col overflow-hidden ${selectedConv ? "hidden sm:flex" : "flex"}`}>
+          <div className="px-5 py-4 border-b border-warm-200/15 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-warm-50 border border-warm-200/30 flex items-center justify-center">
+                <FiMessageSquare className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <h2 className="text-[13px] font-semibold text-slate-800">Conversations</h2>
+            </div>
           </div>
-          <ChatList
-            currentUserId={currentUserId}
-            selectedId={selectedConv?.id ?? null}
-            onSelect={handleSelect}
-            onlineUsers={onlineUsers}
-          />
+          <div className="flex-1 overflow-y-auto">
+            <ChatList
+              currentUserId={currentUserId}
+              selectedId={selectedConv?.id ?? null}
+              onSelect={handleSelect}
+              onlineUsers={onlineUsers}
+            />
+          </div>
         </div>
 
-        {/* Chat window */}
-        <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? "block" : "hidden sm:flex"}`}>
+        {/* ── Chat Window ── */}
+        <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? "flex" : "hidden sm:flex"}`}>
           {selectedConv ? (
             <>
-              <div className="sm:hidden border-b border-warm-200/20 px-4 py-2.5">
+              {/* Mobile back */}
+              <div className="sm:hidden border-b border-warm-200/15 px-4 py-2.5">
                 <button
                   onClick={() => setSelectedConv(null)}
-                  className="flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  className="cursor-pointer flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-slate-600 transition-colors group"
                 >
-                  <FiArrowLeft className="w-3.5 h-3.5" /> Back
+                  <FiArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform duration-500" /> Back to conversations
                 </button>
               </div>
               <ChatWindow
@@ -110,15 +118,20 @@ export default function MessagesPage() {
               />
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-              <div className="w-14 h-14 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mb-4">
-                <FiMessageSquare className="w-6 h-6 text-slate-300" />
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-10">
+              <div className="relative mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-warm-50 to-warm-100/60 border border-warm-200/30 flex items-center justify-center">
+                  <FiMessageSquare className="w-7 h-7 text-slate-300" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-slate-900 flex items-center justify-center shadow-sm">
+                  <FiSend className="w-2.5 h-2.5 text-white" />
+                </div>
               </div>
-              <h3 className="text-[14px] font-semibold text-slate-700 mb-1">
+              <h3 className="font-display text-[16px] font-bold text-slate-800 tracking-headline mb-1.5">
                 Select a conversation
               </h3>
-              <p className="text-[12px] text-slate-400 font-light max-w-xs">
-                Pick a conversation from the list or start a new one by messaging a vendor.
+              <p className="text-[12px] text-slate-400 font-light max-w-xs leading-relaxed">
+                Pick a conversation from the list or start a new one by visiting a vendor&apos;s profile.
               </p>
             </div>
           )}
