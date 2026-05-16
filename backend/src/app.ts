@@ -315,6 +315,62 @@ app.post("/api/v1/admin/notify-user-action", requireAuth(), async (req: Request,
   }
 });
 
+app.get("/api/v1/admin/analytics", requireAuth(), async (req: Request, res: Response) => {
+  const role = req.authContext!.user.role;
+  if (role !== "admin") {
+    res.status(403).json({ error: { code: "FORBIDDEN", message: "Admin only" } });
+    return;
+  }
+
+  try {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    const [activeThisWeek, totalUsers, dailyActivity] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(*) AS count FROM "user" WHERE "lastActiveAt" >= $1`,
+        [weekAgo.toISOString()],
+      ),
+      pool.query(`SELECT COUNT(*) AS count FROM "user"`),
+      pool.query(
+        `SELECT
+           d.day::date AS day,
+           COALESCE(u.count, 0)::int AS count
+         FROM generate_series(
+           (CURRENT_DATE - INTERVAL '6 days'),
+           CURRENT_DATE,
+           '1 day'
+         ) AS d(day)
+         LEFT JOIN (
+           SELECT
+             DATE("lastActiveAt") AS day,
+             COUNT(DISTINCT id) AS count
+           FROM "user"
+           WHERE "lastActiveAt" >= (CURRENT_DATE - INTERVAL '6 days')
+           GROUP BY DATE("lastActiveAt")
+         ) u ON d.day::date = u.day
+         ORDER BY d.day`,
+      ),
+    ]);
+
+    const total = parseInt(totalUsers.rows[0].count, 10);
+    const activeCount = parseInt(activeThisWeek.rows[0].count, 10);
+
+    res.json({
+      activeThisWeek: activeCount,
+      inactiveThisWeek: total - activeCount,
+      totalUsers: total,
+      dailyActivity: dailyActivity.rows.map((r) => ({
+        day: r.day,
+        count: r.count,
+      })),
+    });
+  } catch (err) {
+    console.error("Failed to fetch admin analytics:", err);
+    res.status(500).json({ error: { code: "SERVER_ERROR", message: "Failed to fetch analytics" } });
+  }
+});
+
 app.get("/api/v1/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
@@ -382,6 +438,10 @@ initChecklistTables().catch((err) => {
 
 initBudgetTables().catch((err) => {
   console.error("Failed to initialize budget tables:", err);
+});
+
+pool.query(`ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "lastActiveAt" TIMESTAMPTZ`).catch((err) => {
+  console.error("Failed to add lastActiveAt column:", err);
 });
 
 ensureBucketExists().catch((err) => {

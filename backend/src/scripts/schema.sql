@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS "user" (
     "banReason"       TEXT,
     "banExpires"      TIMESTAMPTZ,
     -- Custom fields (Twedar-specific)
-    "accountType"     TEXT DEFAULT 'couple'
+    "accountType"     TEXT DEFAULT 'couple',
+    "lastActiveAt"    TIMESTAMPTZ
 );
 
 -- 1.2 Session table (core + organization plugin + admin plugin fields)

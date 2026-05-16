@@ -10,6 +10,20 @@ import type { SessionContext } from "../domain/types.js";
 import type { UserRole } from "../domain/roles.js";
 import { pool } from "../../../config/db.js";
 
+const ACTIVITY_THROTTLE_MS = 5 * 60 * 1000;
+const recentlyStamped = new Map<string, number>();
+
+function stampLastActive(userId: string): void {
+  const now = Date.now();
+  const last = recentlyStamped.get(userId);
+  if (last && now - last < ACTIVITY_THROTTLE_MS) return;
+  recentlyStamped.set(userId, now);
+  pool.query(
+    'UPDATE "user" SET "lastActiveAt" = NOW() WHERE id = $1',
+    [userId],
+  ).catch(() => {});
+}
+
 declare global {
   namespace Express {
     interface Request {
@@ -39,6 +53,7 @@ export function requireAuth() {
     }
 
     req.authContext = context;
+    stampLastActive(context.user.id);
     next();
   };
 }

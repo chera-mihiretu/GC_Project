@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, authClient } from "@/lib/auth-client";
 import { listVendorsAdmin } from "@/services/admin-vendor.service";
 import { listReviewsAdmin } from "@/services/admin-review.service";
+import { getAdminAnalytics, type AdminAnalytics } from "@/services/admin-analytics.service";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
 import {
   FiShoppingBag,
@@ -18,6 +19,8 @@ import {
   FiShield,
   FiUser,
   FiXCircle,
+  FiActivity,
+  FiZap,
 } from "react-icons/fi";
 import {
   PieChart,
@@ -25,6 +28,8 @@ import {
   Cell,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -65,6 +70,7 @@ export default function AdminDashboard() {
   const [vendorStats, setVendorStats] = useState<VendorStats | null>(null);
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [activityData, setActivityData] = useState<AdminAnalytics | null>(null);
   const [recentPending, setRecentPending] = useState<VendorProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -130,6 +136,13 @@ export default function AdminDashboard() {
         } catch {
           setUserStats(null);
         }
+
+        try {
+          const analytics = await getAdminAnalytics();
+          setActivityData(analytics);
+        } catch {
+          setActivityData(null);
+        }
       } catch {
         /* stats stay null */
       } finally {
@@ -173,6 +186,18 @@ export default function AdminDashboard() {
     ];
   }, [userStats]);
 
+  const dailyChartData = useMemo(() => {
+    if (!activityData) return [];
+    return activityData.dailyActivity.map((d) => ({
+      day: new Date(d.day).toLocaleDateString("en-US", { weekday: "short" }),
+      users: d.count,
+    }));
+  }, [activityData]);
+
+  const activityRate = activityData && activityData.totalUsers > 0
+    ? Math.round((activityData.activeThisWeek / activityData.totalUsers) * 100)
+    : 0;
+
   const reviewRate = reviewStats && reviewStats.total > 0
     ? Math.round((reviewStats.approved / reviewStats.total) * 100)
     : 0;
@@ -193,7 +218,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Top KPI row ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard
           icon={FiShoppingBag}
           label="Total Vendors"
@@ -215,6 +240,14 @@ export default function AdminDashboard() {
           value={loading ? "—" : (userStats?.total ?? 0)}
           iconBg="bg-blue-50 border-blue-200/40"
           iconColor="text-blue-500"
+        />
+        <KpiCard
+          icon={FiZap}
+          label="Active This Week"
+          value={loading ? "—" : (activityData?.activeThisWeek ?? 0)}
+          subtext={activityData ? `${activityRate}% of users` : undefined}
+          iconBg="bg-violet-50 border-violet-200/40"
+          iconColor="text-violet-500"
         />
         <KpiCard
           icon={FiStar}
@@ -343,6 +376,123 @@ export default function AdminDashboard() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* ── Activity row: Daily active + Active vs Inactive ── */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Daily active users - area chart */}
+        <section className="lg:col-span-2 rounded-2xl border border-warm-200/50 bg-white p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 rounded-xl bg-violet-50 border border-violet-200/40 flex items-center justify-center">
+              <FiActivity className="w-4 h-4 text-violet-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-900">Daily Active Users</h2>
+              <p className="text-[11px] text-slate-400 font-light">Past 7 days</p>
+            </div>
+          </div>
+
+          {loading || !activityData ? (
+            <div className="h-[220px] flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-warm-200/40 border-t-gold-400 rounded-full animate-spin" />
+            </div>
+          ) : dailyChartData.every((d) => d.users === 0) ? (
+            <div className="h-[220px] flex items-center justify-center flex-col gap-3">
+              <div className="w-12 h-12 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+                <FiActivity className="w-5 h-5 text-slate-300" />
+              </div>
+              <p className="text-[13px] text-slate-400 font-light">No activity recorded yet</p>
+            </div>
+          ) : (
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dailyChartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="activeGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(226,220,210,0.3)" vertical={false} />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: "12px", border: "1px solid rgba(226,220,210,0.4)", boxShadow: "0 8px 30px rgba(15,23,42,0.08)", fontSize: "12px", padding: "8px 14px" }}
+                    formatter={(value) => [`${value}`, "Active Users"]}
+                  />
+                  <Area type="monotone" dataKey="users" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#activeGradient)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </section>
+
+        {/* Active vs Inactive donut */}
+        <section className="rounded-2xl border border-warm-200/50 bg-white p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 rounded-xl bg-violet-50 border border-violet-200/40 flex items-center justify-center">
+              <FiZap className="w-4 h-4 text-violet-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-900">Activity Rate</h2>
+              <p className="text-[11px] text-slate-400 font-light">This week</p>
+            </div>
+          </div>
+
+          {loading || !activityData ? (
+            <div className="h-[220px] flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-warm-200/40 border-t-gold-400 rounded-full animate-spin" />
+            </div>
+          ) : activityData.totalUsers === 0 ? (
+            <div className="h-[220px] flex items-center justify-center flex-col gap-3">
+              <div className="w-12 h-12 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+                <FiUsers className="w-5 h-5 text-slate-300" />
+              </div>
+              <p className="text-[13px] text-slate-400 font-light">No users yet</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              <div className="text-center py-2">
+                <p className="font-display text-4xl font-bold text-slate-900 tracking-tight">{activityRate}%</p>
+                <p className="text-[12px] text-slate-400 font-light mt-1">Active this week</p>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] text-slate-400 font-light mb-2">
+                  <span>Active</span>
+                  <span>Inactive</span>
+                </div>
+                <div className="h-3 rounded-full bg-warm-100 overflow-hidden flex">
+                  <div
+                    className="h-full bg-violet-500 rounded-l-full transition-all duration-1000"
+                    style={{ width: `${activityRate}%` }}
+                  />
+                  <div
+                    className="h-full bg-slate-300 rounded-r-full transition-all duration-1000"
+                    style={{ width: `${100 - activityRate}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-warm-200/20">
+                <div className="text-center">
+                  <div className="w-8 h-8 rounded-lg border bg-violet-50 border-violet-200/40 flex items-center justify-center mx-auto mb-2">
+                    <FiZap className="w-3.5 h-3.5 text-violet-500" />
+                  </div>
+                  <p className="font-display text-lg font-bold text-slate-800">{activityData.activeThisWeek}</p>
+                  <p className="text-[10px] text-slate-400 font-light uppercase tracking-luxury">Active</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-8 h-8 rounded-lg border bg-warm-50 border-warm-200/40 flex items-center justify-center mx-auto mb-2">
+                    <FiUser className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                  <p className="font-display text-lg font-bold text-slate-800">{activityData.inactiveThisWeek}</p>
+                  <p className="text-[10px] text-slate-400 font-light uppercase tracking-luxury">Inactive</p>
+                </div>
+              </div>
             </div>
           )}
         </section>
