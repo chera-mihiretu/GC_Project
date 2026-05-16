@@ -48,3 +48,66 @@ export async function verifyTransaction(
 
   return res.json() as Promise<ChapaVerifyResponse>;
 }
+
+// ──────────────────── Transfer / Payout ────────────────────
+
+export interface ChapaTransferParams {
+  account_name: string;
+  account_number: string;
+  amount: string;
+  currency: string;
+  bank_code: string;
+  reference: string;
+}
+
+export interface ChapaTransferResponse {
+  message: string;
+  status: string;
+  data: unknown;
+}
+
+export interface ChapaBank {
+  id: string;
+  name: string;
+  country_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function initiateTransfer(
+  params: ChapaTransferParams,
+): Promise<ChapaTransferResponse> {
+  const res = await fetch(`${CHAPA_BASE_URL}/transfers`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw Object.assign(
+      new Error(`Chapa transfer failed (${res.status}): ${body}`),
+      { statusCode: 502 },
+    );
+  }
+
+  return res.json() as Promise<ChapaTransferResponse>;
+}
+
+export async function listBanks(): Promise<ChapaBank[]> {
+  const res = await fetch(`${CHAPA_BASE_URL}/banks`, {
+    method: "GET",
+    headers: headers(),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw Object.assign(
+      new Error(`Chapa list banks failed (${res.status}): ${body}`),
+      { statusCode: 502 },
+    );
+  }
+
+  const json = (await res.json()) as { data: ChapaBank[] };
+  return json.data ?? [];
+}

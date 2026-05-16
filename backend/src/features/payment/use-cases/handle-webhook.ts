@@ -5,6 +5,7 @@ import * as bookingRepo from "../../booking/infrastructure/booking.repository.js
 import { PaymentStatus } from "../domain/types.js";
 import { BookingStatus } from "../../booking/domain/types.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
+import { recordPaymentAsExpense } from "./record-payment-expense.js";
 
 export function verifyWebhookSignature(
   payload: string,
@@ -13,7 +14,7 @@ export function verifyWebhookSignature(
   if (!signature) return false;
 
   const hash = crypto
-    .createHmac("sha256", env.CHAPA_SECRET_KEY)
+    .createHmac("sha256", env.CHAPA_WEBHOOK_SECRET)
     .update(payload)
     .digest("hex");
 
@@ -35,20 +36,24 @@ export async function handleWebhook(
 
   if (payment.status === PaymentStatus.SUCCESS) return;
 
+  const charge = parseFloat(String(payload.charge ?? "0")) || 0;
   await paymentRepo.updateStatus(
     txRef,
     PaymentStatus.SUCCESS,
     payload.reference as string | undefined,
     payload.payment_method as string | undefined,
     payload,
+    charge,
   );
 
   const booking = await bookingRepo.findById(payment.bookingId);
   if (!booking) return;
 
-  if (booking.status === BookingStatus.ACCEPTED) {
+  if (booking.status === BookingStatus.PAYMENT_REQUESTED) {
     await bookingRepo.updateStatus(payment.bookingId, BookingStatus.DEPOSIT_PAID);
   }
+
+  recordPaymentAsExpense(payment, booking).catch(() => {});
 
   const dateLabel = new Date(booking.eventDate).toLocaleDateString("en-US", {
     month: "short",
@@ -56,7 +61,7 @@ export async function handleWebhook(
     year: "numeric",
   });
 
-  await sendNotification({
+  sendNotification({
     userId: payment.vendorId,
     type: "payment_received",
     title: "Deposit Payment Received",

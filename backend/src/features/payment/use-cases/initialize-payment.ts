@@ -9,8 +9,6 @@ import type { Payment, ChapaInitParams } from "../domain/types.js";
 export interface InitializePaymentInput {
   bookingId: string;
   coupleId: string;
-  amount: number;
-  currency?: string;
 }
 
 export interface InitializePaymentResult {
@@ -21,11 +19,7 @@ export interface InitializePaymentResult {
 export async function initializePayment(
   input: InitializePaymentInput,
 ): Promise<InitializePaymentResult> {
-  const { bookingId, coupleId, amount, currency = "ETB" } = input;
-
-  if (amount <= 0) {
-    throw Object.assign(new Error("Amount must be greater than zero"), { statusCode: 400 });
-  }
+  const { bookingId, coupleId } = input;
 
   const booking = await bookingRepo.findById(bookingId);
   if (!booking) {
@@ -36,12 +30,19 @@ export async function initializePayment(
     throw Object.assign(new Error("Access denied"), { statusCode: 403 });
   }
 
-  if (booking.status !== BookingStatus.ACCEPTED) {
+  if (booking.status !== BookingStatus.PAYMENT_REQUESTED) {
     throw Object.assign(
-      new Error("Payment can only be made for accepted bookings"),
+      new Error("Payment can only be made after the vendor requests it"),
       { statusCode: 422 },
     );
   }
+
+  if (!booking.requestedAmount || booking.requestedAmount <= 0) {
+    throw Object.assign(new Error("No payment amount has been set by the vendor"), { statusCode: 422 });
+  }
+
+  const amount = booking.requestedAmount;
+  const currency = booking.requestedCurrency ?? "ETB";
 
   const existingPayment = await paymentRepo.findPendingOrSuccessByBookingId(bookingId);
   if (existingPayment) {
@@ -68,9 +69,9 @@ export async function initializePayment(
   const firstName = nameParts[0] || "Customer";
   const lastName = nameParts.slice(1).join(" ") || "Customer";
 
-  const txRef = `twedar-${bookingId}-${Date.now()}`;
+  const shortId = bookingId.replace(/-/g, "").slice(0, 12);
+  const txRef = `tw-${shortId}-${Date.now()}`;
   const returnUrl = `${env.FRONTEND_URL}/bookings/${bookingId}?payment=verifying&tx_ref=${txRef}`;
-  const callbackUrl = `${env.BETTER_AUTH_URL}/api/v1/payments/webhook`;
 
   const chapaParams: ChapaInitParams = {
     amount: amount.toFixed(2),
@@ -79,11 +80,10 @@ export async function initializePayment(
     first_name: firstName,
     last_name: lastName,
     tx_ref: txRef,
-    callback_url: callbackUrl,
     return_url: returnUrl,
     customization: {
-      title: "Twedar Booking Deposit",
-      description: `Deposit for booking ${bookingId.slice(0, 8)}`,
+      title: "Twedar Payment",
+      description: `Booking ${shortId}`,
     },
     meta: {
       booking_id: bookingId,

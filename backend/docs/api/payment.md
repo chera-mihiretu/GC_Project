@@ -10,7 +10,7 @@ The payment module integrates with [Chapa](https://chapa.co) to handle deposit p
 
 ## POST /initialize
 
-Initialize a Chapa payment transaction for a booking deposit. Returns a checkout URL to redirect the user to.
+Initialize a Chapa payment transaction for a booking deposit. The payment amount is determined by the vendor's request (stored on the booking as `requestedAmount`). Returns a checkout URL to redirect the user to.
 
 **Auth:** Required (couple role only)
 
@@ -18,17 +18,13 @@ Initialize a Chapa payment transaction for a booking deposit. Returns a checkout
 
 | Field      | Type   | Required | Default | Description                       |
 |------------|--------|----------|---------|-----------------------------------|
-| bookingId  | string | Yes      | —       | UUID of the accepted booking      |
-| amount     | number | Yes      | —       | Deposit amount (must be > 0)      |
-| currency   | string | No       | "ETB"   | ISO 4217 currency code            |
+| bookingId  | string | Yes      | —       | UUID of the booking (must be in `payment_requested` status) |
 
 **Request Example:**
 
 ```json
 {
-  "bookingId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
-  "amount": 5000,
-  "currency": "ETB"
+  "bookingId": "a1b2c3d4-5678-90ab-cdef-1234567890ab"
 }
 ```
 

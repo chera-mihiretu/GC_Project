@@ -15,6 +15,7 @@ export interface Payment {
   txRef: string;
   chapaRef: string | null;
   amount: number;
+  chargeAmount: number;
   currency: string;
   status: PaymentStatus;
   paymentMethod: string | null;
@@ -39,7 +40,7 @@ export interface ChapaInitParams {
   last_name: string;
   phone_number?: string;
   tx_ref: string;
-  callback_url: string;
+  callback_url?: string;
   return_url: string;
   customization?: {
     title?: string;
@@ -81,4 +82,30 @@ export interface ChapaVerifyResponse {
     };
     meta: unknown;
   };
+}
+
+// ──────────────────── Withdrawals ────────────────────
+
+export const WithdrawalStatus = {
+  PENDING: "pending",
+  COMPLETED: "completed",
+  FAILED: "failed",
+} as const;
+
+export type WithdrawalStatus = (typeof WithdrawalStatus)[keyof typeof WithdrawalStatus];
+
+export interface Withdrawal {
+  id: string;
+  vendorId: string;
+  amount: number;
+  currency: string;
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  reference: string;
+  status: WithdrawalStatus;
+  failureReason: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

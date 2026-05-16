@@ -4,6 +4,7 @@ import * as chapaClient from "../infrastructure/chapa-client.js";
 import { PaymentStatus, type Payment } from "../domain/types.js";
 import { BookingStatus, type Booking } from "../../booking/domain/types.js";
 import { sendNotification } from "../../realtime/use-cases/send-notification.js";
+import { recordPaymentAsExpense } from "./record-payment-expense.js";
 
 export interface VerifyPaymentResult {
   payment: Payment;
@@ -35,16 +36,20 @@ export async function verifyPayment(
   const chapaStatus = chapaResult.data.status;
 
   if (chapaStatus === "success") {
+    const charge = parseFloat(chapaResult.data.charge || "0");
     const updatedPayment = await paymentRepo.updateStatus(
       txRef,
       PaymentStatus.SUCCESS,
       chapaResult.data.reference,
       chapaResult.data.method,
+      undefined,
+      charge,
     );
 
     const booking = await transitionBookingToDepositPaid(payment.bookingId);
 
-    await notifyVendor(payment, booking);
+    notifyVendor(payment, booking).catch(() => {});
+    recordPaymentAsExpense(updatedPayment, booking).catch(() => {});
 
     return { payment: updatedPayment, booking };
   }

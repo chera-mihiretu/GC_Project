@@ -30,15 +30,11 @@ export async function handleInitializePayment(
 ): Promise<void> {
   try {
     const coupleId = req.authContext!.user.id;
-    const { bookingId, amount, currency } = req.body as {
-      bookingId?: string;
-      amount?: number;
-      currency?: string;
-    };
+    const { bookingId } = req.body as { bookingId?: string };
 
-    if (!bookingId || !amount) {
+    if (!bookingId) {
       res.status(400).json({
-        error: { code: "BAD_REQUEST", message: "bookingId and amount are required" },
+        error: { code: "BAD_REQUEST", message: "bookingId is required" },
       });
       return;
     }
@@ -46,8 +42,6 @@ export async function handleInitializePayment(
     const result = await initializePayment({
       bookingId,
       coupleId,
-      amount,
-      currency,
     });
 
     res.status(201).json({
