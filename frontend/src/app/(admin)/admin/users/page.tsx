@@ -17,7 +17,9 @@ import {
   FiSlash,
   FiRefreshCw,
   FiLogIn,
-  FiMoreVertical,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 
 interface AdminUser {
@@ -36,21 +38,24 @@ interface AdminUser {
 const ROLES = ["all", "couple", "vendor", "admin"] as const;
 type RoleFilter = (typeof ROLES)[number];
 
-const ROLE_STYLES: Record<string, { bg: string; text: string; icon: typeof FiUser }> = {
-  couple: { bg: "bg-rose-50", text: "text-rose-600", icon: FiUser },
-  vendor: { bg: "bg-blue-50", text: "text-blue-600", icon: FiShoppingBag },
-  admin: { bg: "bg-amber-50", text: "text-amber-600", icon: FiShield },
+const ROLE_STYLES: Record<string, { bg: string; text: string; border: string; icon: typeof FiUser; label: string }> = {
+  couple: { bg: "bg-rose-50", text: "text-rose-500", border: "border-rose-200/40", icon: FiUser, label: "Couple" },
+  vendor: { bg: "bg-blue-50", text: "text-blue-500", border: "border-blue-200/40", icon: FiShoppingBag, label: "Vendor" },
+  admin:  { bg: "bg-amber-50", text: "text-amber-500", border: "border-amber-200/40", icon: FiShield, label: "Admin" },
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 type ModalAction = "ban" | "unban" | "impersonate" | null;
+
+const INPUT_CLS =
+  "w-full px-4 py-3 border border-warm-200/60 rounded-xl text-[13px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
@@ -62,11 +67,11 @@ export default function AdminUsersPage() {
   const [customDays, setCustomDays] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async (offset: number, append: boolean) => {
-    if (append) setLoadingMore(true); else setLoading(true);
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
     try {
+      const offset = (page - 1) * PAGE_SIZE;
       const query: Record<string, unknown> = {
         limit: PAGE_SIZE,
         offset,
@@ -91,32 +96,36 @@ export default function AdminUsersPage() {
 
       if (res.data) {
         const fetched = ((res.data.users ?? []) as unknown) as AdminUser[];
-        setUsers((prev) => append ? [...prev, ...fetched] : fetched);
+        setUsers(fetched);
         setTotal((res.data.total as number) ?? 0);
       }
     } catch {
-      if (!append) { setUsers([]); setTotal(0); }
+      setUsers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
-  }, [search, roleFilter]);
+  }, [search, roleFilter, page]);
 
   useEffect(() => {
-    fetchUsers(0, false);
+    fetchUsers();
   }, [fetchUsers]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setSearch(searchInput);
+    setPage(1);
+  }
+
+  function clearSearch() {
+    setSearchInput("");
+    setSearch("");
+    setPage(1);
   }
 
   function handleRoleChange(role: RoleFilter) {
     setRoleFilter(role);
-  }
-
-  function handleLoadMore() {
-    fetchUsers(users.length, true);
+    setPage(1);
   }
 
   function openModal(user: AdminUser, action: ModalAction) {
@@ -126,7 +135,6 @@ export default function AdminUsersPage() {
     setBanReason("");
     setBanDuration("permanent");
     setCustomDays("");
-    setOpenMenuId(null);
   }
 
   function closeModal() {
@@ -193,10 +201,7 @@ export default function AdminUsersPage() {
       apiFetch("/api/v1/admin/notify-user-action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: selectedUser.id,
-          action: "unban",
-        }),
+        body: JSON.stringify({ userId: selectedUser.id, action: "unban" }),
       }).catch(() => {});
 
       setUsers((prev) =>
@@ -231,50 +236,34 @@ export default function AdminUsersPage() {
     }
   }
 
-  const hasMore = users.length < total;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-display flex items-center gap-2">
-          <FiUsers className="w-7 h-7 text-amber-500" />
-          Users
-        </h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          {total} registered user{total !== 1 ? "s" : ""} on the platform.
-        </p>
-      </div>
+    <div className="space-y-10">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+            Administration
+          </p>
+          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+            User Management
+          </h1>
+          <p className="text-[14px] text-slate-400 font-light mt-2">
+            {loading ? "Loading..." : `${total} registered user${total !== 1 ? "s" : ""} on the platform`}
+          </p>
+        </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <form onSubmit={handleSearch} className="flex-1 flex gap-2">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by email..."
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
-          >
-            Search
-          </button>
-        </form>
-
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        {/* Role filter */}
+        <div className="rounded-xl bg-warm-50/60 border border-warm-200/30 p-1 flex gap-0.5 w-fit self-start sm:self-auto">
           {ROLES.map((role) => (
             <button
               key={role}
               onClick={() => handleRoleChange(role)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-colors cursor-pointer ${
+              className={`cursor-pointer px-3.5 py-2 rounded-lg text-[12px] font-medium capitalize whitespace-nowrap transition-all duration-500 ${
                 roleFilter === role
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white text-slate-900 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
               {role === "all" ? "All" : role}
@@ -283,229 +272,246 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200/80 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="text-left font-medium text-gray-500 px-5 py-3">User</th>
-                <th className="text-left font-medium text-gray-500 px-5 py-3">Role</th>
-                <th className="text-left font-medium text-gray-500 px-5 py-3 hidden sm:table-cell">Email Verified</th>
-                <th className="text-left font-medium text-gray-500 px-5 py-3 hidden md:table-cell">Joined</th>
-                <th className="text-left font-medium text-gray-500 px-5 py-3">Status</th>
-                <th className="text-right font-medium text-gray-500 px-5 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-gray-50">
-                    <td className="px-5 py-4"><div className="h-4 w-40 bg-gray-100 rounded animate-pulse" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded animate-pulse" /></td>
-                    <td className="px-5 py-4 hidden sm:table-cell"><div className="h-4 w-12 bg-gray-100 rounded animate-pulse" /></td>
-                    <td className="px-5 py-4 hidden md:table-cell"><div className="h-4 w-24 bg-gray-100 rounded animate-pulse" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded animate-pulse" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-8 bg-gray-100 rounded animate-pulse ml-auto" /></td>
-                  </tr>
-                ))
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-gray-400">
-                    No users found.
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => {
-                  const roleStyle = ROLE_STYLES[user.role ?? "couple"] ?? ROLE_STYLES.couple;
-                  const RoleIcon = roleStyle.icon;
-                  return (
-                    <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold shrink-0">
-                            {user.image ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={user.image} alt="" className="w-full h-full rounded-full object-cover" />
-                            ) : (
-                              (user.name ?? "?").charAt(0).toUpperCase()
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {user.name || "Unnamed"}
-                            </p>
-                            <p className="text-xs text-gray-400 truncate flex items-center gap-1">
-                              <FiMail className="w-3 h-3 shrink-0" />
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize ${roleStyle.bg} ${roleStyle.text}`}>
-                          <RoleIcon className="w-3 h-3" />
-                          {user.role ?? "couple"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 hidden sm:table-cell">
-                        {user.emailVerified ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-600">
-                            <FiCheckCircle className="w-3.5 h-3.5" /> Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-gray-400">
-                            <FiXCircle className="w-3.5 h-3.5" /> Unverified
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4 hidden md:table-cell">
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                          <FiCalendar className="w-3 h-3" />
-                          {new Date(user.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        {user.banned ? (
-                          <div>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">
-                              <FiSlash className="w-3 h-3" /> Banned
-                            </span>
-                            {user.banReason && (
-                              <p className="text-[10px] text-red-400 mt-0.5 truncate max-w-[120px]" title={user.banReason}>
-                                {user.banReason}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-600">
-                            Active
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="relative inline-block">
-                          <button
-                            onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
-                          >
-                            <FiMoreVertical className="w-4 h-4" />
-                          </button>
-
-                          {openMenuId === user.id && (
-                            <>
-                              <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)} />
-                              <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
-                                {user.banned ? (
-                                  <button
-                                    onClick={() => openModal(user, "unban")}
-                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors cursor-pointer text-left"
-                                  >
-                                    <FiRefreshCw className="w-3.5 h-3.5" />
-                                    Reactivate
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => openModal(user, "ban")}
-                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left"
-                                  >
-                                    <FiSlash className="w-3.5 h-3.5" />
-                                    Suspend / Ban
-                                  </button>
-                                )}
-                                {user.role !== "admin" && (
-                                  <button
-                                    onClick={() => openModal(user, "impersonate")}
-                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-left"
-                                  >
-                                    <FiLogIn className="w-3.5 h-3.5" />
-                                    Impersonate
-                                  </button>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Load more */}
-        {!loading && hasMore && (
-          <div className="flex justify-center py-4 border-t border-gray-100">
+      {/* ── Search ── */}
+      <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by email..."
+            className="w-full pl-11 pr-10 py-3 border border-warm-200/60 rounded-xl text-[13px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
+          />
+          {searchInput && (
             <button
-              onClick={handleLoadMore}
-              disabled={loadingMore}
-              className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer"
+              type="button"
+              onClick={clearSearch}
+              className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-slate-500 transition-colors duration-300"
             >
-              {loadingMore ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
-              {loadingMore ? "Loading..." : `Load more (${users.length} of ${total})`}
+              <FiX className="w-3.5 h-3.5" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
+        <button
+          type="submit"
+          className="cursor-pointer px-5 py-3 bg-slate-900 text-white text-[12px] font-semibold rounded-xl hover:bg-slate-800 shadow-[0_2px_12px_rgba(15,23,42,0.1)] transition-all duration-500"
+        >
+          Search
+        </button>
+      </form>
 
-        {!loading && users.length > 0 && !hasMore && (
-          <div className="text-center py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-400">All {total} users loaded</p>
-          </div>
-        )}
-      </div>
-
-      {/* Ban confirmation modal */}
-      {modalAction === "ban" && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeModal}>
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                <FiSlash className="w-5 h-5 text-red-500" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Suspend / Ban User</h3>
-                <p className="text-xs text-gray-500">{selectedUser.name} ({selectedUser.email})</p>
+      {/* ── User cards ── */}
+      {loading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-warm-200/30 bg-white p-5 sm:p-6 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 bg-warm-100 rounded-xl shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-36 bg-warm-100 rounded" />
+                  <div className="h-3 w-48 bg-warm-100 rounded" />
+                </div>
+                <div className="h-6 w-16 bg-warm-100 rounded-lg shrink-0" />
               </div>
             </div>
+          ))}
+        </div>
+      ) : users.length === 0 ? (
+        <div className="rounded-2xl border border-warm-200/50 bg-white py-24 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-6">
+            <FiUsers className="w-7 h-7 text-slate-300" />
+          </div>
+          <p className="font-display text-lg font-semibold text-slate-500 mb-2">No users found</p>
+          <p className="text-[13px] text-slate-400 font-light max-w-xs mx-auto">
+            {search ? "Try a different search term or adjust filters" : "Users will appear here once they register"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {users.map((user) => {
+            const roleStyle = ROLE_STYLES[user.role ?? "couple"] ?? ROLE_STYLES.couple;
+            const RoleIcon = roleStyle.icon;
+            return (
+              <div
+                key={user.id}
+                className="group rounded-2xl border border-warm-200/40 bg-white hover:border-warm-200/70 hover:shadow-[0_2px_16px_rgba(15,23,42,0.03)] transition-all duration-500"
+              >
+                <div className="p-5 sm:p-6">
+                  {/* Top: avatar + info + status */}
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
+                    <div className="w-11 h-11 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center text-slate-400 text-[13px] font-bold shrink-0 overflow-hidden">
+                      {user.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={user.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        (user.name ?? "?").charAt(0).toUpperCase()
+                      )}
+                    </div>
 
-            <p className="text-sm text-gray-600 mb-4">
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <p className="text-[14px] font-medium text-slate-800">{user.name || "Unnamed"}</p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold uppercase tracking-luxury border ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
+                          <RoleIcon className="w-3 h-3" /> {roleStyle.label}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-slate-400 font-light mt-0.5 flex items-center gap-1.5 truncate">
+                        <FiMail className="w-3 h-3 shrink-0" /> {user.email}
+                      </p>
+                    </div>
+
+                    {/* Status badge */}
+                    <div className="shrink-0">
+                      {user.banned ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-luxury bg-red-50 text-red-500 border border-red-200/40">
+                          <FiSlash className="w-3 h-3" /> Banned
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-luxury bg-emerald-50 text-emerald-500 border border-emerald-200/40">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ban reason if present */}
+                  {user.banned && user.banReason && (
+                    <div className="mt-3 ml-15 rounded-xl bg-red-50/40 border border-red-200/20 px-3.5 py-2">
+                      <p className="text-[11px] text-red-400 font-light">
+                        <span className="font-medium text-red-500">Reason:</span> {user.banReason}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Bottom: meta + actions */}
+                  <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-warm-200/20">
+                    {/* Meta chips */}
+                    <div className="flex items-center gap-4 text-[11px] text-slate-400 font-light">
+                      <span className="flex items-center gap-1">
+                        <FiCalendar className="w-3 h-3" />
+                        {new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                      {user.emailVerified ? (
+                        <span className="flex items-center gap-1 text-emerald-500">
+                          <FiCheckCircle className="w-3 h-3" /> Verified
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-slate-300">
+                          <FiXCircle className="w-3 h-3" /> Unverified
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2">
+                      {user.banned ? (
+                        <button
+                          onClick={() => openModal(user, "unban")}
+                          className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50/50 border border-emerald-200/40 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition-all duration-500"
+                        >
+                          <FiRefreshCw className="w-3 h-3" /> Reactivate
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => openModal(user, "ban")}
+                          className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold text-red-500 bg-red-50/50 border border-red-200/40 rounded-xl hover:bg-red-50 hover:border-red-200 transition-all duration-500"
+                        >
+                          <FiSlash className="w-3 h-3" /> Ban
+                        </button>
+                      )}
+                      {user.role !== "admin" && (
+                        <button
+                          onClick={() => openModal(user, "impersonate")}
+                          className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 border border-warm-200/50 rounded-xl hover:bg-warm-50 hover:border-warm-200 transition-all duration-500"
+                        >
+                          <FiLogIn className="w-3 h-3" /> Impersonate
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Pagination ── */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between rounded-2xl border border-warm-200/30 bg-white px-6 sm:px-8 py-4">
+          <span className="text-[13px] text-slate-400 font-light">
+            Page <span className="text-slate-600 font-medium">{page}</span> of{" "}
+            <span className="text-slate-600 font-medium">{totalPages}</span>
+            <span className="hidden sm:inline ml-1.5">· {total} total</span>
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-slate-600 border border-warm-200/60 hover:border-warm-200 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-500"
+            >
+              <FiChevronLeft className="w-3.5 h-3.5" /> Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-slate-600 border border-warm-200/60 hover:border-warm-200 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-500"
+            >
+              Next <FiChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Ban modal ── */}
+      {modalAction === "ban" && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={closeModal}>
+          <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.15)] max-w-md w-full mx-4 p-8 sm:p-10 animate-scale-reveal" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200/40 flex items-center justify-center">
+                  <FiSlash className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-slate-900">Suspend / Ban User</h3>
+                  <p className="text-[11px] text-slate-400 font-light">{selectedUser.name} ({selectedUser.email})</p>
+                </div>
+              </div>
+              <button onClick={closeModal} className="cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-slate-500 hover:bg-warm-50 transition-all duration-300">
+                <FiX className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-[13px] text-slate-400 font-light leading-relaxed mb-5">
               This will immediately sign the user out and prevent them from logging in.
             </p>
 
-            <div className="space-y-3 mb-4">
+            <div className="space-y-4 mb-5">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Reason (optional)</label>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1.5">Reason (optional)</label>
                 <input
                   type="text"
                   value={banReason}
                   onChange={(e) => setBanReason(e.target.value)}
                   placeholder="e.g. Violating terms of service"
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-red-300 focus:ring-2 focus:ring-red-100 transition-all"
+                  className={INPUT_CLS}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Duration</label>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1.5">Duration</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {([
-                    ["permanent", "Permanent"],
-                    ["7d", "7 Days"],
-                    ["30d", "30 Days"],
-                    ["custom", "Custom"],
-                  ] as const).map(([value, label]) => (
+                  {([["permanent", "Permanent"], ["7d", "7 Days"], ["30d", "30 Days"], ["custom", "Custom"]] as const).map(([value, label]) => (
                     <button
                       key={value}
                       onClick={() => setBanDuration(value)}
-                      className={`px-3 py-2 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                      className={`cursor-pointer px-3 py-2.5 text-[12px] font-medium rounded-xl border transition-all duration-500 ${
                         banDuration === value
-                          ? "border-red-300 bg-red-50 text-red-700"
-                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                          ? "border-red-300 bg-red-50 text-red-600"
+                          : "border-warm-200/60 text-slate-500 hover:bg-warm-50"
                       }`}
                     >
                       {label}
@@ -519,28 +525,26 @@ export default function AdminUsersPage() {
                     value={customDays}
                     onChange={(e) => setCustomDays(e.target.value)}
                     placeholder="Number of days"
-                    className="w-full mt-2 px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-red-300 focus:ring-2 focus:ring-red-100 transition-all"
+                    className={`${INPUT_CLS} mt-2`}
                   />
                 )}
               </div>
             </div>
 
-            {actionError && (
-              <p className="text-xs text-red-500 mb-3">{actionError}</p>
-            )}
+            {actionError && <p className="text-[12px] text-red-500 font-light mb-3">{actionError}</p>}
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <button
                 onClick={closeModal}
                 disabled={actionLoading}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 disabled:opacity-40 transition-all duration-500"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBan}
                 disabled={actionLoading}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-60"
+                className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-3 text-[13px] font-semibold text-white bg-red-500 rounded-xl shadow-[0_2px_12px_rgba(239,68,68,0.15)] hover:bg-red-600 disabled:opacity-40 transition-all duration-500"
               >
                 {actionLoading && <FiLoader className="w-3.5 h-3.5 animate-spin" />}
                 Ban User
@@ -550,49 +554,39 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Unban / Reactivate confirmation modal */}
+      {/* ── Unban modal ── */}
       {modalAction === "unban" && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeModal}>
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-                <FiRefreshCw className="w-5 h-5 text-green-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={closeModal}>
+          <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.15)] max-w-sm w-full mx-4 p-8 sm:p-10 animate-scale-reveal" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/40 flex items-center justify-center">
+                <FiRefreshCw className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900">Reactivate User</h3>
-                <p className="text-xs text-gray-500">{selectedUser.name} ({selectedUser.email})</p>
+                <h3 className="font-display text-base font-semibold text-slate-900">Reactivate User</h3>
+                <p className="text-[11px] text-slate-400 font-light">{selectedUser.name} ({selectedUser.email})</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-5">
-              This will remove the ban and allow the user to sign in again. Are you sure?
+            <p className="text-[13px] text-slate-400 font-light leading-relaxed mb-5">
+              This will remove the ban and allow the user to sign in again.
             </p>
 
             {selectedUser.banReason && (
-              <div className="bg-gray-50 rounded-lg px-3.5 py-2.5 mb-4">
-                <p className="text-xs text-gray-500">
+              <div className="rounded-xl bg-warm-50/60 border border-warm-200/20 px-4 py-3 mb-5">
+                <p className="text-[12px] text-slate-500 font-light">
                   <span className="font-medium">Ban reason:</span> {selectedUser.banReason}
                 </p>
               </div>
             )}
 
-            {actionError && (
-              <p className="text-xs text-red-500 mb-3">{actionError}</p>
-            )}
+            {actionError && <p className="text-[12px] text-red-500 font-light mb-3">{actionError}</p>}
 
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={closeModal}
-                disabled={actionLoading}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
-              >
+            <div className="flex gap-3">
+              <button onClick={closeModal} disabled={actionLoading} className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 disabled:opacity-40 transition-all duration-500">
                 Cancel
               </button>
-              <button
-                onClick={handleUnban}
-                disabled={actionLoading}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors cursor-pointer disabled:opacity-60"
-              >
+              <button onClick={handleUnban} disabled={actionLoading} className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-3 text-[13px] font-semibold text-white bg-emerald-500 rounded-xl shadow-[0_2px_12px_rgba(5,150,105,0.15)] hover:bg-emerald-600 disabled:opacity-40 transition-all duration-500">
                 {actionLoading && <FiLoader className="w-3.5 h-3.5 animate-spin" />}
                 Reactivate
               </button>
@@ -601,46 +595,38 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Impersonate confirmation modal */}
+      {/* ── Impersonate modal ── */}
       {modalAction === "impersonate" && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeModal}>
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-                <FiLogIn className="w-5 h-5 text-amber-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={closeModal}>
+          <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.15)] max-w-sm w-full mx-4 p-8 sm:p-10 animate-scale-reveal" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/40 flex items-center justify-center">
+                <FiLogIn className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-900">Impersonate User</h3>
-                <p className="text-xs text-gray-500">{selectedUser.name} ({selectedUser.email})</p>
+                <h3 className="font-display text-base font-semibold text-slate-900">Impersonate User</h3>
+                <p className="text-[11px] text-slate-400 font-light">{selectedUser.name} ({selectedUser.email})</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-[13px] text-slate-400 font-light leading-relaxed mb-3">
               You will view the platform as this user. This action is logged for security auditing.
             </p>
-            <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-5">
-              The impersonation session expires after 1 hour. You can exit at any time using the banner at the top.
-            </p>
+            <div className="rounded-xl bg-amber-50/60 border border-amber-200/20 px-4 py-3 mb-6">
+              <p className="text-[11px] text-amber-600 font-light leading-relaxed">
+                The impersonation session expires after 1 hour. You can exit at any time using the banner.
+              </p>
+            </div>
 
-            {actionError && (
-              <p className="text-xs text-red-500 mb-3">{actionError}</p>
-            )}
+            {actionError && <p className="text-[12px] text-red-500 font-light mb-3">{actionError}</p>}
 
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={closeModal}
-                disabled={actionLoading}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
-              >
+            <div className="flex gap-3">
+              <button onClick={closeModal} disabled={actionLoading} className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 disabled:opacity-40 transition-all duration-500">
                 Cancel
               </button>
-              <button
-                onClick={handleImpersonate}
-                disabled={actionLoading}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors cursor-pointer disabled:opacity-60"
-              >
+              <button onClick={handleImpersonate} disabled={actionLoading} className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-3 text-[13px] font-semibold text-white bg-amber-500 rounded-xl shadow-[0_2px_12px_rgba(217,119,6,0.15)] hover:bg-amber-600 disabled:opacity-40 transition-all duration-500">
                 {actionLoading && <FiLoader className="w-3.5 h-3.5 animate-spin" />}
-                Start Impersonation
+                Start Session
               </button>
             </div>
           </div>
