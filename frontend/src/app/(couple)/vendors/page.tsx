@@ -15,6 +15,8 @@ import {
   FiShoppingBag,
   FiX,
   FiStar,
+  FiFilter,
+  FiDollarSign,
 } from "react-icons/fi";
 
 const SORT_OPTIONS = [
@@ -93,22 +95,36 @@ export default function VendorListingPage() {
   return (
     <div className="space-y-8">
       {/* ── Header ── */}
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
-          Discover
-        </p>
-        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
-          Find Your Vendors
-        </h1>
-        <p className="text-[14px] text-slate-400 font-light mt-2">
-          Browse verified wedding vendors for your special day
-        </p>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+            Discover
+          </p>
+          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+            Wedding Vendors
+          </h1>
+          <p className="text-[13px] text-slate-400 font-light mt-2">
+            Curated professionals to bring your vision to life
+          </p>
+        </div>
+        {!loading && (
+          <p className="text-[12px] text-slate-300 font-light shrink-0 pb-0.5">
+            {total} vendor{total !== 1 ? "s" : ""}
+          </p>
+        )}
       </div>
 
       {/* ── Filters ── */}
       <div className="rounded-2xl border border-warm-200/50 bg-white p-5 sm:p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-warm-50 border border-warm-200/30 flex items-center justify-center">
+            <FiFilter className="w-3.5 h-3.5 text-slate-400" />
+          </div>
+          <p className="text-[12px] font-medium text-slate-600">Filter & Search</p>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="relative">
+          <div className="relative sm:col-span-2 lg:col-span-1">
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
             <input
               type="text"
@@ -120,7 +136,7 @@ export default function VendorListingPage() {
             {searchInput && (
               <button
                 onClick={() => { setSearchInput(""); setSearch(""); setPage(1); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-warm-100 flex items-center justify-center hover:bg-warm-200/60 transition-colors cursor-pointer"
+                className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-warm-100 flex items-center justify-center hover:bg-warm-200/60 transition-colors"
               >
                 <FiX className="w-3 h-3 text-slate-400" />
               </button>
@@ -161,7 +177,7 @@ export default function VendorListingPage() {
         </div>
 
         {activeFilters > 0 && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-warm-200/20">
+          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-warm-200/20">
             <span className="text-[11px] text-slate-400 font-light">
               {total} result{total !== 1 ? "s" : ""}
             </span>
@@ -170,7 +186,7 @@ export default function VendorListingPage() {
                 setSearchInput(""); setSearch(""); setCategory(""); setLocation("");
                 setSortIdx(0); setPage(1);
               }}
-              className="ml-auto text-[11px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              className="cursor-pointer ml-auto text-[11px] text-gold-500 hover:text-gold-600 font-medium transition-colors"
             >
               Clear all filters
             </button>
@@ -178,23 +194,20 @@ export default function VendorListingPage() {
         )}
       </div>
 
-      {/* ── Results count (no filters) ── */}
-      {!loading && activeFilters === 0 && (
-        <p className="text-[12px] text-slate-400 font-light">
-          {total} vendor{total !== 1 ? "s" : ""} available
-        </p>
-      )}
-
-      {/* ── Vendor grid ── */}
+      {/* ── Vendor Grid ── */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-warm-200/50 bg-white overflow-hidden animate-pulse">
-              <div className="aspect-[4/3] bg-warm-100" />
+            <div key={i} className="rounded-2xl border border-warm-200/30 bg-white overflow-hidden animate-pulse">
+              <div className="aspect-[4/3] bg-warm-100/60" />
               <div className="p-5 space-y-3">
-                <div className="h-4 bg-warm-100 rounded w-3/4" />
-                <div className="h-3 bg-warm-100 rounded w-1/2" />
-                <div className="h-3 bg-warm-100 rounded w-1/3" />
+                <div className="h-4 bg-warm-100/60 rounded-lg w-3/4" />
+                <div className="flex gap-1.5">
+                  <div className="h-5 bg-warm-100/40 rounded-lg w-16" />
+                  <div className="h-5 bg-warm-100/40 rounded-lg w-14" />
+                </div>
+                <div className="h-3 bg-warm-100/40 rounded-lg w-1/2" />
+                <div className="h-3 bg-warm-100/40 rounded-lg w-1/3" />
               </div>
             </div>
           ))}
@@ -204,10 +217,21 @@ export default function VendorListingPage() {
           <div className="w-14 h-14 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-4">
             <FiShoppingBag className="w-6 h-6 text-slate-300" />
           </div>
-          <h3 className="text-[14px] font-semibold text-slate-700 mb-1">No vendors found</h3>
-          <p className="text-[12px] text-slate-400 font-light max-w-sm mx-auto">
+          <h3 className="text-[15px] font-semibold text-slate-700 mb-1">No vendors found</h3>
+          <p className="text-[13px] text-slate-400 font-light max-w-sm mx-auto mb-5">
             Try adjusting your filters or search terms to discover wedding vendors.
           </p>
+          {activeFilters > 0 && (
+            <button
+              onClick={() => {
+                setSearchInput(""); setSearch(""); setCategory(""); setLocation("");
+                setSortIdx(0); setPage(1);
+              }}
+              className="cursor-pointer px-5 py-2.5 text-[12px] font-medium text-slate-500 border border-warm-200/50 rounded-full hover:bg-warm-50 transition-all duration-500"
+            >
+              Clear all filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -219,21 +243,42 @@ export default function VendorListingPage() {
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 pt-4">
+        <div className="flex items-center justify-center gap-2 pt-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-medium rounded-xl border border-warm-200/50 bg-white disabled:opacity-40 hover:border-warm-200 hover:shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-500 cursor-pointer"
+            className="cursor-pointer flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-medium rounded-xl border border-warm-200/50 bg-white disabled:opacity-30 hover:border-warm-200 hover:shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-500"
           >
             <FiChevronLeft className="w-3.5 h-3.5" /> Previous
           </button>
-          <span className="text-[12px] text-slate-400 font-light">
-            Page {page} of {totalPages}
-          </span>
+
+          <div className="flex items-center gap-1 px-2">
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const p = i + 1;
+              if (totalPages > 7 && p !== 1 && p !== totalPages && Math.abs(p - page) > 1) {
+                if (p === 2 || p === totalPages - 1) return <span key={p} className="text-[11px] text-slate-300 px-1">...</span>;
+                return null;
+              }
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`cursor-pointer w-8 h-8 rounded-lg text-[12px] font-medium transition-all duration-500 ${
+                    p === page
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-400 hover:bg-warm-50"
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-medium rounded-xl border border-warm-200/50 bg-white disabled:opacity-40 hover:border-warm-200 hover:shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-500 cursor-pointer"
+            className="cursor-pointer flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-medium rounded-xl border border-warm-200/50 bg-white disabled:opacity-30 hover:border-warm-200 hover:shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-500"
           >
             Next <FiChevronRight className="w-3.5 h-3.5" />
           </button>
@@ -243,59 +288,76 @@ export default function VendorListingPage() {
   );
 }
 
+/* ── Vendor Card ── */
+
 function VendorCard({ vendor }: { vendor: VendorProfile }) {
   const thumb = vendor.portfolio?.[0];
   const cats = vendor.category ?? [];
   const price = formatPrice(vendor.priceRangeMin, vendor.priceRangeMax);
 
   return (
-    <Link href={`/vendors/${vendor.id}`}>
-      <div className="group rounded-2xl border border-warm-200/50 bg-white overflow-hidden hover:border-warm-200 hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-500 cursor-pointer h-full flex flex-col">
-        {/* Image */}
+    <Link href={`/vendors/${vendor.id}`} className="block h-full">
+      <div className="group rounded-2xl border border-warm-200/40 bg-white overflow-hidden hover:border-warm-200/70 hover:shadow-[0_12px_40px_rgba(15,23,42,0.06)] transition-all duration-700 cursor-pointer h-full flex flex-col">
+        {/* ── Image ── */}
         <div className="relative aspect-[4/3] bg-warm-50 overflow-hidden">
           {thumb ? (
             <Image
               src={thumb}
               alt={vendor.businessName ?? "Vendor"}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="object-cover group-hover:scale-[1.04] transition-transform duration-[900ms] ease-out"
               unoptimized
             />
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <FiShoppingBag className="w-8 h-8 text-slate-200" />
+            <div className="flex items-center justify-center h-full bg-gradient-to-br from-warm-50 to-warm-100/60">
+              <FiShoppingBag className="w-8 h-8 text-warm-200" />
             </div>
           )}
 
-          {/* Rating overlay */}
+          {/* Gradient overlay at bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+
+          {/* Rating badge */}
           {vendor.rating > 0 && (
-            <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-sm border border-warm-200/30 shadow-sm">
+            <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm">
               <FiStar className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span className="text-[11px] font-semibold text-slate-700">{vendor.rating.toFixed(1)}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="p-5 flex-1 flex flex-col">
-          <h3 className="text-[14px] font-semibold text-slate-900 group-hover:text-slate-700 transition-colors duration-500 line-clamp-1 mb-2">
-            {vendor.businessName ?? "Unnamed Vendor"}
-          </h3>
-
-          {cats.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {cats.slice(0, 3).map((c) => (
-                <span key={c} className="px-2.5 py-0.5 rounded-lg bg-warm-50 border border-warm-200/30 text-[10px] font-medium text-slate-500 capitalize">
-                  {c}
-                </span>
-              ))}
-              {cats.length > 3 && (
-                <span className="text-[10px] text-slate-300 font-light self-center">+{cats.length - 3}</span>
+              <span className="text-[11px] font-bold text-slate-700">{vendor.rating.toFixed(1)}</span>
+              {vendor.reviewCount > 0 && (
+                <span className="text-[10px] text-slate-400 font-light">({vendor.reviewCount})</span>
               )}
             </div>
           )}
 
-          <div className="mt-auto pt-2 space-y-1.5">
+          {/* Category overlay */}
+          {cats.length > 0 && (
+            <div className="absolute bottom-3 left-3 flex flex-wrap gap-1">
+              {cats.slice(0, 2).map((c) => (
+                <span key={c} className="px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[10px] font-semibold text-slate-600 capitalize shadow-sm">
+                  {c}
+                </span>
+              ))}
+              {cats.length > 2 && (
+                <span className="px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[10px] font-medium text-slate-400">
+                  +{cats.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Content ── */}
+        <div className="p-5 flex-1 flex flex-col">
+          <h3 className="text-[14px] font-semibold text-slate-900 group-hover:text-slate-700 transition-colors duration-500 line-clamp-1 mb-1.5">
+            {vendor.businessName ?? "Unnamed Vendor"}
+          </h3>
+
+          {vendor.description && (
+            <p className="text-[11px] text-slate-400 font-light line-clamp-2 mb-3 leading-relaxed">
+              {vendor.description}
+            </p>
+          )}
+
+          <div className="mt-auto space-y-2">
             {vendor.location && (
               <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-light">
                 <FiMapPin className="w-3 h-3 shrink-0 text-slate-300" />
@@ -303,13 +365,21 @@ function VendorCard({ vendor }: { vendor: VendorProfile }) {
               </div>
             )}
             {price && (
-              <p className="text-[12px] font-medium text-slate-600">{price}</p>
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-600">
+                <FiDollarSign className="w-3 h-3 shrink-0 text-slate-300" />
+                <span>{price}</span>
+              </div>
             )}
           </div>
 
-          <div className="flex items-center justify-end mt-4 pt-4 border-t border-warm-200/20">
-            <span className="text-[11px] font-medium text-slate-400 group-hover:text-slate-600 flex items-center gap-1 transition-all duration-500 group-hover:translate-x-0.5">
-              View Profile <FiArrowRight className="w-3 h-3" />
+          <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-warm-200/20">
+            <span className="text-[10px] uppercase tracking-luxury text-slate-300 font-medium">
+              {vendor.yearsOfExperience
+                ? `${vendor.yearsOfExperience} yr${vendor.yearsOfExperience > 1 ? "s" : ""} exp`
+                : "View details"}
+            </span>
+            <span className="w-7 h-7 rounded-lg bg-warm-50 border border-warm-200/30 flex items-center justify-center group-hover:bg-slate-900 group-hover:border-slate-900 transition-all duration-500">
+              <FiArrowRight className="w-3 h-3 text-slate-400 group-hover:text-white transition-colors duration-500" />
             </span>
           </div>
         </div>
