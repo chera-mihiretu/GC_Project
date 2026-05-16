@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {
+  FiSearch,
+  FiChevronLeft,
+  FiChevronRight,
+  FiShoppingBag,
+  FiArrowRight,
+  FiX,
+} from "react-icons/fi";
 import VendorStatusBadge from "@/components/admin/vendor-status-badge";
 import { listVendorsAdmin } from "@/services/admin-vendor.service";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
@@ -15,6 +23,8 @@ const STATUS_TABS = [
   { label: "Deactivated", value: VendorStatus.DEACTIVATED },
 ];
 
+const PAGE_SIZE = 10;
+
 export default function AdminVendorsPage() {
   const router = useRouter();
   const [vendors, setVendors] = useState<VendorProfile[]>([]);
@@ -22,7 +32,9 @@ export default function AdminVendorsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchVendors = useCallback(async () => {
     setLoading(true);
@@ -31,7 +43,7 @@ export default function AdminVendorsPage() {
         status: statusFilter ? (statusFilter as VendorStatus) : undefined,
         search: search || undefined,
         page,
-        limit: 20,
+        limit: PAGE_SIZE,
       });
       setVendors(data.vendors);
       setTotal(data.total);
@@ -46,131 +58,184 @@ export default function AdminVendorsPage() {
     fetchVendors();
   }, [fetchVendors]);
 
-  const totalPages = Math.ceil(total / 20);
+  function handleSearchInput(value: string) {
+    setSearchInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearch(value);
+      setPage(1);
+    }, 400);
+  }
+
+  function clearSearch() {
+    setSearchInput("");
+    setSearch("");
+    setPage(1);
+  }
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Vendor Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Review and manage vendor applications
-          </p>
+    <div className="space-y-10">
+      {/* ── Header ── */}
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+          Administration
+        </p>
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+          Vendor Management
+        </h1>
+        <p className="text-[14px] text-slate-400 font-light mt-2">
+          Review applications, manage vendor status, and monitor compliance
+        </p>
+      </div>
+
+      {/* ── Filters row ── */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            placeholder="Search by business name..."
+            className="w-full pl-11 pr-10 py-3 border border-warm-200/60 rounded-xl text-[13px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
+          />
+          {searchInput && (
+            <button
+              onClick={clearSearch}
+              className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-slate-500 transition-colors duration-300"
+            >
+              <FiX className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Status tabs */}
+        <div className="rounded-xl bg-warm-50/60 border border-warm-200/30 p-1 flex gap-0.5 overflow-x-auto">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => { setStatusFilter(tab.value); setPage(1); }}
+              className={`cursor-pointer px-3.5 py-2 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all duration-500 ${
+                statusFilter === tab.value
+                  ? "bg-white text-slate-900 shadow-[0_1px_4px_rgba(15,23,42,0.06)]"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => {
-              setStatusFilter(tab.value);
-              setPage(1);
-            }}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              statusFilter === tab.value
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          placeholder="Search by business name..."
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-300 outline-none"
-        />
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200/80 overflow-hidden">
+      {/* ── Table ── */}
+      <div className="rounded-2xl border border-warm-200/50 bg-white overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-400 text-sm animate-pulse">Loading...</div>
+          <div className="divide-y divide-warm-200/20">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 sm:px-8 py-5 animate-pulse">
+                <div className="w-10 h-10 bg-warm-100 rounded-xl shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-40 bg-warm-100 rounded" />
+                  <div className="h-3 w-24 bg-warm-100 rounded" />
+                </div>
+                <div className="h-6 w-20 bg-warm-100 rounded-lg" />
+              </div>
+            ))}
+          </div>
         ) : vendors.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            No vendors found
+          <div className="py-20 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-5">
+              <FiShoppingBag className="w-6 h-6 text-slate-300" />
+            </div>
+            <p className="text-[15px] font-medium text-slate-500 mb-1">No vendors found</p>
+            <p className="text-[13px] text-slate-400 font-light">
+              {search ? "Try a different search term" : "No vendors match the selected filter"}
+            </p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/60">
-                <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Business
-                </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Category
-                </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Status
-                </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Date
-                </th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Header row */}
+            <div className="hidden sm:grid grid-cols-[1fr,120px,100px,80px] gap-4 px-6 sm:px-8 py-3.5 border-b border-warm-200/30 bg-warm-50/40">
+              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Business</span>
+              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Category</span>
+              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Status</span>
+              <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 text-right">Date</span>
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-warm-200/20">
               {vendors.map((vendor) => (
-                <tr
+                <button
                   key={vendor.id}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() =>
-                    router.push(`/admin/vendors/${vendor.id}`)
-                  }
+                  onClick={() => router.push(`/admin/vendors/${vendor.id}`)}
+                  className="cursor-pointer w-full grid grid-cols-1 sm:grid-cols-[1fr,120px,100px,80px] gap-2 sm:gap-4 items-center px-6 sm:px-8 py-4 sm:py-5 text-left hover:bg-warm-50/30 transition-all duration-300 group"
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {vendor.businessName || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 capitalize">
+                  {/* Business */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center shrink-0">
+                      <span className="text-[12px] font-bold text-slate-400">
+                        {(vendor.businessName ?? "?").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-slate-800 truncate">
+                        {vendor.businessName || "Unnamed"}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-light sm:hidden capitalize">
+                        {vendor.category || "—"}
+                      </p>
+                    </div>
+                    <FiArrowRight className="w-3.5 h-3.5 text-slate-200 ml-auto sm:hidden opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-0.5" />
+                  </div>
+
+                  {/* Category */}
+                  <p className="hidden sm:block text-[13px] text-slate-500 capitalize truncate">
                     {vendor.category || "—"}
-                  </td>
-                  <td className="px-4 py-3">
+                  </p>
+
+                  {/* Status */}
+                  <div className="hidden sm:block">
                     <VendorStatusBadge status={vendor.status} />
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(vendor.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="text-gray-400 text-xs">
-                      View &rarr;
-                    </span>
-                  </td>
-                </tr>
+                  </div>
+
+                  {/* Date */}
+                  <p className="hidden sm:block text-[12px] text-slate-400 font-light text-right">
+                    {new Date(vendor.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
+                </button>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-500">
-            Page {page} of {totalPages}
+      {/* ── Pagination ── */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between rounded-2xl border border-warm-200/30 bg-white px-6 sm:px-8 py-4">
+          <span className="text-[13px] text-slate-400 font-light">
+            Page <span className="text-slate-600 font-medium">{page}</span> of{" "}
+            <span className="text-slate-600 font-medium">{totalPages}</span>
+            <span className="hidden sm:inline ml-1.5">· {total} total</span>
           </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40"
-          >
-            Next
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-slate-600 border border-warm-200/60 hover:border-warm-200 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-500"
+            >
+              <FiChevronLeft className="w-3.5 h-3.5" /> Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium text-slate-600 border border-warm-200/60 hover:border-warm-200 hover:bg-warm-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-500"
+            >
+              Next <FiChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       )}
     </div>

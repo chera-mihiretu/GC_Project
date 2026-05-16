@@ -15,7 +15,21 @@ import {
   deactivateVendor,
 } from "@/services/admin-vendor.service";
 import { VendorStatus, type VendorProfile, type VendorDocument } from "@/types/vendor";
-import { FiFile, FiDownload, FiX, FiEye, FiExternalLink, FiImage } from "react-icons/fi";
+import {
+  FiFile,
+  FiDownload,
+  FiX,
+  FiEye,
+  FiExternalLink,
+  FiImage,
+  FiArrowLeft,
+  FiBriefcase,
+  FiFileText,
+  FiShield,
+  FiCheck,
+  FiSlash,
+  FiAlertTriangle,
+} from "react-icons/fi";
 
 type ModalState =
   | { type: "none" }
@@ -95,236 +109,262 @@ export default function AdminVendorDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-400">
-        <div className="animate-pulse text-sm">Loading...</div>
+      <div className="space-y-8">
+        <div className="h-4 w-32 bg-warm-100 rounded animate-pulse" />
+        <div className="rounded-2xl border border-warm-200/30 bg-white p-8 sm:p-10 animate-pulse space-y-5">
+          <div className="h-7 w-48 bg-warm-100 rounded-lg" />
+          <div className="h-4 w-64 bg-warm-100 rounded" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-16 bg-warm-100 rounded-xl" />
+            <div className="h-16 bg-warm-100 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!vendor) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-500">
-        Vendor not found
+      <div className="space-y-8">
+        <button onClick={() => router.push("/admin/vendors")} className="cursor-pointer inline-flex items-center gap-2 text-[13px] text-slate-400 hover:text-slate-600 transition-colors duration-500">
+          <FiArrowLeft className="w-3.5 h-3.5" /> Back to Vendors
+        </button>
+        <div className="rounded-2xl border border-warm-200/30 bg-white py-20 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-5">
+            <FiAlertTriangle className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-[15px] font-medium text-slate-600 mb-1">Vendor not found</p>
+          <p className="text-[13px] text-slate-400 font-light">This vendor may have been removed</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <button
-        onClick={() => router.push("/admin/vendors")}
-        className="text-sm text-gray-500 hover:text-gray-700"
-      >
-        &larr; Back to Vendors
+    <div className="space-y-8">
+      {/* Back */}
+      <button onClick={() => router.push("/admin/vendors")} className="cursor-pointer inline-flex items-center gap-2 text-[13px] text-slate-400 hover:text-slate-600 transition-colors duration-500">
+        <FiArrowLeft className="w-3.5 h-3.5" /> Back to Vendors
       </button>
 
-      <div className="flex items-start justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">Vendor Detail</p>
+          <h1 className="font-display text-2xl font-bold text-slate-900 tracking-headline">
             {vendor.businessName || "Unnamed Vendor"}
           </h1>
-          <p className="text-gray-500 text-sm mt-1 capitalize">
-            {vendor.category || "No category"}
-          </p>
+          <p className="text-[13px] text-slate-400 font-light mt-1 capitalize">{vendor.category || "No category"}</p>
         </div>
         <VendorStatusBadge status={vendor.status} />
       </div>
 
-      <div className="grid gap-6">
-        <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Business Information
-          </h2>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-500 block mb-0.5">Business Name</span>
-              <span className="text-gray-900 font-medium">
-                {vendor.businessName || "—"}
-              </span>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* ── Left: Info + Documents ── */}
+        <div className="w-full lg:flex-1 lg:min-w-0 space-y-6">
+          {/* Business Info */}
+          <section className="rounded-2xl border border-warm-200/50 bg-white p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-9 h-9 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+                <FiBriefcase className="w-4 h-4 text-slate-400" />
+              </div>
+              <h2 className="text-[15px] font-semibold text-slate-900">Business Information</h2>
             </div>
-            <div>
-              <span className="text-gray-500 block mb-0.5">Category</span>
-              <span className="text-gray-900 capitalize">
-                {vendor.category || "—"}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 block mb-0.5">Phone</span>
-              <span className="text-gray-900">
-                {vendor.phoneNumber || "—"}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 block mb-0.5">Location</span>
-              <span className="text-gray-900">
-                {vendor.location || "—"}
-              </span>
-            </div>
-          </div>
-          {vendor.description && (
-            <div className="mt-4">
-              <span className="text-gray-500 text-sm block mb-0.5">Description</span>
-              <p className="text-sm text-gray-700">{vendor.description}</p>
-            </div>
-          )}
-          <div className="mt-4 text-xs text-gray-400">
-            Registered: {new Date(vendor.createdAt).toLocaleDateString()} |
-            Updated: {new Date(vendor.updatedAt).toLocaleDateString()}
-          </div>
-        </div>
 
-        <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Uploaded Documents
-          </h2>
-          {(!vendor.documents || vendor.documents.length === 0) ? (
-            <p className="text-sm text-gray-400">No documents uploaded</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {vendor.documents.map((doc) => {
-                const url = resolveUrl(doc.fileUrl);
-                const imageFile = isImage(doc.fileUrl);
-                return (
-                  <div
-                    key={doc.id}
-                    className="group bg-gray-50 rounded-xl border border-gray-100 overflow-hidden hover:border-gray-300 transition-colors"
-                  >
-                    {/* Thumbnail / preview area */}
-                    <button
-                      onClick={() => setPreviewDoc(doc)}
-                      className="w-full relative aspect-4/3 bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
-                    >
-                      {imageFile ? (
-                        <Image
-                          src={url}
-                          alt={doc.documentType}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 text-gray-400">
-                          <FiFile className="w-10 h-10" />
-                          <span className="text-xs font-medium uppercase">PDF</span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2.5 shadow-sm">
-                          <FiEye className="w-5 h-5 text-gray-700" />
-                        </div>
-                      </div>
-                    </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { label: "Business Name", value: vendor.businessName },
+                { label: "Category", value: vendor.category, capitalize: true },
+                { label: "Phone", value: vendor.phoneNumber },
+                { label: "Location", value: vendor.location },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl bg-warm-50/60 border border-warm-200/20 px-4 py-3.5">
+                  <p className="text-[11px] text-slate-400 font-light">{item.label}</p>
+                  <p className={`text-[14px] font-medium text-slate-700 mt-0.5 ${item.capitalize ? "capitalize" : ""}`}>
+                    {item.value || "—"}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-                    {/* Info row */}
-                    <div className="flex items-center justify-between px-3.5 py-2.5">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-700 capitalize truncate">
-                          {doc.documentType.replace(/_/g, " ")}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {new Date(doc.uploadedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-gray-700 p-1 shrink-0"
-                        title="Download"
+            {vendor.description && (
+              <div className="mt-4 rounded-xl bg-warm-50/60 border border-warm-200/20 px-4 py-3.5">
+                <p className="text-[11px] text-slate-400 font-light mb-1">Description</p>
+                <p className="text-[13px] text-slate-600 font-light leading-relaxed">{vendor.description}</p>
+              </div>
+            )}
+
+            <div className="flex gap-6 mt-4 pt-4 border-t border-warm-200/30 text-[11px] text-slate-400 font-light">
+              <span>Registered: <span className="text-slate-500 font-medium">{new Date(vendor.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></span>
+              <span>Updated: <span className="text-slate-500 font-medium">{new Date(vendor.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></span>
+            </div>
+          </section>
+
+          {/* Documents */}
+          <section className="rounded-2xl border border-warm-200/50 bg-white p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-9 h-9 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+                <FiFileText className="w-4 h-4 text-slate-400" />
+              </div>
+              <h2 className="text-[15px] font-semibold text-slate-900">Uploaded Documents</h2>
+            </div>
+
+            {(!vendor.documents || vendor.documents.length === 0) ? (
+              <div className="text-center py-10">
+                <div className="w-12 h-12 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-3">
+                  <FiFile className="w-5 h-5 text-slate-300" />
+                </div>
+                <p className="text-[13px] text-slate-400 font-light">No documents uploaded</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {vendor.documents.map((doc) => {
+                  const url = resolveUrl(doc.fileUrl);
+                  const imageFile = isImage(doc.fileUrl);
+                  return (
+                    <div key={doc.id} className="group rounded-xl border border-warm-200/40 overflow-hidden hover:border-warm-200 transition-all duration-500">
+                      <button
+                        onClick={() => setPreviewDoc(doc)}
+                        className="cursor-pointer w-full relative aspect-4/3 bg-warm-50 flex items-center justify-center overflow-hidden"
                       >
-                        <FiDownload size={15} />
-                      </a>
+                        {imageFile ? (
+                          <Image src={url} alt={doc.documentType} fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-slate-300">
+                            <FiFile className="w-8 h-8" />
+                            <span className="text-[10px] font-semibold uppercase tracking-luxury">PDF</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500 flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-white/90 rounded-xl p-2.5 shadow-sm">
+                            <FiEye className="w-4 h-4 text-slate-700" />
+                          </div>
+                        </div>
+                      </button>
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-medium text-slate-700 capitalize truncate">
+                            {doc.documentType.replace(/_/g, " ")}
+                          </p>
+                          <p className="text-[11px] text-slate-400 font-light">
+                            {new Date(doc.uploadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        </div>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-slate-600 hover:bg-warm-50 transition-all duration-300 shrink-0"
+                          title="Download"
+                        >
+                          <FiDownload className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
 
-        {vendor.rejectionReason && (
-          <div className="bg-orange-50 rounded-xl border border-orange-200 p-6">
-            <h2 className="text-lg font-semibold text-orange-900 mb-2">
-              Rejection Reason
-            </h2>
-            <p className="text-sm text-orange-800">
-              {vendor.rejectionReason}
-            </p>
-          </div>
-        )}
+        {/* ── Right: Actions + Rejection ── */}
+        <div className="w-full lg:w-[340px] lg:shrink-0 space-y-5 lg:sticky lg:top-24">
+          {/* Rejection reason */}
+          {vendor.rejectionReason && (
+            <section className="rounded-2xl border border-orange-200/40 bg-orange-50/30 p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-orange-100 border border-orange-200/40 flex items-center justify-center">
+                  <FiAlertTriangle className="w-3.5 h-3.5 text-orange-500" />
+                </div>
+                <h3 className="text-[14px] font-semibold text-orange-800">Rejection Reason</h3>
+              </div>
+              <p className="text-[13px] text-orange-700 font-light leading-relaxed">{vendor.rejectionReason}</p>
+            </section>
+          )}
 
-        <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Actions
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {vendor.status === VendorStatus.PENDING_VERIFICATION && (
-              <>
+          {/* Actions */}
+          <section className="rounded-2xl border border-warm-200/50 bg-white p-5 sm:p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+                <FiShield className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <h3 className="text-[14px] font-semibold text-slate-900">Actions</h3>
+            </div>
+
+            <div className="space-y-2.5">
+              {vendor.status === VendorStatus.PENDING_VERIFICATION && (
+                <>
+                  <button
+                    onClick={() => setModal({ type: "approve" })}
+                    className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white rounded-xl text-[13px] font-semibold shadow-[0_2px_12px_rgba(5,150,105,0.15)] hover:bg-emerald-700 hover:shadow-[0_4px_20px_rgba(5,150,105,0.25)] transition-all duration-500"
+                  >
+                    <FiCheck className="w-3.5 h-3.5" />
+                    Approve Vendor
+                  </button>
+                  <button
+                    onClick={() => setModal({ type: "reject" })}
+                    className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 text-orange-600 border border-orange-200/60 rounded-xl text-[13px] font-semibold hover:bg-orange-50 hover:border-orange-300 transition-all duration-500"
+                  >
+                    <FiX className="w-3.5 h-3.5" />
+                    Reject
+                  </button>
+                </>
+              )}
+              {vendor.status === VendorStatus.VERIFIED && (
                 <button
-                  onClick={() => setModal({ type: "approve" })}
-                  className="px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition-colors"
+                  onClick={() => setModal({ type: "suspend" })}
+                  className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 text-red-500 border border-red-200/60 rounded-xl text-[13px] font-semibold hover:bg-red-50 hover:border-red-300 transition-all duration-500"
                 >
-                  Approve
+                  <FiSlash className="w-3.5 h-3.5" />
+                  Suspend Vendor
                 </button>
-                <button
-                  onClick={() => setModal({ type: "reject" })}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
-                >
-                  Reject
-                </button>
-              </>
-            )}
-            {vendor.status === VendorStatus.VERIFIED && (
-              <button
-                onClick={() => setModal({ type: "suspend" })}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-              >
-                Suspend
-              </button>
-            )}
-            {vendor.status === VendorStatus.SUSPENDED && (
-              <>
-                <button
-                  onClick={() => setModal({ type: "reinstate" })}
-                  className="px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition-colors"
-                >
-                  Reinstate
-                </button>
-                <button
-                  onClick={() => setModal({ type: "deactivate" })}
-                  className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Permanently Ban
-                </button>
-              </>
-            )}
-            {vendor.status === VendorStatus.REJECTED && (
-              <p className="text-sm text-gray-400 italic">
-                Waiting for vendor to resubmit documents.
-              </p>
-            )}
-            {vendor.status === VendorStatus.DEACTIVATED && (
-              <p className="text-sm text-gray-400 italic">
-                This account is permanently deactivated. No actions
-                available.
-              </p>
-            )}
-            {vendor.status === VendorStatus.REGISTERED && (
-              <p className="text-sm text-gray-400 italic">
-                Vendor has not yet submitted for verification.
-              </p>
-            )}
-          </div>
+              )}
+              {vendor.status === VendorStatus.SUSPENDED && (
+                <>
+                  <button
+                    onClick={() => setModal({ type: "reinstate" })}
+                    className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white rounded-xl text-[13px] font-semibold shadow-[0_2px_12px_rgba(5,150,105,0.15)] hover:bg-emerald-700 transition-all duration-500"
+                  >
+                    <FiCheck className="w-3.5 h-3.5" />
+                    Reinstate
+                  </button>
+                  <button
+                    onClick={() => setModal({ type: "deactivate" })}
+                    className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-slate-900 text-white rounded-xl text-[13px] font-semibold shadow-[0_2px_12px_rgba(15,23,42,0.1)] hover:bg-slate-800 transition-all duration-500"
+                  >
+                    <FiSlash className="w-3.5 h-3.5" />
+                    Permanently Ban
+                  </button>
+                </>
+              )}
+              {vendor.status === VendorStatus.REJECTED && (
+                <p className="text-[12px] text-slate-400 font-light text-center py-4">
+                  Waiting for vendor to resubmit documents
+                </p>
+              )}
+              {vendor.status === VendorStatus.DEACTIVATED && (
+                <p className="text-[12px] text-slate-400 font-light text-center py-4">
+                  This account is permanently deactivated
+                </p>
+              )}
+              {vendor.status === VendorStatus.REGISTERED && (
+                <p className="text-[12px] text-slate-400 font-light text-center py-4">
+                  Vendor has not yet submitted for verification
+                </p>
+              )}
+            </div>
+          </section>
         </div>
       </div>
 
-      {/* Modals */}
+      {/* ── Modals ── */}
       {modal.type === "approve" && (
         <ConfirmDialog
           title="Approve Vendor"
           description="This vendor will become visible to couples and can start receiving bookings."
           confirmLabel="Approve"
-          confirmColor="bg-green-700 hover:bg-green-800"
+          confirmColor="bg-emerald-600 hover:bg-emerald-700"
           onConfirm={handleApprove}
           onCancel={() => setModal({ type: "none" })}
         />
@@ -353,7 +393,7 @@ export default function AdminVendorDetailPage() {
           title="Reinstate Vendor"
           description="The vendor will be restored to verified status and become visible to couples again."
           confirmLabel="Reinstate"
-          confirmColor="bg-green-700 hover:bg-green-800"
+          confirmColor="bg-emerald-600 hover:bg-emerald-700"
           onConfirm={handleReinstate}
           onCancel={() => setModal({ type: "none" })}
         />
@@ -369,87 +409,39 @@ export default function AdminVendorDetailPage() {
         />
       )}
 
-      {/* Document preview lightbox */}
+      {/* ── Document preview lightbox ── */}
       {previewDoc && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex flex-col"
-          onClick={() => setPreviewDoc(null)}
-        >
-          {/* Top bar */}
-          <div
-            className="flex items-center justify-between px-4 sm:px-6 py-3 bg-black/40 backdrop-blur-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col" onClick={() => setPreviewDoc(null)}>
+          <div className="flex items-center justify-between px-5 sm:px-8 py-4 bg-black/40 backdrop-blur-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 text-white min-w-0">
               <FiImage className="w-4 h-4 shrink-0 opacity-60" />
-              <span className="text-sm font-medium capitalize truncate">
-                {previewDoc.documentType.replace(/_/g, " ")}
-              </span>
-              <span className="text-xs opacity-40 shrink-0">
-                {new Date(previewDoc.uploadedAt).toLocaleDateString()}
-              </span>
+              <span className="text-[13px] font-medium capitalize truncate">{previewDoc.documentType.replace(/_/g, " ")}</span>
+              <span className="text-[11px] opacity-40 shrink-0">{new Date(previewDoc.uploadedAt).toLocaleDateString()}</span>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={resolveUrl(previewDoc.fileUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/70 hover:text-white p-2 transition-colors"
-                title="Open in new tab"
-              >
+            <div className="flex items-center gap-1 shrink-0">
+              <a href={resolveUrl(previewDoc.fileUrl)} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300">
                 <FiExternalLink className="w-4 h-4" />
               </a>
-              <a
-                href={resolveUrl(previewDoc.fileUrl)}
-                download
-                className="text-white/70 hover:text-white p-2 transition-colors"
-                title="Download"
-              >
+              <a href={resolveUrl(previewDoc.fileUrl)} download className="w-9 h-9 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300">
                 <FiDownload className="w-4 h-4" />
               </a>
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="text-white/70 hover:text-white p-2 transition-colors"
-                title="Close"
-              >
+              <button onClick={() => setPreviewDoc(null)} className="cursor-pointer w-9 h-9 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300">
                 <FiX className="w-5 h-5" />
               </button>
             </div>
           </div>
-
-          {/* Preview content */}
-          <div
-            className="flex-1 flex items-center justify-center p-4 overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="flex-1 flex items-center justify-center p-4 overflow-auto" onClick={(e) => e.stopPropagation()}>
             {isImage(previewDoc.fileUrl) ? (
               <div className="relative w-full h-full max-w-4xl">
-                <Image
-                  src={resolveUrl(previewDoc.fileUrl)}
-                  alt={previewDoc.documentType}
-                  fill
-                  sizes="100vw"
-                  className="object-contain rounded-lg shadow-2xl"
-                />
+                <Image src={resolveUrl(previewDoc.fileUrl)} alt={previewDoc.documentType} fill sizes="100vw" className="object-contain rounded-xl" />
               </div>
             ) : isPdf(previewDoc.fileUrl) ? (
-              <iframe
-                src={resolveUrl(previewDoc.fileUrl)}
-                title={previewDoc.documentType}
-                className="w-full max-w-4xl h-full rounded-lg bg-white shadow-2xl"
-              />
+              <iframe src={resolveUrl(previewDoc.fileUrl)} title={previewDoc.documentType} className="w-full max-w-4xl h-full rounded-xl bg-white" />
             ) : (
               <div className="text-center text-white">
                 <FiFile className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                <p className="text-sm opacity-60 mb-4">
-                  Preview not available for this file type.
-                </p>
-                <a
-                  href={resolveUrl(previewDoc.fileUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
-                >
+                <p className="text-[13px] opacity-60 mb-4">Preview not available for this file type.</p>
+                <a href={resolveUrl(previewDoc.fileUrl)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-[13px] transition-colors duration-300">
                   <FiDownload className="w-4 h-4" /> Download File
                 </a>
               </div>

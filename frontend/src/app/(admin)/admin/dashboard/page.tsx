@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { listVendorsAdmin } from "@/services/admin-vendor.service";
 import StatCard from "@/components/ui/stat-card";
+import VendorStatusBadge from "@/components/admin/vendor-status-badge";
 import { VendorStatus, type VendorProfile } from "@/types/vendor";
 import {
   FiShoppingBag,
@@ -62,180 +63,166 @@ export default function AdminDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "Admin";
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="space-y-10">
+      {/* ── Header ── */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-display">
-          Dashboard
+        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+          Overview
+        </p>
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+          Welcome back, {firstName}
         </h1>
-        <p className="text-gray-500 mt-1">
-          Welcome back, {firstName}. Here&apos;s what&apos;s happening.
+        <p className="text-[14px] text-slate-400 font-light mt-2">
+          Here&apos;s what&apos;s happening across the platform
         </p>
       </div>
 
-      {/* Stats row */}
+      {/* ── Stats ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={FiShoppingBag}
           label="Total Vendors"
-          value={loading ? "..." : stats.total}
+          value={loading ? "—" : stats.total}
           color="gray"
         />
         <StatCard
           icon={FiClock}
           label="Pending Review"
-          value={loading ? "..." : stats.pending}
+          value={loading ? "—" : stats.pending}
           subtext={stats.pending > 0 ? "Needs attention" : undefined}
           color="amber"
         />
         <StatCard
           icon={FiCheckCircle}
           label="Verified"
-          value={loading ? "..." : stats.verified}
+          value={loading ? "—" : stats.verified}
           color="green"
         />
         <StatCard
           icon={FiAlertTriangle}
           label="Suspended"
-          value={loading ? "..." : stats.suspended}
+          value={loading ? "—" : stats.suspended}
           color="rose"
         />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Recent pending vendors */}
+        {/* ── Recent pending vendors ── */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-[15px] font-semibold text-slate-900">
               Pending Verification
             </h2>
             {stats.pending > 0 && (
               <button
                 onClick={() => router.push("/admin/vendors")}
-                className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                className="cursor-pointer text-[12px] text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors duration-500"
               >
                 View all <FiArrowRight className="w-3 h-3" />
               </button>
             )}
           </div>
-          <div className="bg-white rounded-xl border border-gray-200/80 overflow-hidden">
+
+          <div className="rounded-2xl border border-warm-200/50 bg-white overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-gray-400 text-sm animate-pulse">
-                Loading...
+              <div className="divide-y divide-warm-200/20">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-6 py-4 animate-pulse">
+                    <div className="w-9 h-9 bg-warm-100 rounded-xl shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-4 w-32 bg-warm-100 rounded" />
+                      <div className="h-3 w-20 bg-warm-100 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : recentPending.length === 0 ? (
-              <div className="p-8 text-center">
-                <FiCheckCircle className="w-8 h-8 text-green-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500 font-medium">All caught up</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  No vendors pending review right now.
-                </p>
+              <div className="py-14 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/40 flex items-center justify-center mx-auto mb-4">
+                  <FiCheckCircle className="w-5 h-5 text-emerald-400" />
+                </div>
+                <p className="text-[14px] font-medium text-slate-500 mb-1">All caught up</p>
+                <p className="text-[12px] text-slate-400 font-light">No vendors pending review right now</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/60">
-                    <th className="text-left px-4 py-3 font-medium text-gray-500">
-                      Business
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">
-                      Category
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">
-                      Date
-                    </th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
+              <>
+                {/* Table header */}
+                <div className="hidden sm:grid grid-cols-[1fr,100px,80px,60px] gap-4 px-6 py-3 border-b border-warm-200/30 bg-warm-50/40">
+                  <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Business</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Category</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400">Date</span>
+                  <span />
+                </div>
+
+                <div className="divide-y divide-warm-200/20">
                   {recentPending.map((vendor) => (
-                    <tr
+                    <button
                       key={vendor.id}
-                      onClick={() =>
-                        router.push(`/admin/vendors/${vendor.id}`)
-                      }
-                      className="border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => router.push(`/admin/vendors/${vendor.id}`)}
+                      className="cursor-pointer w-full grid grid-cols-1 sm:grid-cols-[1fr,100px,80px,60px] gap-2 sm:gap-4 items-center px-6 py-4 text-left hover:bg-warm-50/30 transition-all duration-300 group"
                     >
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">
-                          {vendor.businessName || "Unnamed"}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200/40 flex items-center justify-center shrink-0">
+                          <span className="text-[11px] font-bold text-amber-500">
+                            {(vendor.businessName ?? "?").charAt(0).toUpperCase()}
+                          </span>
                         </div>
-                        <div className="text-xs text-gray-400 sm:hidden capitalize">
-                          {vendor.category || "—"}
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-medium text-slate-800 truncate">
+                            {vendor.businessName || "Unnamed"}
+                          </p>
+                          <p className="text-[11px] text-slate-400 font-light sm:hidden capitalize">
+                            {vendor.category || "—"}
+                          </p>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 capitalize hidden sm:table-cell">
-                        {vendor.category || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
-                        {new Date(vendor.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-xs text-blue-600 font-medium">
-                          Review
-                        </span>
-                      </td>
-                    </tr>
+                      </div>
+                      <p className="hidden sm:block text-[12px] text-slate-500 capitalize truncate">{vendor.category || "—"}</p>
+                      <p className="hidden sm:block text-[12px] text-slate-400 font-light">{new Date(vendor.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                      <span className="hidden sm:block text-[11px] text-amber-500 font-medium text-right opacity-0 group-hover:opacity-100 transition-opacity duration-500">Review</span>
+                    </button>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* Quick actions + activity */}
+        {/* ── Quick actions + activity ── */}
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-[15px] font-semibold text-slate-900 mb-4">
               Quick Actions
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[
-                {
-                  label: "Review Vendors",
-                  icon: FiShoppingBag,
-                  href: "/admin/vendors",
-                  ready: true,
-                },
-                {
-                  label: "Manage Users",
-                  icon: FiUsers,
-                  href: "/admin/users",
-                  ready: false,
-                },
-                {
-                  label: "View Reports",
-                  icon: FiBarChart2,
-                  href: "/admin/reports",
-                  ready: false,
-                },
+                { label: "Review Vendors", icon: FiShoppingBag, href: "/admin/vendors", ready: true },
+                { label: "Manage Users", icon: FiUsers, href: "/admin/users", ready: true },
+                { label: "View Reports", icon: FiBarChart2, href: "/admin/reports", ready: false },
               ].map((action) => {
                 const Icon = action.icon;
                 return (
                   <button
                     key={action.label}
                     onClick={() => action.ready && router.push(action.href)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-gray-200/80 text-left transition-all ${
+                    className={`cursor-pointer w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-500 ${
                       action.ready
-                        ? "hover:border-gray-300 hover:shadow-sm cursor-pointer"
-                        : "opacity-60 cursor-default"
+                        ? "border-warm-200/50 bg-white hover:border-warm-200 hover:shadow-[0_2px_12px_rgba(15,23,42,0.04)] group"
+                        : "border-warm-200/30 bg-warm-50/30 opacity-60 cursor-default"
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-amber-600" />
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200/40 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-amber-500" />
                     </div>
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-gray-900">
-                        {action.label}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[13px] font-medium text-slate-800">{action.label}</span>
                       {!action.ready && (
-                        <span className="ml-2 text-[10px] text-gray-400">
-                          Coming soon
+                        <span className="ml-2 text-[10px] text-slate-400 uppercase tracking-luxury font-semibold">
+                          Soon
                         </span>
                       )}
                     </div>
                     {action.ready && (
-                      <FiArrowRight className="w-4 h-4 text-gray-300" />
+                      <FiArrowRight className="w-3.5 h-3.5 text-slate-200 group-hover:text-slate-400 transition-all duration-500 group-hover:translate-x-0.5" />
                     )}
                   </button>
                 );
@@ -244,13 +231,15 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-[15px] font-semibold text-slate-900 mb-4">
               Activity
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200/80 p-6 text-center">
-              <FiActivity className="w-6 h-6 text-gray-300 mx-auto mb-3" />
-              <p className="text-xs text-gray-400">
-                System activity will appear here.
+            <div className="rounded-2xl border border-warm-200/50 bg-white py-10 text-center">
+              <div className="w-10 h-10 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-3">
+                <FiActivity className="w-4 h-4 text-slate-300" />
+              </div>
+              <p className="text-[12px] text-slate-400 font-light">
+                System activity will appear here
               </p>
             </div>
           </div>
