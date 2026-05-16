@@ -10,6 +10,9 @@ import {
   FiUser,
   FiClock,
   FiCheckCircle,
+  FiSend,
+  FiAlertCircle,
+  FiX,
 } from "react-icons/fi";
 
 interface OrgMember {
@@ -177,134 +180,200 @@ export default function VendorTeamPage() {
     }
   }
 
+  /* ── Loading ── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-400">
-        <div className="animate-pulse text-sm">Loading team...</div>
+      <div className="space-y-10">
+        <div>
+          <div className="h-3 w-16 bg-warm-100 rounded animate-pulse mb-3" />
+          <div className="h-9 w-52 bg-warm-100 rounded-lg animate-pulse" />
+        </div>
+        <div className="rounded-2xl border border-warm-200/30 bg-white p-10 animate-pulse">
+          <div className="h-5 w-40 bg-warm-100 rounded mb-6" />
+          <div className="h-12 bg-warm-100 rounded-xl" />
+        </div>
+        <div className="rounded-2xl border border-warm-200/30 bg-white p-10 animate-pulse">
+          <div className="h-5 w-32 bg-warm-100 rounded mb-6" />
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-16 bg-warm-100 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
+      {/* ── Header ── */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-display">
-          Team Management
+        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+          Organization
+        </p>
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline">
+          Team
         </h1>
-        <p className="text-gray-500 mt-1">
-          Manage your staff members and send invitations.
+        <p className="text-[14px] text-slate-400 font-light mt-2">
+          Manage your staff members and invitations
           {activeOrg && (
-            <span className="ml-1 text-blue-600 font-medium">
-              {activeOrg.name}
+            <span className="ml-1.5 text-slate-600 font-medium">
+              · {activeOrg.name}
             </span>
           )}
         </p>
       </div>
 
+      {/* ── Alerts ── */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-          {error}
+        <div className="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/50 px-5 py-4 text-[13px] text-red-600">
+          <FiAlertCircle className="w-4 h-4 shrink-0" />
+          <span className="flex-1">{error}</span>
+          <button onClick={() => setError("")} className="cursor-pointer text-red-300 hover:text-red-500 transition-colors duration-300">
+            <FiX className="w-4 h-4" />
+          </button>
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
-          {success}
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-5 py-4 text-[13px] text-emerald-700">
+          <FiCheckCircle className="w-4 h-4 shrink-0" />
+          <span className="flex-1">{success}</span>
+          <button onClick={() => setSuccess("")} className="cursor-pointer text-emerald-300 hover:text-emerald-500 transition-colors duration-300">
+            <FiX className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      {/* Invite Form */}
-      <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <FiMail className="w-5 h-5 text-blue-600" />
-          Invite Staff Member
-        </h2>
+      {/* ── Invite form ── */}
+      <section className="rounded-2xl border border-warm-200/50 bg-white p-8 sm:p-10">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+            <FiSend className="w-4.5 h-4.5 text-slate-400" />
+          </div>
+          <div>
+            <h2 className="text-[15px] font-semibold text-slate-900">Invite Staff Member</h2>
+            <p className="text-[11px] text-slate-400 font-light mt-0.5">
+              Send an email invitation to join your team
+            </p>
+          </div>
+        </div>
+
         <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
           <input
             type="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             placeholder="staff@example.com"
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none"
+            className="flex-1 px-4 py-3.5 border border-warm-200/60 rounded-xl text-[14px] text-slate-800 bg-white outline-none transition-all duration-500 placeholder:text-slate-300 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
             disabled={inviting}
           />
           <select
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value as "member")}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none bg-white"
+            className="px-4 py-3.5 border border-warm-200/60 rounded-xl text-[13px] text-slate-700 bg-white outline-none appearance-none transition-all duration-500 focus:border-slate-300 focus:shadow-[0_0_0_3px_rgba(250,248,245,1),0_0_0_5px_rgba(201,168,76,0.15)]"
             disabled={inviting}
           >
-            <option value="member">Staff (Limited Access)</option>
+            <option value="member">Staff (Limited)</option>
           </select>
           <button
             type="submit"
             disabled={inviting || !inviteEmail.trim()}
-            className="cursor-pointer px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="cursor-pointer flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-xl text-[13px] font-semibold shadow-[0_2px_12px_rgba(15,23,42,0.1)] hover:bg-slate-800 hover:shadow-[0_4px_20px_rgba(15,23,42,0.18)] transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {inviting ? "Sending..." : "Send Invite"}
+            {inviting ? (
+              <span className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Sending...
+              </span>
+            ) : (
+              <>
+                <FiSend className="w-3.5 h-3.5" />
+                Send Invite
+              </>
+            )}
           </button>
         </form>
-        <p className="text-xs text-gray-400 mt-3">
+
+        <p className="text-[11px] text-slate-400 font-light mt-5 leading-relaxed">
           Staff members can manage chat, bookings, and schedule. They cannot access financial data or edit the business profile.
         </p>
-      </div>
+      </section>
 
-      {/* Current Members */}
-      <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <FiUsers className="w-5 h-5 text-blue-600" />
-          Team Members
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full ml-1">
+      {/* ── Team Members ── */}
+      <section className="rounded-2xl border border-warm-200/50 bg-white p-8 sm:p-10">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+            <FiUsers className="w-4.5 h-4.5 text-slate-400" />
+          </div>
+          <h2 className="text-[15px] font-semibold text-slate-900">
+            Team Members
+          </h2>
+          <span className="text-[11px] px-2.5 py-1 rounded-lg bg-warm-100 text-slate-500 font-semibold">
             {members.length}
           </span>
-        </h2>
+        </div>
 
         {members.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">
-            No team members yet. Invite your first staff member above.
-          </p>
+          <div className="text-center py-14">
+            <div className="w-14 h-14 rounded-2xl bg-warm-50 border border-warm-200/40 flex items-center justify-center mx-auto mb-5">
+              <FiUsers className="w-6 h-6 text-slate-300" />
+            </div>
+            <p className="text-[14px] font-medium text-slate-500 mb-1">No team members yet</p>
+            <p className="text-[13px] text-slate-400 font-light">
+              Invite your first staff member above
+            </p>
+          </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="space-y-3">
             {members.map((member) => {
               const isPending = pendingIds.has(member.id);
+              const isOwner = member.role === "owner";
               return (
                 <div
                   key={member.id}
-                  className={`flex items-center justify-between py-4 first:pt-0 last:pb-0 transition-opacity duration-300 ${isPending ? "opacity-40 pointer-events-none" : ""}`}
+                  className={`group flex items-center justify-between gap-4 px-5 py-4 rounded-xl transition-all duration-500 ${
+                    isPending
+                      ? "opacity-30 pointer-events-none scale-[0.98]"
+                      : "bg-warm-50/30 border border-warm-200/20 hover:border-warm-200/50"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                      {member.role === "owner" ? (
-                        <FiShield className="w-4 h-4 text-blue-600" />
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                      isOwner
+                        ? "bg-gold-50 border-gold-200/40"
+                        : "bg-white border-warm-200/40"
+                    }`}>
+                      {isOwner ? (
+                        <FiShield className="w-4 h-4 text-gold-500" />
                       ) : (
-                        <FiUser className="w-4 h-4 text-gray-500" />
+                        <FiUser className="w-4 h-4 text-slate-400" />
                       )}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-slate-800 truncate">
                         {member.user?.name ?? "Unknown"}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-[12px] text-slate-400 font-light truncate">
                         {member.user?.email ?? "—"}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        member.role === "owner"
-                          ? "bg-blue-50 text-blue-700"
-                          : "bg-gray-100 text-gray-600"
+                      className={`text-[10px] font-semibold uppercase tracking-luxury px-2.5 py-1 rounded-lg border ${
+                        isOwner
+                          ? "bg-gold-50 text-gold-600 border-gold-200/40"
+                          : "bg-warm-50 text-slate-500 border-warm-200/30"
                       }`}
                     >
-                      {member.role === "owner" ? "Owner" : "Staff"}
+                      {isOwner ? "Owner" : "Staff"}
                     </span>
-                    {member.role !== "owner" && (
+                    {!isOwner && (
                       <button
                         onClick={() => setConfirmAction({ type: "remove", id: member.id, label: member.user?.name || member.user?.email || "this member" })}
-                        className="cursor-pointer p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                        title="Remove member"
+                        className="cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all duration-500"
                       >
-                        <FiTrash2 className="w-4 h-4" />
+                        <FiTrash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -313,56 +382,72 @@ export default function VendorTeamPage() {
             })}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Pending Invitations */}
+      {/* ── Pending Invitations ── */}
       {invitations.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200/80 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <FiClock className="w-5 h-5 text-amber-500" />
-            Pending Invitations
-            <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full ml-1">
+        <section className="rounded-2xl border border-warm-200/50 bg-white p-8 sm:p-10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/40 flex items-center justify-center">
+              <FiClock className="w-4.5 h-4.5 text-amber-500" />
+            </div>
+            <h2 className="text-[15px] font-semibold text-slate-900">
+              Pending Invitations
+            </h2>
+            <span className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-50 text-amber-600 font-semibold border border-amber-200/40">
               {invitations.filter((i) => i.status === "pending").length}
             </span>
-          </h2>
-          <div className="divide-y divide-gray-100">
+          </div>
+
+          <div className="space-y-3">
             {invitations.map((inv) => {
               const isPending = pendingIds.has(inv.id);
               const isOptimistic = inv.id.startsWith("optimistic-");
+              const isAccepted = inv.status === "accepted";
               return (
                 <div
                   key={inv.id}
-                  className={`flex items-center justify-between py-4 first:pt-0 last:pb-0 transition-opacity duration-300 ${isPending ? "opacity-40 pointer-events-none" : ""} ${isOptimistic ? "animate-pulse" : ""}`}
+                  className={`group flex items-center justify-between gap-4 px-5 py-4 rounded-xl border transition-all duration-500 ${
+                    isPending
+                      ? "opacity-30 pointer-events-none scale-[0.98]"
+                      : isOptimistic
+                        ? "bg-amber-50/20 border-amber-200/20 animate-pulse"
+                        : "bg-warm-50/30 border-warm-200/20 hover:border-warm-200/50"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-                      {inv.status === "accepted" ? (
-                        <FiCheckCircle className="w-4 h-4 text-green-500" />
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                      isAccepted
+                        ? "bg-emerald-50 border-emerald-200/40"
+                        : "bg-amber-50 border-amber-200/40"
+                    }`}>
+                      {isAccepted ? (
+                        <FiCheckCircle className="w-4 h-4 text-emerald-500" />
                       ) : (
                         <FiMail className="w-4 h-4 text-amber-500" />
                       )}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-slate-800 truncate">
                         {inv.email}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-[12px] text-slate-400 font-light">
                         {isOptimistic
                           ? "Sending invitation..."
                           : inv.status === "pending"
-                            ? `Expires ${new Date(inv.expiresAt).toLocaleDateString()}`
+                            ? `Expires ${new Date(inv.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
                             : inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                      className={`text-[10px] font-semibold uppercase tracking-luxury px-2.5 py-1 rounded-lg border ${
                         inv.status === "pending"
-                          ? "bg-amber-50 text-amber-700"
-                          : inv.status === "accepted"
-                            ? "bg-green-50 text-green-700"
-                            : "bg-gray-100 text-gray-600"
+                          ? "bg-amber-50 text-amber-600 border-amber-200/40"
+                          : isAccepted
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-200/40"
+                            : "bg-warm-50 text-slate-500 border-warm-200/30"
                       }`}
                     >
                       {isOptimistic ? "Sending..." : inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
@@ -370,10 +455,9 @@ export default function VendorTeamPage() {
                     {inv.status === "pending" && !isOptimistic && (
                       <button
                         onClick={() => setConfirmAction({ type: "cancel", id: inv.id, label: inv.email })}
-                        className="cursor-pointer p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                        title="Cancel invitation"
+                        className="cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all duration-500"
                       >
-                        <FiTrash2 className="w-4 h-4" />
+                        <FiTrash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -381,32 +465,36 @@ export default function VendorTeamPage() {
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
+      {/* ── Confirm modal ── */}
       {confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 sm:p-10 max-w-sm w-full mx-4 shadow-[0_20px_60px_rgba(15,23,42,0.15)] animate-scale-reveal">
+            <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-6">
+              <FiTrash2 className="w-5 h-5 text-red-400" />
+            </div>
+            <h3 className="font-display text-lg font-semibold text-slate-900 text-center mb-2">
               {confirmAction.type === "remove" ? "Remove member" : "Cancel invitation"}
             </h3>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-[13px] text-slate-400 font-light text-center leading-relaxed mb-8">
               {confirmAction.type === "remove"
-                ? <>Are you sure you want to remove <strong>{confirmAction.label}</strong> from the team?</>
-                : <>Cancel the invitation to <strong>{confirmAction.label}</strong>?</>}
+                ? <>Are you sure you want to remove <strong className="text-slate-700 font-medium">{confirmAction.label}</strong> from the team?</>
+                : <>Cancel the invitation to <strong className="text-slate-700 font-medium">{confirmAction.label}</strong>?</>}
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <button
                 onClick={() => setConfirmAction(null)}
-                className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-slate-600 border border-warm-200/60 rounded-xl hover:bg-warm-50 hover:border-warm-200 transition-all duration-500"
               >
                 Keep
               </button>
               <button
                 onClick={handleConfirmedAction}
-                className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                className="cursor-pointer flex-1 py-3 text-[13px] font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-[0_2px_12px_rgba(220,38,38,0.15)] hover:shadow-[0_4px_20px_rgba(220,38,38,0.25)] transition-all duration-500"
               >
-                {confirmAction.type === "remove" ? "Remove" : "Cancel invitation"}
+                {confirmAction.type === "remove" ? "Remove" : "Cancel"}
               </button>
             </div>
           </div>
