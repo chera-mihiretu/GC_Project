@@ -19,6 +19,7 @@ import {
   FiDollarSign,
   FiUser,
   FiCheck,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 const LocationMapPicker = dynamic(
@@ -26,7 +27,7 @@ const LocationMapPicker = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[300px] rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-center text-sm text-gray-400">
+      <div className="h-[300px] rounded-2xl border border-warm-200/40 bg-warm-50/30 flex items-center justify-center text-[13px] text-slate-300 font-light">
         Loading map...
       </div>
     ),
@@ -71,6 +72,9 @@ const CURRENCY_OPTIONS = ["ETB", "USD"];
 
 const ADDIS_LAT = 9.005401;
 const ADDIS_LNG = 38.764142;
+
+const INPUT_CLS =
+  "w-full px-4 py-3 rounded-xl bg-warm-50/60 border border-warm-200/40 text-[13px] text-slate-800 placeholder:text-slate-300 outline-none transition-all duration-500 focus:border-gold-400/50 focus:ring-2 focus:ring-gold-400/10";
 
 export default function CoupleProfilePage() {
   const { data: session } = useSession();
@@ -166,8 +170,11 @@ export default function CoupleProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-400">
-        <div className="animate-pulse text-sm">Loading profile...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-warm-200/40 border-t-gold-400 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[13px] text-slate-400 font-light">Loading profile...</p>
+        </div>
       </div>
     );
   }
@@ -175,40 +182,60 @@ export default function CoupleProfilePage() {
   const firstName = session?.user?.name?.split(" ")[0] ?? "";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* ── Header ── */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-display flex items-center gap-2">
-          <FiHeart className="w-7 h-7 text-rose-500" />
+        <p className="text-[11px] font-semibold uppercase tracking-editorial text-slate-400 mb-2">
+          Your Wedding
+        </p>
+        <h1 className="font-display text-3xl font-bold text-slate-900 tracking-headline flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/40 flex items-center justify-center shrink-0">
+            <FiHeart className="w-4.5 h-4.5 text-rose-500" />
+          </div>
           Wedding Profile
         </h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-[14px] text-slate-400 font-light mt-2">
           {profile
             ? "Keep your wedding details up to date for personalized recommendations."
             : `${firstName ? `Hi ${firstName}! ` : ""}Tell us about your special day so we can help you plan.`}
         </p>
       </div>
 
+      {/* ── Alerts ── */}
       {success && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
-          <FiCheck className="w-4 h-4 shrink-0" />
+        <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 border border-emerald-200/40 px-5 py-4 text-[13px] text-emerald-700">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200/40 flex items-center justify-center shrink-0">
+            <FiCheck className="w-4 h-4 text-emerald-500" />
+          </div>
           {success}
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+        <div className="flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200/40 px-5 py-4 text-[13px] text-red-600">
+          <div className="w-8 h-8 rounded-lg bg-red-100 border border-red-200/40 flex items-center justify-center shrink-0">
+            <FiAlertCircle className="w-4 h-4 text-red-400" />
+          </div>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Wedding details */}
-        <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-gray-900">Wedding Details</h2>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* ── Wedding Details ── */}
+        <div className="rounded-2xl border border-warm-200/50 bg-white p-6 sm:p-8 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-warm-50 border border-warm-200/40 flex items-center justify-center">
+              <FiCalendar className="w-4 h-4 text-slate-400" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-900">Wedding Details</h2>
+              <p className="text-[11px] text-slate-400 font-light">Essential information about your big day</p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="weddingDate" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                <FiCalendar className="w-3.5 h-3.5 text-gray-400" />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="weddingDate" className="text-[12px] font-medium text-slate-600 flex items-center gap-1.5">
+                <FiCalendar className="w-3 h-3 text-slate-300" />
                 Wedding Date
               </label>
               <input
@@ -216,10 +243,10 @@ export default function CoupleProfilePage() {
                 type="date"
                 value={weddingDate}
                 onChange={(e) => setWeddingDate(e.target.value)}
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={INPUT_CLS}
               />
               {weddingDate && (
-                <p className="text-xs text-rose-600 font-medium mt-0.5">
+                <p className="text-[11px] text-rose-500 font-medium">
                   {new Date(weddingDate + "T00:00:00").toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -230,9 +257,9 @@ export default function CoupleProfilePage() {
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="partnerName" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                <FiUser className="w-3.5 h-3.5 text-gray-400" />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="partnerName" className="text-[12px] font-medium text-slate-600 flex items-center gap-1.5">
+                <FiUser className="w-3 h-3 text-slate-300" />
                 Partner&apos;s Name
               </label>
               <input
@@ -241,13 +268,13 @@ export default function CoupleProfilePage() {
                 value={partnerName}
                 onChange={(e) => setPartnerName(e.target.value)}
                 placeholder="Your partner's name"
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={INPUT_CLS}
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="estimatedGuests" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                <FiUsers className="w-3.5 h-3.5 text-gray-400" />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="estimatedGuests" className="text-[12px] font-medium text-slate-600 flex items-center gap-1.5">
+                <FiUsers className="w-3 h-3 text-slate-300" />
                 Estimated Guests
               </label>
               <input
@@ -257,20 +284,20 @@ export default function CoupleProfilePage() {
                 value={estimatedGuests}
                 onChange={(e) => setEstimatedGuests(e.target.value)}
                 placeholder="e.g. 150"
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={INPUT_CLS}
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="weddingTheme" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                <FiStar className="w-3.5 h-3.5 text-gray-400" />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="weddingTheme" className="text-[12px] font-medium text-slate-600 flex items-center gap-1.5">
+                <FiStar className="w-3 h-3 text-slate-300" />
                 Wedding Theme
               </label>
               <select
                 id="weddingTheme"
                 value={weddingTheme}
                 onChange={(e) => setWeddingTheme(e.target.value)}
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={`${INPUT_CLS} appearance-none cursor-pointer`}
               >
                 <option value="">Select a theme</option>
                 {THEME_OPTIONS.map((t) => (
@@ -279,16 +306,16 @@ export default function CoupleProfilePage() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="budgetCurrency" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                <FiDollarSign className="w-3.5 h-3.5 text-gray-400" />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="budgetCurrency" className="text-[12px] font-medium text-slate-600 flex items-center gap-1.5">
+                <FiDollarSign className="w-3 h-3 text-slate-300" />
                 Budget Currency
               </label>
               <select
                 id="budgetCurrency"
                 value={budgetCurrency}
                 onChange={(e) => setBudgetCurrency(e.target.value)}
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={`${INPUT_CLS} appearance-none cursor-pointer`}
               >
                 {CURRENCY_OPTIONS.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -298,23 +325,26 @@ export default function CoupleProfilePage() {
           </div>
         </div>
 
-        {/* Location section */}
-        <div className="bg-white rounded-xl border border-gray-200/80 p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FiMapPin className="w-5 h-5 text-rose-500" />
-            Wedding Location
-          </h2>
+        {/* ── Location ── */}
+        <div className="rounded-2xl border border-warm-200/50 bg-white p-6 sm:p-8 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200/40 flex items-center justify-center">
+              <FiMapPin className="w-4 h-4 text-rose-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-slate-900">Wedding Location</h2>
+              <p className="text-[11px] text-slate-400 font-light">Where will the celebration take place?</p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="weddingCity" className="text-sm font-medium text-gray-700">
-                City
-              </label>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="weddingCity" className="text-[12px] font-medium text-slate-600">City</label>
               <select
                 id="weddingCity"
                 value={weddingLocation}
                 onChange={(e) => handleCityChange(e.target.value)}
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={`${INPUT_CLS} appearance-none cursor-pointer`}
               >
                 <option value="">Select a city</option>
                 {ETHIOPIAN_CITIES.map((c) => (
@@ -322,51 +352,57 @@ export default function CoupleProfilePage() {
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="weddingLocationCustom" className="text-sm font-medium text-gray-700">
-                Or type a custom location
-              </label>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="weddingLocationCustom" className="text-[12px] font-medium text-slate-600">Or type a custom location</label>
               <input
                 id="weddingLocationCustom"
                 type="text"
                 value={weddingLocation}
                 onChange={(e) => setWeddingLocation(e.target.value)}
                 placeholder="Venue name or address"
-                className="px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white outline-none placeholder:text-gray-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                className={INPUT_CLS}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pin Your Venue on Map
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
+            <label className="block text-[12px] font-medium text-slate-600 mb-1.5">Pin Your Venue on Map</label>
+            <p className="text-[11px] text-slate-400 font-light mb-3">
               Click on the map to set the exact venue location. Selecting a city above will center the map there.
             </p>
-            <LocationMapPicker
-              latitude={latitude}
-              longitude={longitude}
-              onChange={handleMapChange}
-            />
-            <div className="flex gap-4 mt-2">
-              <div className="text-xs text-gray-400">
-                Lat: <span className="font-mono text-gray-600">{latitude.toFixed(6)}</span>
+            <div className="rounded-2xl overflow-hidden border border-warm-200/40">
+              <LocationMapPicker
+                latitude={latitude}
+                longitude={longitude}
+                onChange={handleMapChange}
+              />
+            </div>
+            <div className="flex gap-6 mt-3">
+              <div className="text-[11px] text-slate-300 font-light">
+                Lat: <span className="font-mono text-slate-500">{latitude.toFixed(6)}</span>
               </div>
-              <div className="text-xs text-gray-400">
-                Lng: <span className="font-mono text-gray-600">{longitude.toFixed(6)}</span>
+              <div className="text-[11px] text-slate-300 font-light">
+                Lng: <span className="font-mono text-slate-500">{longitude.toFixed(6)}</span>
               </div>
             </div>
           </div>
         </div>
 
+        {/* ── Submit ── */}
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={saving}
-            className="cursor-pointer px-8 py-3 bg-rose-500 text-white rounded-lg text-sm font-semibold transition-all hover:bg-rose-600 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="cursor-pointer px-8 py-3 bg-slate-900 text-white rounded-full text-[13px] font-medium transition-all duration-500 hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? "Saving..." : profile ? "Update Profile" : "Save Profile"}
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              profile ? "Update Profile" : "Save Profile"
+            )}
           </button>
         </div>
       </form>
