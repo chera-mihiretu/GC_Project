@@ -37,6 +37,7 @@ import { initChecklistTables } from "./features/checklist/infrastructure/init-ta
 import budgetRoutes from "./features/budget/presentation/budget.routes.js";
 import { initBudgetTables } from "./features/budget/infrastructure/init-tables.js";
 import earningsRoutes from "./features/payment/presentation/earnings.routes.js";
+import guideRoutes from "./features/guide/presentation/guide.routes.js";
 
 const app = express();
 
@@ -484,6 +485,7 @@ app.use("/api/v1/ai", aiRoutes);
 app.use("/api/v1/checklist", checklistRoutes);
 app.use("/api/v1/budget", budgetRoutes);
 app.use("/api/v1/earnings", earningsRoutes);
+app.use("/api/v1/guide", guideRoutes);
 
 initVendorTables().catch((err) => {
   console.error("Failed to initialize vendor tables:", err);

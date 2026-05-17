@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import NotificationBell from "@/components/realtime/notification-bell";
+import GuideBot from "@/components/guide/guide-bot";
 
 export interface NavItem {
   label: string;
@@ -290,6 +291,8 @@ export default function DashboardShell({
         {/* ── Page Content ── */}
         <main className="flex-1 p-5 sm:p-8 lg:p-10">{children}</main>
       </div>
+
+      <GuideBot />
     </div>
   );
 }
