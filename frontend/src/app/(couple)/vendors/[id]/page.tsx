@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { VendorImage, VendorImgTag } from "@/components/ui/vendor-image";
 import {
   getVendorDetail,
   startConversation,
@@ -174,7 +174,7 @@ export default function VendorDetailPage() {
         {/* Cover image */}
         {firstImage && (
           <div className="relative h-48 sm:h-56 bg-warm-50 overflow-hidden">
-            <Image src={firstImage.mediaUrl} alt={vendor.businessName ?? ""} fill className="object-cover" unoptimized />
+            <VendorImage src={firstImage.mediaUrl} alt={vendor.businessName ?? ""} className="object-cover" fallbackInitial={(vendor.businessName ?? "V").charAt(0)} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           </div>
         )}
@@ -183,13 +183,13 @@ export default function VendorDetailPage() {
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
             {/* Avatar */}
             <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-warm-50 to-warm-100 border border-warm-200/40 overflow-hidden shrink-0 shadow-sm">
-              {firstImage ? (
-                <Image src={firstImage.mediaUrl} alt={vendor.businessName ?? "Vendor"} fill className="object-cover" unoptimized />
-              ) : (
-                <div className="flex items-center justify-center h-full font-display text-2xl font-bold text-slate-400">
-                  {(vendor.businessName ?? "V").charAt(0)}
-                </div>
-              )}
+              <VendorImage
+                src={firstImage?.mediaUrl}
+                alt={vendor.businessName ?? "Vendor"}
+                className="object-cover"
+                fallbackInitial={(vendor.businessName ?? "V").charAt(0)}
+                fallbackClassName="flex flex-col items-center justify-center h-full w-full font-display text-2xl font-bold text-slate-400"
+              />
             </div>
 
             <div className="flex-1 min-w-0">
@@ -304,7 +304,7 @@ export default function VendorDetailPage() {
                           {item.mediaType === "video" ? (
                             <video src={item.mediaUrl} className="w-full h-full object-cover" muted preload="metadata" />
                           ) : (
-                            <Image src={item.mediaUrl} alt={item.caption ?? `Portfolio ${i + 1}`} fill className="object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out" unoptimized />
+                            <VendorImage src={item.mediaUrl} alt={item.caption ?? `Portfolio ${i + 1}`} className="object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out" fallbackInitial="" />
                           )}
                           {item.mediaType === "video" && (
                             <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-white text-[9px] font-medium flex items-center gap-1">
@@ -523,13 +523,14 @@ export default function VendorDetailPage() {
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={lightboxItems[lightboxIdx].mediaUrl}
-              alt={lightboxItems[lightboxIdx].caption ?? `Portfolio ${lightboxIdx + 1}`}
-              className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
+              <VendorImgTag
+                src={lightboxItems[lightboxIdx].mediaUrl}
+                alt={lightboxItems[lightboxIdx].caption ?? `Portfolio ${lightboxIdx + 1}`}
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                fallbackClassName="flex flex-col items-center justify-center w-64 h-64 rounded-2xl bg-slate-800/80"
+              />
+            </div>
           )}
 
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">

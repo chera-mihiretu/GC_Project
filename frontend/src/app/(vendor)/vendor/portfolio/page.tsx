@@ -22,6 +22,7 @@ import {
   FiArrowRight,
 } from "react-icons/fi";
 import Link from "next/link";
+import { VendorImgTag } from "@/components/ui/vendor-image";
 
 const CATEGORY_LABELS: Record<string, string> = {};
 for (const c of VENDOR_CATEGORIES) {
@@ -372,11 +373,11 @@ export default function PortfolioPage() {
                     }}
                   />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <VendorImgTag
                     src={item.mediaUrl}
                     alt={item.caption ?? "Portfolio item"}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    fallbackInitial=""
                   />
                 )}
 

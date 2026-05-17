@@ -2,6 +2,7 @@
 
 import { FiStar, FiMapPin } from "react-icons/fi";
 import type { VendorCard as VendorCardType } from "@/services/ai.service";
+import { VendorImgTag } from "@/components/ui/vendor-image";
 
 interface Props {
   vendor: VendorCardType;
@@ -21,15 +22,15 @@ export default function VendorCard({ vendor, onClick }: Props) {
       onClick={() => onClick?.(vendor.id)}
       className="flex gap-3 p-3 rounded-xl border border-gray-200 hover:border-rose-300 hover:shadow-sm transition-all bg-white group text-left w-full cursor-pointer"
     >
-      {vendor.thumbnail && (
-        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-          <img
-            src={vendor.thumbnail}
-            alt={vendor.businessName}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
+      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+        <VendorImgTag
+          src={vendor.thumbnail}
+          alt={vendor.businessName}
+          className="w-full h-full object-cover"
+          fallbackInitial={vendor.businessName.charAt(0)}
+          fallbackClassName="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-rose-50 to-rose-100/60"
+        />
+      </div>
       <div className="flex-1 min-w-0">
         <h4 className="font-semibold text-sm text-gray-900 truncate group-hover:text-rose-600 transition-colors">
           {vendor.businessName}

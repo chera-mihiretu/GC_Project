@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { listVendors, type VendorListParams } from "@/services/public-vendor.service";
+import { VendorImage } from "@/components/ui/vendor-image";
 import type { VendorProfile } from "@/types/vendor";
 import { VENDOR_CATEGORIES } from "@/types/vendor";
 import {
@@ -300,19 +300,13 @@ function VendorCard({ vendor }: { vendor: VendorProfile }) {
       <div className="group rounded-2xl border border-warm-200/40 bg-white overflow-hidden hover:border-warm-200/70 hover:shadow-[0_12px_40px_rgba(15,23,42,0.06)] transition-all duration-700 cursor-pointer h-full flex flex-col">
         {/* ── Image ── */}
         <div className="relative aspect-[4/3] bg-warm-50 overflow-hidden">
-          {thumb ? (
-            <Image
-              src={thumb}
-              alt={vendor.businessName ?? "Vendor"}
-              fill
-              className="object-cover group-hover:scale-[1.04] transition-transform duration-[900ms] ease-out"
-              unoptimized
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gradient-to-br from-warm-50 to-warm-100/60">
-              <FiShoppingBag className="w-8 h-8 text-warm-200" />
-            </div>
-          )}
+          <VendorImage
+            src={thumb}
+            alt={vendor.businessName ?? "Vendor"}
+            className="object-cover group-hover:scale-[1.04] transition-transform duration-[900ms] ease-out"
+            fallbackInitial={(vendor.businessName ?? "V").charAt(0)}
+            fallbackClassName="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-warm-50 to-warm-100/60"
+          />
 
           {/* Gradient overlay at bottom */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { VendorImage, VendorImgTag } from "@/components/ui/vendor-image";
 import {
   FiX,
   FiMapPin,
@@ -269,19 +269,13 @@ export default function VendorDetailPanel({ vendorId, onClose }: Props) {
               {/* Profile header */}
               <div className="flex gap-4">
                 <div className="relative w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-                  {vendor.portfolio?.[0] ? (
-                    <Image
-                      src={vendor.portfolio[0]}
-                      alt={vendor.businessName ?? "Vendor"}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-300 text-xl font-bold">
-                      {(vendor.businessName ?? "V").charAt(0)}
-                    </div>
-                  )}
+                  <VendorImage
+                    src={vendor.portfolio?.[0]}
+                    alt={vendor.businessName ?? "Vendor"}
+                    className="object-cover"
+                    fallbackInitial={(vendor.businessName ?? "V").charAt(0)}
+                    fallbackClassName="flex flex-col items-center justify-center h-full w-full bg-gradient-to-br from-gray-50 to-gray-100"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -410,12 +404,11 @@ export default function VendorDetailPanel({ vendorId, onClose }: Props) {
                             {item.mediaType === "video" ? (
                               <video src={item.mediaUrl} className="w-full h-full object-cover" muted preload="metadata" />
                             ) : (
-                              <Image
+                              <VendorImage
                                 src={item.mediaUrl}
                                 alt={item.caption ?? `Portfolio ${i + 1}`}
-                                fill
                                 className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                unoptimized
+                                fallbackInitial=""
                               />
                             )}
                             {item.mediaType === "video" && (
@@ -504,13 +497,14 @@ export default function VendorDetailPanel({ vendorId, onClose }: Props) {
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={currentTabItems[lightboxIdx].mediaUrl}
-                alt={currentTabItems[lightboxIdx].caption ?? ""}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div className="max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
+                <VendorImgTag
+                  src={currentTabItems[lightboxIdx].mediaUrl}
+                  alt={currentTabItems[lightboxIdx].caption ?? ""}
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                  fallbackClassName="flex flex-col items-center justify-center w-48 h-48 rounded-lg bg-gray-800/80"
+                />
+              </div>
             )}
           </div>
         )}
