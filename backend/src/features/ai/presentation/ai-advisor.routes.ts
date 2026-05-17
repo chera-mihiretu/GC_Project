@@ -151,36 +151,41 @@ router.post("/chat/stream", requireAuth(), async (req: Request, res: Response) =
     }
   }
 
-  // Resolve or create session
   let activeSessionId: string | null = sessionId || null;
   const lastUserMessage = [...messages].reverse().find((m: { role: string }) => m.role === "user");
 
-  if (activeSessionId) {
-    const session = await getSessionById(activeSessionId);
-    if (!session || session.userId !== userId) {
-      activeSessionId = null;
+  try {
+    if (activeSessionId) {
+      const session = await getSessionById(activeSessionId);
+      if (!session || session.userId !== userId) {
+        activeSessionId = null;
+      }
     }
+
+    if (!activeSessionId) {
+      const title = lastUserMessage
+        ? (lastUserMessage.content as string).slice(0, 50)
+        : "New conversation";
+      const session = await createSession(userId, title);
+      activeSessionId = session.id;
+    }
+
+    if (lastUserMessage) {
+      await addMessage(activeSessionId, "user", lastUserMessage.content as string);
+    }
+
+    const existingMessages = await getMessagesBySession(activeSessionId, 2);
+    if (existingMessages.length <= 1 && lastUserMessage) {
+      const title = (lastUserMessage.content as string).slice(0, 50);
+      await updateSessionTitle(activeSessionId, title);
+    }
+  } catch (err) {
+    console.error("[AI] Session setup error:", err);
+    res.status(500).json({ error: { code: "SESSION_ERROR", message: "Failed to set up AI session" } });
+    return;
   }
 
-  if (!activeSessionId) {
-    const title = lastUserMessage
-      ? (lastUserMessage.content as string).slice(0, 50)
-      : "New conversation";
-    const session = await createSession(userId, title);
-    activeSessionId = session.id;
-  }
-
-  // Save the user message
-  if (lastUserMessage) {
-    await addMessage(activeSessionId, "user", lastUserMessage.content as string);
-  }
-
-  // Check if session needs a title (first message scenario)
-  const existingMessages = await getMessagesBySession(activeSessionId, 2);
-  if (existingMessages.length <= 1 && lastUserMessage) {
-    const title = (lastUserMessage.content as string).slice(0, 50);
-    await updateSessionTitle(activeSessionId, title);
-  }
+  console.log(`[AI] Stream starting for user=${userId} session=${activeSessionId}`);
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -200,13 +205,20 @@ router.post("/chat/stream", requireAuth(), async (req: Request, res: Response) =
   // Send session ID to frontend so it can track the active session
   sendEvent("session", { sessionId: activeSessionId });
 
-  const coupleProfile = await findCoupleProfile(userId);
+  let coupleProfile;
+  try {
+    coupleProfile = await findCoupleProfile(userId);
+  } catch (err) {
+    console.error("[AI] Failed to fetch couple profile:", err);
+    coupleProfile = null;
+  }
   const coupleContext = buildCoupleContext(userName, coupleProfile);
 
   let fullReply = "";
   let collectedVendorCards: unknown[] = [];
   let collectedAction: Record<string, unknown> | undefined;
 
+  try {
   await aiChatStream(
     messages as ChatMessage[],
     userId,
@@ -243,12 +255,18 @@ router.post("/chat/stream", requireAuth(), async (req: Request, res: Response) =
         res.end();
       },
       onError: (error) => {
+        console.error(`[AI] Stream onError: ${error}`);
         sendEvent("error", { message: error });
         res.end();
       },
     },
     coupleContext,
   );
+  } catch (err) {
+    console.error("[AI] Unhandled stream error:", err);
+    sendEvent("error", { message: err instanceof Error ? err.message : "AI processing failed" });
+    res.end();
+  }
 });
 
 // --- Confirm Action ---
