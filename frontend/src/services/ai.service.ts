@@ -106,20 +106,12 @@ export async function deleteAISession(sessionId: string): Promise<boolean> {
 
 // --- Streaming Chat ---
 
-function getBackendUrl(): string {
-  if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return process.env.NEXT_PUBLIC_BACKEND_URL;
-  }
-  return "http://localhost:5000";
-}
-
 export async function streamAIMessage(
   messages: ChatMessage[],
   callbacks: StreamCallbacks,
   sessionId?: string,
 ): Promise<void> {
-  // Call backend directly to avoid Next.js rewrite proxy buffering SSE
-  const res = await fetch(`${getBackendUrl()}/api/v1/ai/chat/stream`, {
+  const res = await fetch("/api/v1/ai/chat/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
